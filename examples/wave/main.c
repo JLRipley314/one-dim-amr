@@ -10,15 +10,15 @@
 
 int main(int argc, char* argv[])
 {
-	int Nx = pow(2,10)+1 ;
-	int Nt = pow(2,1)+1 ;
-	int tss = 1 ;
+	int Nx = pow(2,9)+1 ;
+	int Nt = pow(2,12)+1 ;
+	int tss = 4 ;
 
 	double cfl_num = 0.25 ;
 
 	double bbox[2] = {-50,50} ;
 
-	double dx = (bbox[1] - bbox[0]) / Nx ;
+	double dx = (bbox[1] - bbox[0]) / (Nx-1) ;
 	double dt = cfl_num * dx ;
 
 	char output_name_P[MAX_FILE_NAME+1] ;
@@ -48,9 +48,9 @@ int main(int argc, char* argv[])
 	copy_to_2nd_array(Nx, Q_n, Q_nm1) ;
 	save_to_txt_file(Nx, output_file_P, P_n) ;
 	save_to_txt_file(Nx, output_file_Q, Q_n) ;
+	fflush(NULL) ;
 
 	for (int tC=1; tC<Nt; tC++) {
-		printf("%d\n", tC) ;
 		advance_tStep_wave(Nx, dt, dx, P_n, P_nm1, Q_n, Q_nm1) ;
 
 		Kreiss_Oliger_Filter(Nx, P_n) ;
@@ -62,6 +62,7 @@ int main(int argc, char* argv[])
 		if (tC%tss == 0) {
 			save_to_txt_file(Nx, output_file_P, P_n) ;
 			save_to_txt_file(Nx, output_file_Q, Q_n) ;
+			fflush(NULL) ;
 		}
 	}	
 

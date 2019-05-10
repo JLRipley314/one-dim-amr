@@ -31,9 +31,9 @@ void initial_Data(
 	double x = 0 ;
 
 	for (int iC=0; iC<Nx; iC++) {
-		x = (iC * dx) - left_point ;
+		x = (iC * dx) + left_point ;
 		Q_n[iC] = amp * (-(x-x_0)/pow(width,2)) * exp(-pow((x-x_0)/width,2)) ;
-		P_n[iC] = - Q_n[iC] ;
+		P_n[iC] = Q_n[iC] ;
 	}
 	return ;
 }
@@ -51,16 +51,18 @@ void advance_tStep_wave(
 
 	double res_infty_norm = 0 ;
 	do {
+		res_infty_norm = 0 ;
+/* inner region */
 		for (int iC=1; iC<Nx-1; iC++) {
-			t_der_P = (P_n[iC]-P_nm1[iC])/dt ;
-			t_der_Q = (Q_n[iC]-Q_nm1[iC])/dt ;
+			t_der_P = (P_n[iC] - P_nm1[iC])/dt ;
+			t_der_Q = (Q_n[iC] - Q_nm1[iC])/dt ;
 
-			x_der_P  = (P_n[iC+1]  -P_n[iC-1]  )/(2.*dx) ;
-			x_der_P += (P_nm1[iC+1]-P_nm1[iC-1])/(2.*dx) ;
+			x_der_P  = (P_n[iC+1]   - P_n[iC-1]  )/(2.*dx) ;
+			x_der_P += (P_nm1[iC+1] - P_nm1[iC-1])/(2.*dx) ;
 			x_der_P /= 2. ;
 
-			x_der_Q  = (Q_n[iC+1]  -Q_n[iC-1]  )/(2.*dx) ;
-			x_der_Q += (Q_nm1[iC+1]-Q_nm1[iC-1])/(2.*dx) ;
+			x_der_Q  = (Q_n[iC+1]   - Q_n[iC-1]  )/(2.*dx) ;
+			x_der_Q += (Q_nm1[iC+1] - Q_nm1[iC-1])/(2.*dx) ;
 			x_der_Q /= 2. ;
 
 			res_P = t_der_P - x_der_Q ;
@@ -75,6 +77,35 @@ void advance_tStep_wave(
 			res_infty_norm = max_fabs(res_infty_norm,res_Q) ;
 			res_infty_norm = max_fabs(res_infty_norm,res_P) ;
 		}
+/* left boundary condition: phi = 0 */
+		t_der_Q = (Q_n[0] - Q_nm1[0])/dt ;
+
+		x_der_P  = (-P_n[2]   + (4.*P_n[1])   - (3*P_n[0]  ))/(2.*dx) ;
+		x_der_P  = (-P_nm1[2] + (4.*P_nm1[1]) - (3*P_nm1[0]))/(2.*dx) ;
+		x_der_P /= 2. ;
+
+		res_Q = t_der_Q - x_der_P ;
+
+		jac_Q = (1/dt) ;
+
+		Q_n[0] -= res_Q/jac_Q ;
+
+		res_infty_norm = max_fabs(res_infty_norm,res_Q) ;
+/* right boundary condition: phi = 0 */
+		t_der_Q = (Q_n[Nx-1] - Q_nm1[Nx-1])/dt ;
+
+		x_der_P  = (+P_n[Nx-1-2]   - (4.*P_n[Nx-1-1])   + (3*P_n[Nx-1-0]  ))/(2.*dx) ;
+		x_der_P  = (+P_nm1[Nx-1-2] - (4.*P_nm1[Nx-1-1]) + (3*P_nm1[Nx-1-0]))/(2.*dx) ;
+		x_der_P /= 2. ;
+
+		res_Q = t_der_Q - x_der_P ;
+
+		jac_Q = (1/dt) ;
+
+		Q_n[Nx-1] -= res_Q/jac_Q ;
+
+		res_infty_norm = max_fabs(res_infty_norm,res_Q) ;
+
 	} while (res_infty_norm > ERR_TOLERANCE) ;
 
 	return ;
@@ -87,7 +118,7 @@ void Kreiss_Oliger_Filter(
 {
 	double epsilon_ko = 0.5 ;
 	for (int iC=2; iC<Nx-2; iC++) {
-		field[iC] -= epsilon_ko * (
+		field[iC] -= (epsilon_ko/16.) * (
 			field[iC+2] + (-4.*field[iC+1]) + (6.*field[iC]) + (-4.*field[iC-1]) + field[iC-2] 
 		)
 		;
@@ -103,7 +134,7 @@ void save_to_txt_file(
 	double* field)
 {
 	for (int iC=0; iC<Nx; iC++) {
-		fprintf(output_file, "%.10f;", field[iC]) ;
+		fprintf(output_file, "%.10f\t", field[iC]) ;
 	}
 	fprintf(output_file, "\n") ;
 	return ;
