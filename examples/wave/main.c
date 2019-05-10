@@ -3,8 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#include "initial_data.h"
-#include "PDE_solvers.h"
+#include "evolution_routines.h"
 
 #define MAX_FILE_NAME 1024
 #define OUTPUT_DIR "/home/jripley/one-dim-amr/examples/wave/output/"
@@ -12,36 +11,57 @@
 int main(int argc, char* argv[])
 {
 	int Nx = pow(2,10)+1 ;
-	int Nt = pow(2,10)+1 ;
-	int tss = 4 ;
+	int Nt = pow(2,1)+1 ;
+	int tss = 1 ;
 
-	char output_file_P[MAX_FILE_NAME+1] ;
-	char output_file_Q[MAX_FILE_NAME+1] ;
+	double cfl_num = 0.25 ;
 
-	snprintf(output_file_P, MAX_FILE_NAME, "%sP.txt", OUTPUT_DIR) ;
-	snprintf(output_file_Q, MAX_FILE_NAME, "%sQ.txt", OUTPUT_DIR) ;
+	double bbox[2] = {-50,50} ;
+
+	double dx = (bbox[1] - bbox[0]) / Nx ;
+	double dt = cfl_num * dx ;
+
+	char output_name_P[MAX_FILE_NAME+1] ;
+	char output_name_Q[MAX_FILE_NAME+1] ;
+
+	snprintf(output_name_P, MAX_FILE_NAME, "%sP.txt", OUTPUT_DIR) ;
+	snprintf(output_name_Q, MAX_FILE_NAME, "%sQ.txt", OUTPUT_DIR) ;
+
+	FILE* output_file_P = fopen(output_name_P, "w") ;
+	if (output_file_P == NULL ) {
+		printf("ERROR(main.c): output_file_P == NULL\n") ;
+		exit(EXIT_FAILURE) ;
+	}
+	FILE* output_file_Q = fopen(output_name_Q, "w") ;
+	if (output_file_Q == NULL ) {
+		printf("ERROR(main.c): output_file_Q == NULL\n") ;
+		exit(EXIT_FAILURE) ;
+	}
 
 	double* P_n   = calloc(Nx,sizeof(double)) ;
 	double* P_nm1 = calloc(Nx,sizeof(double)) ;
 	double* Q_n   = calloc(Nx,sizeof(double)) ;
 	double* Q_nm1 = calloc(Nx,sizeof(double)) ;
 
-	set_initial_data(P_n, Q_n) ;
-	copy_array(Nx, P_n, P_nm1) ;
-	copy_array(Nx, Q_n, Q_nm1) ;
+	initial_Data(Nx, dx, bbox[0], P_n, Q_n) ;
+	copy_to_2nd_array(Nx, P_n, P_nm1) ;
+	copy_to_2nd_array(Nx, Q_n, Q_nm1) ;
+	save_to_txt_file(Nx, output_file_P, P_n) ;
+	save_to_txt_file(Nx, output_file_Q, Q_n) ;
 
-	for (int tC=0; iC<Nt; tC++) {
+	for (int tC=1; tC<Nt; tC++) {
+		printf("%d\n", tC) ;
 		advance_tStep_wave(Nx, dt, dx, P_n, P_nm1, Q_n, Q_nm1) ;
 
-		Kreiss_Oliger_Filer(P_n) ;
-		Kreiss_Oliger_Filer(Q_n) ;
+		Kreiss_Oliger_Filter(Nx, P_n) ;
+		Kreiss_Oliger_Filter(Nx, Q_n) ;
 
-		copy_data(Nx, P_n, P_nm1) ;
-		copy_data(Nx, Q_n, Q_nm1) ;
+		copy_to_2nd_array(Nx, P_n, P_nm1) ;
+		copy_to_2nd_array(Nx, Q_n, Q_nm1) ;
 
 		if (tC%tss == 0) {
-			save_to_file(output_file_P,P_n) ;
-			save_to_file(output_file_Q,Q_n) ;
+			save_to_txt_file(Nx, output_file_P, P_n) ;
+			save_to_txt_file(Nx, output_file_Q, Q_n) ;
 		}
 	}	
 
@@ -49,6 +69,9 @@ int main(int argc, char* argv[])
 	free(P_nm1) ;
 	free(Q_n) ;
 	free(Q_nm1) ;
+
+	fclose(output_file_P) ;
+	fclose(output_file_Q) ;
 
 	return EXIT_SUCCESS ;
 }

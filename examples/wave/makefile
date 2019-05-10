@@ -1,24 +1,26 @@
 CC = gcc
 
-CFLAGS = -g -fmax-errors=5 -Wall -01
+CFLAGS = -g -fmax-errors=5 -Wall -O1
 
-LDFLAGS = -lm -amr
+LIBS = -lm #-libamr.a
+
+LDFLAGS = -L./home/jripley/one-dim-amr
 
 OBJECTS = main.o \
-	initial_data.o \
-	PDE_solvers.o \
+	evolution_routines.o 
+
+DEPS_MAIN = evolution_routines.h 
+
+DEPS_ER = 
 
 run: $(OBJECTS)
-	$(CC) -o run $(OBJECTS) $(LDFLAGS) $(CFLAGS)
+	$(CC) -o run $(OBJECTS) $(LIBS) $(LDFLAGS) $(CFLAGS)
 
 main.o: main.c $(DEPS_MAIN)
-	$(CC) -o main.c $(LDFLAGS) $(CFLAGS)
+	$(CC) -c main.c $(LIBS) $(LDFLAGS) $(CFLAGS)
 
-initial_data.o: initial_data.c $(DEPS_ID)
-	$(CC) -o initial_data.c $(LDFLAGS) $(CFLAGS)
-
-PDE_solver.o: PDE_solvers.c $(DEPS_ID)
-	$(CC) -o PDE_solvers.c $(LDFLAGS) $(CFLAGS)
+evolution_routines.o: evolution_routines.c $(DEPS_ER)
+	$(CC) -c evolution_routines.c $(LIBS) $(LDFLAGS) $(CFLAGS)
 
 clean_o:
 	rm *.o
