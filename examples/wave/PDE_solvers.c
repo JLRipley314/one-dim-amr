@@ -54,6 +54,9 @@ void Kreiss_Oliger_Dissipation(
 	int Nx,
 	double* field)
 {
+	for (int iC=2; iC<Nx-2; iC++) {
+		field[iC] -= 
+	}
 
 	return ;
 }
