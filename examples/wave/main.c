@@ -4,11 +4,53 @@
 #include <math.h>
 #include "grid_hierarchy.h"
 
+
 #include "evolution_routines.h"
 
 #define MAX_FILE_NAME 1024
 #define OUTPUT_DIR "/home/jripley/one-dim-amr/examples/wave/output/"
 
+/*===========================================================================*/
+/* global variables for evolution-convenient for function calls */
+/*===========================================================================*/
+double* p_n ;
+double* p_nm1 ;
+double* q_n ;
+double* q_nm1 ;
+int Nx ;
+double dx, dt ;
+int p_n_index, p_nm1_index, q_n_index, q_nm1_index ;
+/*===========================================================================*/
+/* call after variables have been defined */
+/*===========================================================================*/
+void set_fields_index(void)
+{
+	return ;
+}
+/*===========================================================================*/
+/* call to set global variables for field evolution */
+/*===========================================================================*/
+void set_globals(void)
+{
+	
+
+	return ;
+}
+/*===========================================================================*/
+/* computes one time step (to tolerance) of wave equation */
+/*===========================================================================*/
+void wave_evolve(void)
+{
+	set_globals() ;
+
+	advance_tStep_wave(Nx, dt, dx, p_n, p_nm1, q_n, q_nm1) ;
+	
+	return ;
+}
+
+/*===========================================================================*/
+/* call amr evolution */
+/*===========================================================================*/
 int main(int argc, char* argv[])
 {
 	int Nx = pow(2,9)+1 ;

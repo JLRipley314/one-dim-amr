@@ -1,4 +1,4 @@
-# link together to make .a file
+# link together to make a static linked library
 
 CC=gcc
 

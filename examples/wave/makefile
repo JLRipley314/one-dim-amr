@@ -11,7 +11,7 @@ OBJECTS = main.o \
 
 DEPS_MAIN = evolution_routines.h
 
-DEPS_ER = 
+DEPS_ER = # no deps for now 
 
 run: $(OBJECTS)
 	$(CC) -o run $(OBJECTS) $(LIBS) $(LDFLAGS) $(CFLAGS)
