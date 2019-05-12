@@ -38,6 +38,22 @@ void initial_Data(
 	return ;
 }
 /*****************************************************************************
+ ****************************************************************************/
+void Kreiss_Oliger_Filter(
+	int Nx,
+	double* field)
+{
+	double epsilon_ko = 0.5 ;
+	for (int iC=2; iC<Nx-2; iC++) {
+		field[iC] -= (epsilon_ko/16.) * (
+			field[iC+2] + (-4.*field[iC+1]) + (6.*field[iC]) + (-4.*field[iC-1]) + field[iC-2] 
+		)
+		;
+	}
+
+	return ;
+}
+/*****************************************************************************
  * Dirichlet boundary conditions. 
  ****************************************************************************/
 void advance_tStep_wave(
@@ -77,7 +93,9 @@ void advance_tStep_wave(
 			res_infty_norm = max_fabs(res_infty_norm,res_Q) ;
 			res_infty_norm = max_fabs(res_infty_norm,res_P) ;
 		}
-/* left boundary condition: phi = 0 */
+/***********************************************
+ left boundary condition: phi = 0
+ **********************************************/
 		t_der_Q = (Q_n[0] - Q_nm1[0])/dt ;
 
 		x_der_P  = (-P_n[2]   + (4.*P_n[1])   - (3*P_n[0]  ))/(2.*dx) ;
@@ -91,7 +109,9 @@ void advance_tStep_wave(
 		Q_n[0] -= res_Q/jac_Q ;
 
 		res_infty_norm = max_fabs(res_infty_norm,res_Q) ;
-/* right boundary condition: phi = 0 */
+/***********************************************
+ right boundary condition: phi = 0
+ **********************************************/
 		t_der_Q = (Q_n[Nx-1] - Q_nm1[Nx-1])/dt ;
 
 		x_der_P  = (+P_n[Nx-1-2]   - (4.*P_n[Nx-1-1])   + (3*P_n[Nx-1-0]  ))/(2.*dx) ;
@@ -108,21 +128,8 @@ void advance_tStep_wave(
 
 	} while (res_infty_norm > ERR_TOLERANCE) ;
 
-	return ;
-}
-/*****************************************************************************
- ****************************************************************************/
-void Kreiss_Oliger_Filter(
-	int Nx,
-	double* field)
-{
-	double epsilon_ko = 0.5 ;
-	for (int iC=2; iC<Nx-2; iC++) {
-		field[iC] -= (epsilon_ko/16.) * (
-			field[iC+2] + (-4.*field[iC+1]) + (6.*field[iC]) + (-4.*field[iC-1]) + field[iC-2] 
-		)
-		;
-	}
+	Kreiss_Oliger_Filter(Nx, P_n) ;
+	Kreiss_Oliger_Filter(Nx, Q_n) ;
 
 	return ;
 }

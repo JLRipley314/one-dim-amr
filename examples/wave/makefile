@@ -1,15 +1,15 @@
-CC = gcc
+CC = gcc -I/home/jripley/one-dim-amr
 
 CFLAGS = -g -fmax-errors=5 -Wall -O1
 
-LIBS = -lm #-libamr.a
+LIBS = -lm -lamr
 
-LDFLAGS = -L./home/jripley/one-dim-amr
+LDFLAGS = -L/home/jripley/one-dim-amr
 
 OBJECTS = main.o \
 	evolution_routines.o 
 
-DEPS_MAIN = evolution_routines.h 
+DEPS_MAIN = evolution_routines.h
 
 DEPS_ER = 
 

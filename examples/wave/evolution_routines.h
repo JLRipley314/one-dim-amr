@@ -15,10 +15,6 @@ void advance_tStep_wave(
 	double* P_n, 	double* P_nm1,
 	double* Q_n,	double* Q_nm1)
 ;
-void Kreiss_Oliger_Filter(
-	int Nx,
-	double* field)
-;
 void save_to_txt_file(
 	int Nx,
 	FILE* output,

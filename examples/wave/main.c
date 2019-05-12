@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include "grid_hierarchy.h"
 
 #include "evolution_routines.h"
 
@@ -52,9 +53,6 @@ int main(int argc, char* argv[])
 
 	for (int tC=1; tC<Nt; tC++) {
 		advance_tStep_wave(Nx, dt, dx, P_n, P_nm1, Q_n, Q_nm1) ;
-
-		Kreiss_Oliger_Filter(Nx, P_n) ;
-		Kreiss_Oliger_Filter(Nx, Q_n) ;
 
 		copy_to_2nd_array(Nx, P_n, P_nm1) ;
 		copy_to_2nd_array(Nx, Q_n, Q_nm1) ;
