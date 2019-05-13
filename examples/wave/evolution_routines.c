@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <stdbool.h>
+#include "evolution_routines.h"
 
 #define ERR_TOLERANCE ((double)1e-10)
 
@@ -59,6 +61,7 @@ void Kreiss_Oliger_Filter(
 void advance_tStep_wave(
 	int Nx,
 	double dt, 	double dx,
+	bool perim_interior[2],
 	double* P_n, 	double* P_nm1,
 	double* Q_n,	double* Q_nm1)
 {
@@ -96,36 +99,39 @@ void advance_tStep_wave(
 /***********************************************
  left boundary condition: phi = 0
  **********************************************/
-		t_der_Q = (Q_n[0] - Q_nm1[0])/dt ;
+		if (perim_interior[0] == false) {
+			t_der_Q = (Q_n[0] - Q_nm1[0])/dt ;
 
-		x_der_P  = (-P_n[2]   + (4.*P_n[1])   - (3*P_n[0]  ))/(2.*dx) ;
-		x_der_P  = (-P_nm1[2] + (4.*P_nm1[1]) - (3*P_nm1[0]))/(2.*dx) ;
-		x_der_P /= 2. ;
+			x_der_P  = (-P_n[2]   + (4.*P_n[1])   - (3*P_n[0]  ))/(2.*dx) ;
+			x_der_P  = (-P_nm1[2] + (4.*P_nm1[1]) - (3*P_nm1[0]))/(2.*dx) ;
+			x_der_P /= 2. ;
 
-		res_Q = t_der_Q - x_der_P ;
+			res_Q = t_der_Q - x_der_P ;
 
-		jac_Q = (1/dt) ;
+			jac_Q = (1/dt) ;
 
-		Q_n[0] -= res_Q/jac_Q ;
+			Q_n[0] -= res_Q/jac_Q ;
 
-		res_infty_norm = max_fabs(res_infty_norm,res_Q) ;
+			res_infty_norm = max_fabs(res_infty_norm,res_Q) ;
+		}
 /***********************************************
  right boundary condition: phi = 0
  **********************************************/
-		t_der_Q = (Q_n[Nx-1] - Q_nm1[Nx-1])/dt ;
+		if (perim_interior[1] == false) {	
+			t_der_Q = (Q_n[Nx-1] - Q_nm1[Nx-1])/dt ;
 
-		x_der_P  = (+P_n[Nx-1-2]   - (4.*P_n[Nx-1-1])   + (3*P_n[Nx-1-0]  ))/(2.*dx) ;
-		x_der_P  = (+P_nm1[Nx-1-2] - (4.*P_nm1[Nx-1-1]) + (3*P_nm1[Nx-1-0]))/(2.*dx) ;
-		x_der_P /= 2. ;
+			x_der_P  = (+P_n[Nx-1-2]   - (4.*P_n[Nx-1-1])   + (3*P_n[Nx-1-0]  ))/(2.*dx) ;
+			x_der_P  = (+P_nm1[Nx-1-2] - (4.*P_nm1[Nx-1-1]) + (3*P_nm1[Nx-1-0]))/(2.*dx) ;
+			x_der_P /= 2. ;
 
-		res_Q = t_der_Q - x_der_P ;
+			res_Q = t_der_Q - x_der_P ;
 
-		jac_Q = (1/dt) ;
+			jac_Q = (1/dt) ;
 
-		Q_n[Nx-1] -= res_Q/jac_Q ;
+			Q_n[Nx-1] -= res_Q/jac_Q ;
 
-		res_infty_norm = max_fabs(res_infty_norm,res_Q) ;
-
+			res_infty_norm = max_fabs(res_infty_norm,res_Q) ;
+		}
 	} while (res_infty_norm > ERR_TOLERANCE) ;
 
 	Kreiss_Oliger_Filter(Nx, P_n) ;

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <stdbool.h>
 #include "grid_hierarchy.h"
 
 
@@ -20,6 +21,7 @@ double* q_nm1 ;
 int Nx ;
 double dx, dt ;
 int p_n_index, p_nm1_index, q_n_index, q_nm1_index ;
+bool perim_interior[2] ;
 /*===========================================================================*/
 /* call after variables have been defined */
 /*===========================================================================*/
@@ -31,8 +33,7 @@ void set_fields_index(void)
 /* call to set global variables for field evolution */
 /*===========================================================================*/
 void set_globals(void)
-{
-	
+{	
 
 	return ;
 }
@@ -43,7 +44,7 @@ void wave_evolve(void)
 {
 	set_globals() ;
 
-	advance_tStep_wave(Nx, dt, dx, p_n, p_nm1, q_n, q_nm1) ;
+	advance_tStep_wave(Nx, dt, dx, perim_interior, p_n, p_nm1, q_n, q_nm1) ;
 	
 	return ;
 }
@@ -56,6 +57,8 @@ int main(int argc, char* argv[])
 	int Nx = pow(2,9)+1 ;
 	int Nt = pow(2,12)+1 ;
 	int tss = 4 ;
+
+	bool perim_interior[2] = {false,false} ;
 
 	double cfl_num = 0.25 ;
 
@@ -94,7 +97,7 @@ int main(int argc, char* argv[])
 	fflush(NULL) ;
 
 	for (int tC=1; tC<Nt; tC++) {
-		advance_tStep_wave(Nx, dt, dx, P_n, P_nm1, Q_n, Q_nm1) ;
+		advance_tStep_wave(Nx, dt, dx, perim_interior, P_n, P_nm1, Q_n, Q_nm1) ;
 
 		copy_to_2nd_array(Nx, P_n, P_nm1) ;
 		copy_to_2nd_array(Nx, Q_n, Q_nm1) ;

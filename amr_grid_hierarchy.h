@@ -44,10 +44,14 @@ struct grid
 	double bbox[2] ; /* physical coordinates bounding the grid */
 
 	double time ;
-	double perimeter_coords[2] ; /* coordinates with respect to parent grid */
+	int tC ;
+	double perim_coords[2] ; /* coordinates with respect to parent grid */
 	
-	int num_grid_funcs ;
+	int num_grid_funcs  ;
 	double** grid_funcs ; /* pointer to array of pointer to grid function data */
+
+	bool inner_perim_interior ;
+	bool outer_perim_interior ;
 }
 ;
 /*============================================================================*/
@@ -64,7 +68,7 @@ struct level
 /*============================================================================*/
 /* contains all levels */
 /*============================================================================*/
-struct comp_grid_hierarchy 
+struct grid_hierarchy 
 {
 	/* the following define the structure of the grid-hierarchy */
 

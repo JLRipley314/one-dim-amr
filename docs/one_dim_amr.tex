@@ -37,21 +37,26 @@ which is perhaps the most complicated part of the algorithm. Note also
 we do \emph{not} implement multiple grids at the same level.
 
 \begin{algorithm}
-\caption{Time step}\label{alg:time_step}
+\caption{Evolve}\label{alg:time_step}
 \begin{algorithmic}[1]
-\Procedure{Time\_Step}{}
-	\State$regrid\gets \texttt{true}$
-	\For{$level\gets1,level_{f}$}
-		\State$grid\gets\Call{Set\_Level}{grid,level}$
-		\If{$grid.time\mathrm{mod}(time_r)=0 \And regrid=\texttt{true}$}
+\Procedure{Evolve}{grid,times}
+	\For{$t\gets1,times$}
+		\State{$grid.time\gets grid.time+1$}
+		\If{$grid.time\mathrm{mod}(\texttt{regrid})=0$}
 			\State\Call{Regrid}{$grid$}
-			\State$regrid\gets \texttt{false}$
 		\EndIf 
-		\State$global\_vars\gets\Call{Set\_Global\_Vars}{grid}$
-		\State$\Call{Set\_Boundry\_Conditions}{global\_vars,grid}$
-		\State$\Call{PDE\_Solver\_Time\_Step}{global\_vars,grid}$
+		\If{$grid.interior=\texttt{true}$}
+			\State{\Call{Interpolate\_Boundary\_Conditions}{$grid.parent,grid$}}	
+		\EndIf
+		\State{\Call{Solve\_PDE\_Step}{$grid$}}
+		\If{$grid.child\neq\varnothing$}
+			\State{\Call{Evolve}{$grid.child,\texttt{refinement}$}}
+		\EndIf
 	\EndFor
-	\State$\Call{Inject}{grid}$\Comment{Now at finest grid, so can work our way to coarsest}
+	\If{$grid.parent\neq\varnothing$}
+		\State{\Call{Compute\_Truncation\_Error}{$grid.parent,grid$}}
+		\State{\Call{Inject}{$grid.parent,grid$}}
+	\EndIf
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
