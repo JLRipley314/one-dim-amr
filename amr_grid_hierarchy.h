@@ -49,10 +49,9 @@ struct amr_grid
 	int tC ;
 	double dt, dx ;
 
-
 	double bbox[2] ; /* physical coordinates bounding the grid */
 
-	double perim_coord[2] ; /* coordinates with respect to parent grid */
+	double perim_coords[2] ; /* coordinates with respect to parent grid */
 	
 	int num_grid_funcs  ;
 	double** grid_funcs ; /* pointer to array of pointer to grid function data */
@@ -101,6 +100,8 @@ int amr_get_grid_funcs(struct amr_grid* grid, double** grid_funcs) ;
 
 int amr_find_grid(int level, struct amr_grid_hierarchy* gh, struct amr_grid* grid) ;
 
-int amr_add_grid(struct amr_grid* grid) ;
+int amr_add_grid(int perim_coords[2], struct amr_grid* grid) ;
+
+int amr_destroy_grid(struct amr_grid* grid) ;
 
 #endif /*_GRID_HIERARCHY_H_*/

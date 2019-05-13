@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdbool.h>
 
+#include "amr_evolve.h"
 #include "amr_grid_hierarchy.h"
 
 #include "evolution_routines.h"
@@ -58,7 +59,18 @@ void wave_evolve(void)
 	
 	return ;
 }
+/*===========================================================================*/
+/* computes one time step (to tolerance) of wave equation */
+/*===========================================================================*/
+void wave_to_file(void)
+{
+	set_globals() ;
 
+	save_to_txt_file(Nx, output_file_p, p_n) ;
+	save_to_txt_file(Nx, output_file_q, q_n) ;
+	
+	return ;
+}
 /*===========================================================================*/
 /* call amr evolution */
 /*===========================================================================*/

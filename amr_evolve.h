@@ -1,5 +1,6 @@
 #include "amr_grid_hierarchy.h"
 
+/*==========================================================================*/
 void amr_main(
 	struct amr_grid_hierarchy* gh, 
 	int num_t_steps,
