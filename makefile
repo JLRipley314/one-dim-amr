@@ -12,14 +12,15 @@ DEPS_EVOLVE = amr_evolve.h \
 LIB_OBJECTS = amr_evolve.o \
 	amr_grid_hierarchy.o
 
+libamr.a: $(LIB_OBJECTS)
+	ar rcs libamr.a $(LIB_OBJECTS)
+
 amr_evolve.o: amr_evolve.c $(DEPS_EVOLVE)
 	$(CC) -c amr_evolve.c $(CFLAGS)
 
 grid_hierarchy.o: amr_grid_hierarchy.c $(DEPS_GRID_HIER)
 	$(CC) -c amr_grid_hierarchy.c $(CFLAGS)
 
-libamr.a: $(OBJECTS)
-	ar rcs libamr.a $(LIB_OBJECTS)
 
 clean_o:
 	rm *.o 

@@ -1,10 +1,9 @@
 #include "amr_grid_hierarchy.h"
 
-#define REFINEMENT 4
-#define REGRID 8
-
-void amr_evolve(
-	struct grid* grid,
+void amr_main(
+	struct amr_grid_hierarchy* gh, 
 	int num_t_steps,
-	void (*evolve_pde)(void))
+	int save_time,
+	void (*evolve_pde)(void),
+	void (*save_to_file)(void))
 ;

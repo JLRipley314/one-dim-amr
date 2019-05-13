@@ -15,6 +15,8 @@
 
 
 #define AMR_MAX_LEVELS 2 
+#define REFINEMENT 4
+#define REGRID 8
 
 #include <stdbool.h>
 
@@ -22,9 +24,9 @@
 /* 	keeps track of where variable is located in storage on each grid,
 	along with instructions for how to inject and interpolate */ 
 /*============================================================================*/
-struct var 
+struct amr_var 
 {
-	struct var *next;
+	struct amr_var *next;
 	char *name;    
 	int in_amr_hier;     /* whether the variable exists in the AMR hierarchy or not */
 	int num_time_level;  /* number of time-levels (in AMR hierarchy), from 1 .. num_time_level */
@@ -34,17 +36,22 @@ struct var
 /*	each grid holds storage for ``grid functions'': i.e. the fields
 	at each refinement level */
 /*============================================================================*/
-struct grid
+struct amr_grid
 {
-	struct grid* child  ; /* to finer grid */
-	struct grid* parent ; /* to coarser grid */
+	struct amr_grid* child  ; /* to finer grid */
+	struct amr_grid* parent ; /* to coarser grid */
+	struct amr_grid* sibling ; /* to coarser grid */
 
-	int dim ; /* number of grid points */
+	int level ;
+	int Nx ; /* number of grid points */
+	
+	double time ;
+	int tC ;
+	double dt, dx ;
+
 
 	double bbox[2] ; /* physical coordinates bounding the grid */
 
-	double time ;
-	int tC ;
 	double perim_coord[2] ; /* coordinates with respect to parent grid */
 	
 	int num_grid_funcs  ;
@@ -54,25 +61,13 @@ struct grid
 }
 ;
 /*============================================================================*/
-/*	pointers to multiple grids at this refinement */
-/*============================================================================*/
-struct level
-{
-	double time, dt ;
-	double dx ;          /* discretization for each dimension */
-
-	struct grid* grids ;
-}
-;
-/*============================================================================*/
 /* contains all levels */
 /*============================================================================*/
-struct grid_hierarchy 
+struct amr_grid_hierarchy 
 {
 	/* the following define the structure of the grid-hierarchy */
 
 	int dim;                        /* spatial dimension */
-	int refinement_ratio;           /* refine space and time steps the same amount and the same for each level */
 	double dx[AMR_MAX_LEVELS];       /* level defined by discretization scale dx of first coordinate */
 	double dt[AMR_MAX_LEVELS];
 	double shape;                    /* geometry of base level   */
@@ -81,7 +76,7 @@ struct grid_hierarchy
 	int num_seq_grid_hier_bboxes[AMR_MAX_LEVELS];
 	double cfl_num;                  /* courant factor */
 	int num_vars;                    /* total number of variables */
-	struct var* vars;                /* pointer to a linked list of (num_vars) variable structures */
+	struct amr_var* vars;            /* pointer to a linked list of (num_vars) variable structures */
 	int num_grid_funcs;              /* total number of grid functions */
 
 /* 	big difference from Frans' code:  we do not have a ``context'' for different
@@ -89,7 +84,7 @@ struct grid_hierarchy
 */
 	int min_level ;
 	int max_level ;
-	struct level* levels[AMR_MAX_LEVELS] ;
+	struct amr_grid* grid ;
 /* 	excision functions */
 	bool excision_on ;
 /*	user defined function to mask excised regions */
@@ -100,7 +95,12 @@ struct grid_hierarchy
 }
 ;
 /*============================================================================*/
-void amr_get_grid_funcs(struct grid* grid, double** grid_funcs) ;
+/* return 0 then no errors */
+/*============================================================================*/
+int amr_get_grid_funcs(struct amr_grid* grid, double** grid_funcs) ;
 
+int amr_find_grid(int level, struct amr_grid_hierarchy* gh, struct amr_grid* grid) ;
+
+int amr_add_grid(struct amr_grid* grid) ;
 
 #endif /*_GRID_HIERARCHY_H_*/

@@ -10,38 +10,50 @@
 /*==========================================================================*/
 /* for now its linear prolongation */
 /*==========================================================================*/
-/*static*/ void prolong(int Nx_grid, int perim_coord_left, double* parent, double* grid)
+/*static*/ void prolong(
+	int Nx, int perim_coord_left, double* gf, double* gf_child)
 {
 	double coef_0 = 0 ;
 	double coef_1 = 0 ;
 
-	for (int iC=0; iC<Nx_grid-REFINEMENT; iC++) {
+	for (int iC=0; iC<Nx-REFINEMENT; iC++) {
 		if (iC%REFINEMENT==0) {
-			coef_0 = parent[perim_coord_left+(iC/REFINEMENT)] ;
+			coef_0 = gf[perim_coord_left+(iC/REFINEMENT)] ;
 			coef_1 = (
-				parent[perim_coord_left+(iC/REFINEMENT)+1] 
-			-	parent[perim_coord_left+(iC/REFINEMENT)+0] 
+				gf[perim_coord_left+(iC/REFINEMENT)+1] 
+			-	gf[perim_coord_left+(iC/REFINEMENT)+0] 
 			)/REFINEMENT
 			;
 			for (int jC=0; jC<REFINEMENT; jC++) {
-				grid[iC+jC] = coef_0 + (coef_1*jC) ;
+				gf_child[iC+jC] = coef_0 + (coef_1*jC) ;
 			}
 		}
 	}
+	return ;
 }
 /*==========================================================================*/
-/* restriction */
+/* restriction along shared grid points */
 /*==========================================================================*/
-/*static*/ void inject(int Nx_grid, int perim_coord_left, double* parent, double* grid)
+/*static*/ void inject_grid_func(
+	int Nx, int perim_coord_left, double* gf_parent, double* gf)
 {
-	for (int iC=0; iC<Nx_grid; iC++) {
+	for (int iC=0; iC<Nx; iC++) {
 		if (iC%REFINEMENT==0) {
-			parent[perim_coord_left+(iC/REFINEMENT)] = grid[iC] ;
+			gf_parent[perim_coord_left+(iC/REFINEMENT)] = gf[iC] ;
 		}
 	}
+	return ;
 }
 /*==========================================================================*/
-void amr_evolve( struct grid* grid,
+/*static*/ void inject_all_grid_funcs()
+{
+	return ;
+}
+/*==========================================================================*/
+/* evolves all grids in hierarchy */
+/*==========================================================================*/
+static void amr_evolve_grid(
+	struct amr_grid* grid,
 	int num_t_steps,
 	void (*evolve_pde)(void))
 {
@@ -58,7 +70,7 @@ void amr_evolve( struct grid* grid,
 		}
 		evolve_pde() ;
 		if (grid->child != NULL) {
-			amr_evolve(
+			amr_evolve_grid(
 				grid->child,
 				REFINEMENT,
 				evolve_pde)
@@ -69,5 +81,27 @@ void amr_evolve( struct grid* grid,
 		/* compute truncation error */
 		/* inject */
 	}
+
 	return ;
+}
+/*==========================================================================*/
+/* evolves all grids in hierarchy */
+/*==========================================================================*/
+void amr_main(
+	struct amr_grid_hierarchy* gh, 
+	int num_t_steps,
+	int save_time,
+	void (*evolve_pde)(void),
+	void (*save_to_file)(void))
+{
+	for (int tC=0; tC<num_t_steps; tC++) {
+		amr_evolve_grid(
+			gh->grid,
+			1,
+			evolve_pde) 
+		;
+		if (tC%save_time) {
+			save_to_file() ;
+		}
+	}
 }
