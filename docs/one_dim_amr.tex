@@ -29,5 +29,32 @@ library written by Frans Pretorius (with addtions by Branson Stevens).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Organization of data}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Basic algorithms}
+
+	With fixed mesh refinment we do not need the regridding routine,
+which is perhaps the most complicated part of the algorithm. Note also
+we do \emph{not} implement multiple grids at the same level.
+
+\begin{algorithm}
+\caption{Time step}\label{alg:time_step}
+\begin{algorithmic}[1]
+\Procedure{Time\_Step}{}
+	\State$regrid\gets \texttt{true}$
+	\For{$level\gets1,level_{f}$}
+		\State$grid\gets\Call{Set\_Level}{grid,level}$
+		\If{$grid.time\mathrm{mod}(time_r)=0 \And regrid=\texttt{true}$}
+			\State\Call{Regrid}{$grid$}
+			\State$regrid\gets \texttt{false}$
+		\EndIf 
+		\State$global\_vars\gets\Call{Set\_Global\_Vars}{grid}$
+		\State$\Call{Set\_Boundry\_Conditions}{global\_vars,grid}$
+		\State$\Call{PDE\_Solver\_Time\_Step}{global\_vars,grid}$
+	\EndFor
+	\State$\Call{Inject}{grid}$\Comment{Now at finest grid, so can work our way to coarsest}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
 
 \end{document}
