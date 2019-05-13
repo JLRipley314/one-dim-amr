@@ -45,13 +45,12 @@ struct grid
 
 	double time ;
 	int tC ;
-	double perim_coords[2] ; /* coordinates with respect to parent grid */
+	double perim_coord[2] ; /* coordinates with respect to parent grid */
 	
 	int num_grid_funcs  ;
 	double** grid_funcs ; /* pointer to array of pointer to grid function data */
 
-	bool inner_perim_interior ;
-	bool outer_perim_interior ;
+	bool perim_interior[2] ;
 }
 ;
 /*============================================================================*/
@@ -101,5 +100,7 @@ struct grid_hierarchy
 }
 ;
 /*============================================================================*/
+void amr_get_grid_funcs(struct grid* grid, double** grid_funcs) ;
+
 
 #endif /*_GRID_HIERARCHY_H_*/

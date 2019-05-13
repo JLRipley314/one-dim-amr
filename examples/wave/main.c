@@ -3,8 +3,8 @@
 #include <string.h>
 #include <math.h>
 #include <stdbool.h>
-#include "grid_hierarchy.h"
 
+#include "amr_grid_hierarchy.h"
 
 #include "evolution_routines.h"
 
@@ -27,6 +27,11 @@ bool perim_interior[2] ;
 /*===========================================================================*/
 void set_fields_index(void)
 {
+	p_n_index   = 0 ;
+	p_nm1_index = 1 ;
+	q_n_index   = 2 ;
+	q_nm1_index = 3 ;
+
 	return ;
 }
 /*===========================================================================*/
@@ -34,6 +39,11 @@ void set_fields_index(void)
 /*===========================================================================*/
 void set_globals(void)
 {	
+
+//	p_n   = grid_funcs[p_n_index  ] ;
+//	p_nm1 = grid_funcs[p_nm1_index] ;
+//	q_n   = grid_funcs[q_n_index  ] ;
+//	q_nm1 = grid_funcs[q_nm1_index] ;
 
 	return ;
 }
