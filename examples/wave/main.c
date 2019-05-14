@@ -19,10 +19,15 @@ double* p_n ;
 double* p_nm1 ;
 double* q_n ;
 double* q_nm1 ;
-int Nx ;
 double dx, dt ;
+double bbox[2] ;
+int Nx ;
 int p_n_index, p_nm1_index, q_n_index, q_nm1_index ;
 bool perim_interior[2] ;
+
+
+FILE* output_file_p ;
+FILE* output_file_q ;
 /*===========================================================================*/
 /* call after variables have been defined */
 /*===========================================================================*/
@@ -51,6 +56,17 @@ void set_globals(void)
 /*===========================================================================*/
 /* computes one time step (to tolerance) of wave equation */
 /*===========================================================================*/
+void initial_data(void)
+{
+	set_globals() ;
+
+	initial_data_Gaussian(Nx, dx, bbox[0], p_n, p_nm1, q_n, q_nm1) ;
+	
+	return ;
+}
+/*===========================================================================*/
+/* computes one time step (to tolerance) of wave equation */
+/*===========================================================================*/
 void wave_evolve(void)
 {
 	set_globals() ;
@@ -62,7 +78,7 @@ void wave_evolve(void)
 /*===========================================================================*/
 /* computes one time step (to tolerance) of wave equation */
 /*===========================================================================*/
-void wave_to_file(void)
+void wave_to_file_output(void)
 {
 	set_globals() ;
 
@@ -111,19 +127,13 @@ int main(int argc, char* argv[])
 	double* Q_n   = calloc(Nx,sizeof(double)) ;
 	double* Q_nm1 = calloc(Nx,sizeof(double)) ;
 
-	initial_Data(Nx, dx, bbox[0], P_n, Q_n) ;
-	copy_to_2nd_array(Nx, P_n, P_nm1) ;
-	copy_to_2nd_array(Nx, Q_n, Q_nm1) ;
+	initial_data_Gaussian(Nx, dx, bbox[0], P_n, P_nm1, Q_n, Q_nm1) ;
 	save_to_txt_file(Nx, output_file_P, P_n) ;
 	save_to_txt_file(Nx, output_file_Q, Q_n) ;
 	fflush(NULL) ;
 
 	for (int tC=1; tC<Nt; tC++) {
 		advance_tStep_wave(Nx, dt, dx, perim_interior, P_n, P_nm1, Q_n, Q_nm1) ;
-
-		copy_to_2nd_array(Nx, P_n, P_nm1) ;
-		copy_to_2nd_array(Nx, Q_n, Q_nm1) ;
-
 		if (tC%tss == 0) {
 			save_to_txt_file(Nx, output_file_P, P_n) ;
 			save_to_txt_file(Nx, output_file_Q, Q_n) ;

@@ -12,7 +12,7 @@ static inline double max_fabs(double var_1, double var_2)
 	return (fabs(var_1)>fabs(var_2)) ? fabs(var_1) : fabs(var_2) ;
 }
 /****************************************************************************/
-void copy_to_2nd_array(int Nx, double* array_1, double* array_2) 
+static void copy_to_2nd_array(int Nx, double* array_1, double* array_2) 
 {
 	for (int iC=0; iC<Nx; iC++) {
 		array_2[iC] = array_1[iC] ;
@@ -22,10 +22,11 @@ void copy_to_2nd_array(int Nx, double* array_1, double* array_2)
 /*****************************************************************************
  * leftgoing Gaussian pulse 
  ****************************************************************************/
-void initial_Data(
+void initial_data_Gaussian(
 	int Nx, 	double dx,
 	double left_point,
-	double* P_n, 	double* Q_n)
+	double* P_n, 	double* P_nm1,
+	double* Q_n, 	double* Q_nm1)
 {
 	double amp = 1 ;
 	double width = 5 ;
@@ -37,6 +38,8 @@ void initial_Data(
 		Q_n[iC] = amp * (-(x-x_0)/pow(width,2)) * exp(-pow((x-x_0)/width,2)) ;
 		P_n[iC] = Q_n[iC] ;
 	}
+	copy_to_2nd_array(Nx, P_n, P_nm1) ;
+	copy_to_2nd_array(Nx, Q_n, Q_nm1) ;
 	return ;
 }
 /*****************************************************************************
@@ -136,6 +139,9 @@ void advance_tStep_wave(
 
 	Kreiss_Oliger_Filter(Nx, P_n) ;
 	Kreiss_Oliger_Filter(Nx, Q_n) ;
+
+	copy_to_2nd_array(Nx, P_n, P_nm1) ;
+	copy_to_2nd_array(Nx, Q_n, Q_nm1) ;
 
 	return ;
 }

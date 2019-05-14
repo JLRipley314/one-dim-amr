@@ -5,6 +5,7 @@ void amr_main(
 	struct amr_grid_hierarchy* gh, 
 	int num_t_steps,
 	int save_time,
+	void (*initial_data)(void),
 	void (*evolve_pde)(void),
 	void (*save_to_file)(void))
 ;

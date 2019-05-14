@@ -3,12 +3,11 @@
 
 #include <stdbool.h>
 
-void copy_to_2nd_array(int Nx, double* array_1, double* array_2) 
-;
-void initial_Data(
+void initial_data_Gaussian(
 	int Nx, 	double dx,
 	double left_point,
-	double* P_n, 	double* Q_n)
+	double* P_n, 	double* P_nm1,
+	double* Q_n, 	double* Q_nm1)
 ;
 /* we set Dirichlet boundary conditions for now */
 void advance_tStep_wave(

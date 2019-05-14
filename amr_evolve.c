@@ -85,15 +85,30 @@ static void amr_evolve_grid(
 	return ;
 }
 /*==========================================================================*/
+/* sets initial data on all pre assigned grid levels */
+/*==========================================================================*/
+static void set_initial_data(
+	struct amr_grid* grid,
+	void (*initial_data)(void))
+{
+	while (grid != NULL) {
+		initial_data() ;
+	}
+	return ;
+}
+/*==========================================================================*/
 /* evolves all grids in hierarchy */
 /*==========================================================================*/
 void amr_main(
 	struct amr_grid_hierarchy* gh, 
 	int num_t_steps,
 	int save_time,
+	void (*initial_data)(void),
 	void (*evolve_pde)(void),
 	void (*save_to_file)(void))
 {
+	set_initial_data(gh->grid,initial_data) ;
+
 	for (int tC=0; tC<num_t_steps; tC++) {
 		amr_evolve_grid(
 			gh->grid,
