@@ -118,39 +118,41 @@ int amr_add_finer_grid(int left_coord, int right_coord, struct amr_grid* parent)
 	) {
 		new_grid->perim_interior[1] = false ;
 	}
+	printf("amr_add_finer_grid: made grid level %d\n", new_grid->level) ;
+
 	return 0 ;
 }
 /*============================================================================*/
 /* set the base/level 0 (shadow) grid and the level one grid */
 /*============================================================================*/
-int amr_init_grid_hierarchy(
-	int num_vars,
+struct amr_grid_hierarchy* amr_init_grid_hierarchy(
 	int num_grid_funcs,
-	int Nx,
+	int Nt, int Nx, int t_step_save,
 	double cfl_num,
-	double left_boundary,
-	double right_boundary,
-	bool excision_on,
-	struct amr_grid_hierarchy* gh)
+	double bbox[2],
+	bool excision_on)
 {
-	gh->num_vars = num_vars ;
+	struct amr_grid_hierarchy* gh = malloc(sizeof(struct amr_grid_hierarchy)) ;
+
 	gh->cfl_num = cfl_num ;
+	gh->Nt  = Nt ;
+	gh->t_step_save = t_step_save ;
 
 /*	base (shadow) grid */
 	struct amr_grid* base_grid = malloc(sizeof(struct amr_grid)) ;
 	if (base_grid == NULL) {
 		printf("ERROR(amr_init_grid_hierarchy): base_grid == NULL\n") ;
-		return -1 ;
+		assert(base_grid != NULL) ;
 	}
 	gh->grid = base_grid ;
 
 	base_grid->num_grid_funcs = num_grid_funcs ;
 	base_grid->Nx = Nx ;
 
-	base_grid->bbox[0] = left_boundary ;
-	base_grid->bbox[1] = right_boundary ;
+	base_grid->bbox[0] = bbox[0] ;
+	base_grid->bbox[1] = bbox[1] ;
 
-	base_grid->dx = (right_boundary-left_boundary)/(Nx-1.) ;
+	base_grid->dx = (bbox[1]-bbox[0])/(Nx-1.) ;
 	base_grid->dt = cfl_num*base_grid->dx ;
 	
 	base_grid->grid_funcs = allocate_double_2DArray(base_grid->num_grid_funcs, base_grid->Nx, 0.) ; 
@@ -167,7 +169,7 @@ int amr_init_grid_hierarchy(
 /*	level one grid */
 	amr_add_finer_grid(0, Nx-1, base_grid) ;
 	
-	return 0 ;
+	return gh ;
 }
 /*============================================================================*/
 int amr_destroy_grid(struct amr_grid* grid) 

@@ -19,14 +19,17 @@ double* P_n ;
 double* P_nm1 ;
 double* Q_n ;
 double* Q_nm1 ;
-double dx, dt ;
+
+double cfl_num ;
 double bbox[2] ;
-int Nx ;
+double dt, dx ;
+
+int Nx, Nt, t_step_save ;
 int excised_jC ;
-int num_grid_funcs = 4 ;
+
+int num_grid_funcs ;
 int P_n_index, P_nm1_index, Q_n_index, Q_nm1_index ;
 int perim_coords[2] ;
-bool perim_interior[2] ;
 
 char output_name_P[MAX_FILE_NAME+1] ;
 char output_name_Q[MAX_FILE_NAME+1] ;
@@ -34,16 +37,40 @@ char output_name_Q[MAX_FILE_NAME+1] ;
 FILE* output_file_P ;
 FILE* output_file_Q ;
 
-bool made_files = false ;
+bool perim_interior[2] ;
+bool excision_on = false ;
+bool made_files  = false ;
 /*===========================================================================*/
 /* call after variables have been defined */
 /*===========================================================================*/
-void set_fields_index(void)
+void set_initial_run_data(void)
 {
+	Nx = pow(2,9)+1 ;
+	Nt = pow(2,1)+1 ;
+	t_step_save = 1 ;
+
+	perim_interior[0] = false ;
+	perim_interior[1] = false ;
+
+	cfl_num = 0.25 ;
+
+	bbox[0] = -50 ;
+	bbox[1] =  50 ;
+
+	dx = (bbox[1] - bbox[0]) / (Nx-1) ;
+	dt = cfl_num * dx ;
+
+	return ;
+}
+void set_field_indices(void) 
+{
+
 	P_n_index   = 0 ;
 	P_nm1_index = 1 ;
 	Q_n_index   = 2 ;
 	Q_nm1_index = 3 ;
+
+	num_grid_funcs = 4 ;
 
 	return ;
 }
@@ -52,6 +79,7 @@ void set_fields_index(void)
 /*===========================================================================*/
 void set_globals(struct amr_grid* grid)
 {	
+
 	P_n   = grid->grid_funcs[P_n_index  ] ;
 	P_nm1 = grid->grid_funcs[P_nm1_index] ;
 	Q_n   = grid->grid_funcs[Q_n_index  ] ;
@@ -100,11 +128,14 @@ void wave_evolve(struct amr_grid* grid)
 /*===========================================================================*/
 /* computes one time step (to tolerance) of wave equation */
 /*===========================================================================*/
-void wave_to_file_output(struct amr_grid* grid)
+void save_to_file(struct amr_grid* grid)
 {
 	set_globals(grid) ;
 
 	if (made_files == false) {
+		snprintf(output_name_P, MAX_FILE_NAME, "%sP.txt", OUTPUT_DIR) ;
+		snprintf(output_name_Q, MAX_FILE_NAME, "%sQ.txt", OUTPUT_DIR) ;
+
 		FILE* output_file_P = fopen(output_name_P, "w") ;
 		if (output_file_P == NULL ) {
 			printf("ERROR(main.c): output_file_P == NULL\n") ;
@@ -142,20 +173,36 @@ void wave_to_file_output(struct amr_grid* grid)
 /*===========================================================================*/
 /* call amr evolution */
 /*===========================================================================*/
+
 int main(int argc, char* argv[])
 {
-	int Nx = pow(2,9)+1 ;
-	int Nt = pow(2,12)+1 ;
-	int tss = 4 ;
+	set_initial_run_data() ;
+	set_field_indices() ; 
 
-	bool perim_interior[2] = {false,false} ;
+	struct amr_grid_hierarchy* gh 
+	= amr_init_grid_hierarchy(
+        	num_grid_funcs,
+        	Nt, Nx, t_step_save,
+		cfl_num,
+		bbox,
+		excision_on)
+	;
+	amr_main(
+		gh, 
+		initial_data,
+		wave_evolve,
+		save_to_file)
+	;
 
-	double cfl_num = 0.25 ;
+	amr_destroy_grid_hierarchy(gh) ;
 
-	double bbox[2] = {-50,50} ;
-
-	double dx = (bbox[1] - bbox[0]) / (Nx-1) ;
-	double dt = cfl_num * dx ;
+	return EXIT_SUCCESS ;
+}
+/*
+int main(int argc, char* argv[])
+{
+	set_initial_run_data() ;
+	set_field_indices() ; 
 
 	snprintf(output_name_P, MAX_FILE_NAME, "%sP.txt", OUTPUT_DIR) ;
 	snprintf(output_name_Q, MAX_FILE_NAME, "%sQ.txt", OUTPUT_DIR) ;
@@ -200,3 +247,4 @@ int main(int argc, char* argv[])
 
 	return EXIT_SUCCESS ;
 }
+*/

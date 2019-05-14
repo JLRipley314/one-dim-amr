@@ -103,21 +103,19 @@ static void set_initial_data(
 /*==========================================================================*/
 void amr_main(
 	struct amr_grid_hierarchy* gh, 
-	int num_t_steps,
-	int save_time,
 	void (*initial_data)(struct amr_grid*),
 	void (*evolve_pde)(struct amr_grid*),
 	void (*save_to_file)(struct amr_grid*))
 {
 	set_initial_data(gh,initial_data) ;
 
-	for (int tC=0; tC<num_t_steps; tC++) {
+	for (int tC=0; tC<(gh->Nt); tC++) {
 		amr_evolve_grid(
 			gh->grid,
 			1,
 			evolve_pde) 
 		;
-		if (tC%save_time) {
+		if (tC%(gh->t_step_save)) {
 			save_to_file(gh->grid) ;
 		}
 	}

@@ -70,9 +70,10 @@ struct amr_grid_hierarchy
 	/* the following define the structure of the grid-hierarchy */
 
 	double cfl_num;		/* courant factor */
-	int num_vars;		/* total number of variables */
-	struct amr_var* vars;	/* pointer to a linked list of (num_vars) variable structures */
 	int num_grid_funcs;	/* total number of grid functions */
+	int t_step_save ;
+	int Nt ;
+	struct amr_var* vars;	/* pointer to a linked list of (num_vars) variable structures */
 
 /* 	big difference from Frans' code:  we do not have a ``context'' for different
 	instances of grid hieracrhies as our application is simpler (1+1D, no parallel)
@@ -95,15 +96,12 @@ int amr_add_finer_grid(int left_coord, int right_coord, struct amr_grid* parent)
 
 int amr_destroy_grid(struct amr_grid* grid) ;
 
-int amr_init_grid_hierarchy(
-	int num_vars,
+struct amr_grid_hierarchy* amr_init_grid_hierarchy(
 	int num_grid_funcs,
-	int Nx,
+	int Nt, int Nx, int t_step_save,
 	double cfl_num,
-	double left_boundary,
-	double right_boundary,
-	bool excision_on,
-	struct amr_grid_hierarchy* gh)
+	double bbox[2],
+	bool excision_on)
 ;
 int amr_destroy_grid_hierarchy(struct amr_grid_hierarchy* gh) ;
  
