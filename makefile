@@ -2,7 +2,7 @@
 
 CC=gcc
 
-CFLAGS= -Wall -fmax-errors=5 -std=gnu11 -lm
+CFLAGS= -g -Wall -fmax-errors=5 -std=gnu11 -lm
 
 DEPS_GRID_HIER = amr_grid_hierarchy.h
 

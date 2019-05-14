@@ -110,6 +110,9 @@ void initial_data(struct amr_grid* grid)
 {
 	set_globals(grid) ;
 
+	printf("set globals\n") ;
+	fflush(NULL) ;
+
 	initial_data_Gaussian(Nx, dx, bbox[0], P_n, P_nm1, Q_n, Q_nm1) ;
 	
 	return ;
@@ -187,14 +190,14 @@ int main(int argc, char* argv[])
 		bbox,
 		excision_on)
 	;
-	amr_main(
-		gh, 
-		initial_data,
-		wave_evolve,
-		save_to_file)
-	;
+//	amr_main(
+//		gh, 
+//		initial_data,
+//		wave_evolve,
+//		save_to_file)
+//	;
 
-	amr_destroy_grid_hierarchy(gh) ;
+//	amr_destroy_grid_hierarchy(gh) ;
 
 	return EXIT_SUCCESS ;
 }

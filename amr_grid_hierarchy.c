@@ -10,9 +10,9 @@
 /*============================================================================*/
 /* c: so row major order. arrays called as array[row][column] */
 /*============================================================================*/
-static double** allocate_double_2DArray(int rows, int columns, double initializeValue)  
+double** allocate_double_2DArray(int rows, int columns, double initializeValue)  
 {
-        double **pa_array   = malloc(rows * sizeof(double *)) ;
+        double** pa_array   = malloc(rows * sizeof(double* )) ;
         assert(pa_array    != NULL) ;    
         pa_array[0]         = malloc(rows * columns * sizeof(double)) ; 
         assert(pa_array[0] != NULL) ;    
@@ -25,7 +25,7 @@ static double** allocate_double_2DArray(int rows, int columns, double initialize
         return pa_array ;
 }
 /*============================================================================*/
-static void free_double_2DArray(double** array)  
+void free_double_2DArray(double** array)  
 {
         free(array[0]) ;    
         array[0] = NULL ;    
@@ -140,11 +140,10 @@ struct amr_grid_hierarchy* amr_init_grid_hierarchy(
 
 /*	base (shadow) grid */
 	struct amr_grid* base_grid = malloc(sizeof(struct amr_grid)) ;
-	if (base_grid == NULL) {
-		printf("ERROR(amr_init_grid_hierarchy): base_grid == NULL\n") ;
-		assert(base_grid != NULL) ;
-	}
-	gh->grid = base_grid ;
+	assert(base_grid != NULL) ;	
+	
+	double** grid_funcs = allocate_double_2DArray(num_grid_funcs, Nx, 1.) ; 
+	base_grid->grid_funcs = allocate_double_2DArray(num_grid_funcs, Nx, 1.) ; 
 
 	base_grid->num_grid_funcs = num_grid_funcs ;
 	base_grid->Nx = Nx ;
@@ -154,20 +153,35 @@ struct amr_grid_hierarchy* amr_init_grid_hierarchy(
 
 	base_grid->dx = (bbox[1]-bbox[0])/(Nx-1.) ;
 	base_grid->dt = cfl_num*base_grid->dx ;
-	
-	base_grid->grid_funcs = allocate_double_2DArray(base_grid->num_grid_funcs, base_grid->Nx, 0.) ; 
 
 	base_grid->perim_interior[0] = false ;
 	base_grid->perim_interior[1] = false ;
 	base_grid->perim_coords[0] = 0 ;
 	base_grid->perim_coords[1] = Nx-1 ;
 
+	base_grid->child = NULL ;
 	base_grid->parent = NULL ;
 	base_grid->sibling = NULL ;
 	base_grid->neighbor = NULL ;	
+	
+	gh->grid = base_grid ;
 
+	printf("bbox[0]\t%f\n", gh->grid->bbox[0]) ;
+	printf("bbox[1]\t%f\n", gh->grid->bbox[1]) ;
+	printf("perim_coords[0]\t%d\n", gh->grid->perim_coords[0]) ;
+	printf("perim_coords[1]\t%d\n", gh->grid->perim_coords[1]) ;
+	printf("Nx\t%d\n", gh->grid->Nx) ;
+	printf("dx\t%f\n", gh->grid->dx) ;
+	printf("dt\t%f\n", gh->grid->dt) ;
+	printf("num_grid_funcs\t%d\n", gh->grid->num_grid_funcs) ;
+	printf("grid_funcs[0][0]\t%f\n",grid_funcs[0][0]) ;
+	printf("grid_funcs[0][0]\t%f\n",base_grid->grid_funcs[0][0]) ;
+//	printf("grid_funcs[1][10]\t%f\n",gh->grid->grid_funcs[1][10]) ;
+//	printf("grid_funcs[2][10]\t%f\n",gh->grid->grid_funcs[2][10]) ;
+//	printf("grid_funcs[3][10]\t%f\n",gh->grid->grid_funcs[3][10]) ;
+	fflush(NULL) ;
 /*	level one grid */
-	amr_add_finer_grid(0, Nx-1, base_grid) ;
+//	amr_add_finer_grid(0, Nx-1, base_grid) ;
 	
 	return gh ;
 }
