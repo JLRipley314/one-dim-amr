@@ -22,9 +22,11 @@ double* q_nm1 ;
 double dx, dt ;
 double bbox[2] ;
 int Nx ;
+int excised_jC ;
+int num_grid_funcs = 4 ;
 int p_n_index, p_nm1_index, q_n_index, q_nm1_index ;
+int perim_coords[2] ;
 bool perim_interior[2] ;
-
 
 FILE* output_file_p ;
 FILE* output_file_q ;
@@ -43,22 +45,37 @@ void set_fields_index(void)
 /*===========================================================================*/
 /* call to set global variables for field evolution */
 /*===========================================================================*/
-void set_globals(void)
+void set_globals(struct amr_grid* grid)
 {	
+	p_n   = grid->grid_funcs[p_n_index  ] ;
+	p_nm1 = grid->grid_funcs[p_nm1_index] ;
+	q_n   = grid->grid_funcs[q_n_index  ] ;
+	q_nm1 = grid->grid_funcs[q_nm1_index] ;
 
-//	p_n   = grid_funcs[p_n_index  ] ;
-//	p_nm1 = grid_funcs[p_nm1_index] ;
-//	q_n   = grid_funcs[q_n_index  ] ;
-//	q_nm1 = grid_funcs[q_nm1_index] ;
+	Nx = grid->Nx ;
+
+	bbox[0] = grid->bbox[0] ;
+	bbox[1] = grid->bbox[1] ;
+
+	perim_interior[0] = grid->perim_interior[0] ;
+	perim_interior[1] = grid->perim_interior[1] ;
+	
+	perim_coords[0] = grid->perim_coords[0] ;
+	perim_coords[1] = grid->perim_coords[1] ;
+
+	dt = grid->dt ;
+	dx = grid->dx ;
+
+	excised_jC = grid->excised_jC ;
 
 	return ;
 }
 /*===========================================================================*/
 /* computes one time step (to tolerance) of wave equation */
 /*===========================================================================*/
-void initial_data(void)
+void initial_data(struct amr_grid* grid)
 {
-	set_globals() ;
+	set_globals(grid) ;
 
 	initial_data_Gaussian(Nx, dx, bbox[0], p_n, p_nm1, q_n, q_nm1) ;
 	
@@ -67,9 +84,9 @@ void initial_data(void)
 /*===========================================================================*/
 /* computes one time step (to tolerance) of wave equation */
 /*===========================================================================*/
-void wave_evolve(void)
+void wave_evolve(struct amr_grid* grid)
 {
-	set_globals() ;
+	set_globals(grid) ;
 
 	advance_tStep_wave(Nx, dt, dx, perim_interior, p_n, p_nm1, q_n, q_nm1) ;
 	
@@ -78,9 +95,9 @@ void wave_evolve(void)
 /*===========================================================================*/
 /* computes one time step (to tolerance) of wave equation */
 /*===========================================================================*/
-void wave_to_file_output(void)
+void wave_to_file_output(struct amr_grid* grid)
 {
-	set_globals() ;
+	set_globals(grid) ;
 
 	save_to_txt_file(Nx, output_file_p, p_n) ;
 	save_to_txt_file(Nx, output_file_q, q_n) ;

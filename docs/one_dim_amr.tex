@@ -37,23 +37,23 @@ which is perhaps the most complicated part of the algorithm. Note also
 we do \emph{not} implement multiple grids at the same level.
 
 \begin{algorithm}
-\caption{Evolve}\label{alg:time_step}
+\caption{Evolve grid hierarchy (recursive)}\label{alg:time_step}
 \begin{algorithmic}[1]
 \Procedure{Evolve}{grid,times}
 	\For{$t\gets1,times$}
 		\State{$grid.time\gets grid.time+1$}
-		\If{$grid.time\mathrm{mod}(\texttt{regrid})=0$}
-			\State\Call{Regrid}{$grid$}
+		\If{$\texttt{time to regrid}$}
+			\State\Call{Regrid\_All\_Finer\_Grids}{$grid$}
 		\EndIf 
-		\If{$grid.interior=\texttt{true}$}
+		\If{$\texttt{grid is interior}$}
 			\State{\Call{Interpolate\_Boundary\_Conditions}{$grid.parent,grid$}}	
 		\EndIf
 		\State{\Call{Solve\_PDE\_Step}{$grid$}}
-		\If{$grid.child\neq\varnothing$}
+		\If{$\texttt{not finest grid}$}
 			\State{\Call{Evolve}{$grid.child,\texttt{refinement}$}}
 		\EndIf
 	\EndFor
-	\If{$grid.parent\neq\varnothing$}
+	\If{$\texttt{not coarsest grid}$}
 		\State{\Call{Compute\_Truncation\_Error}{$grid.parent,grid$}}
 		\State{\Call{Inject}{$grid.parent,grid$}}
 	\EndIf

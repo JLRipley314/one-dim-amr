@@ -55,7 +55,7 @@
 static void amr_evolve_grid(
 	struct amr_grid* grid,
 	int num_t_steps,
-	void (*evolve_pde)(void))
+	void (*evolve_pde)(struct amr_grid*))
 {
 	for (int tC=0; tC<num_t_steps; tC++) {
 		grid->tC += 1 ;
@@ -68,7 +68,7 @@ static void amr_evolve_grid(
 		if (grid->perim_interior[1] == true) { 
 			/*interpolate outer*/
 		}
-		evolve_pde() ;
+		evolve_pde(grid) ;
 		if (grid->child != NULL) {
 			amr_evolve_grid(
 				grid->child,
@@ -88,11 +88,13 @@ static void amr_evolve_grid(
 /* sets initial data on all pre assigned grid levels */
 /*==========================================================================*/
 static void set_initial_data(
-	struct amr_grid* grid,
-	void (*initial_data)(void))
+	struct amr_grid_hierarchy* gh,
+	void (*initial_data)(struct amr_grid*))
 {
+	struct amr_grid* grid = gh->grid ;
 	while (grid != NULL) {
-		initial_data() ;
+		initial_data(grid) ;
+		grid = grid->child ;
 	}
 	return ;
 }
@@ -103,11 +105,11 @@ void amr_main(
 	struct amr_grid_hierarchy* gh, 
 	int num_t_steps,
 	int save_time,
-	void (*initial_data)(void),
-	void (*evolve_pde)(void),
-	void (*save_to_file)(void))
+	void (*initial_data)(struct amr_grid*),
+	void (*evolve_pde)(struct amr_grid*),
+	void (*save_to_file)(struct amr_grid*))
 {
-	set_initial_data(gh->grid,initial_data) ;
+	set_initial_data(gh,initial_data) ;
 
 	for (int tC=0; tC<num_t_steps; tC++) {
 		amr_evolve_grid(
@@ -116,7 +118,9 @@ void amr_main(
 			evolve_pde) 
 		;
 		if (tC%save_time) {
-			save_to_file() ;
+			save_to_file(gh->grid) ;
 		}
 	}
+
+	return ;	
 }
