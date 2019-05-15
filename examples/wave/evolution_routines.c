@@ -24,10 +24,12 @@ static void copy_to_2nd_array(int Nx, double* array_1, double* array_2)
  ****************************************************************************/
 void initial_data_Gaussian(
 	int Nx, 	double dx,
-	double left_point,
+	double bbox[2],
 	double* P_n, 	double* P_nm1,
 	double* Q_n, 	double* Q_nm1)
 {
+	double left_point = bbox[0] ;
+
 	double amp = 1 ;
 	double width = 2 ;
 	double x_0 = 0 ;
@@ -64,6 +66,7 @@ void Kreiss_Oliger_Filter(
 void advance_tStep_wave(
 	int Nx,
 	double dt, 	double dx,
+	double bbox[2],
 	bool perim_interior[2],
 	double* P_n, 	double* P_nm1,
 	double* Q_n,	double* Q_nm1)

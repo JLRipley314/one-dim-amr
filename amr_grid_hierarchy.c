@@ -192,11 +192,22 @@ struct amr_grid_hierarchy* amr_init_grid_hierarchy(
 	fflush(NULL) ;
 /*	level one grid */
 	amr_add_finer_grid(0, Nx-1, base_grid) ;
-	amr_add_finer_grid(0, Nx-1, gh->grid->child) ;
-	amr_add_finer_grid(0, Nx-1, gh->grid->child->child) ;
-	amr_add_finer_grid(0, Nx-1, gh->grid->child->child->child) ;
 	
 	return gh ;
+}
+/*============================================================================*/
+void add_self_similar_initial_grids(
+	struct amr_grid_hierarchy* gh, int num_grids) 
+{
+	struct amr_grid* grid = gh->grid->child ;
+	int Nx = gh->grid->Nx ;
+
+	for (int iC=0; iC<num_grids; iC++) {
+		amr_add_finer_grid(0, Nx-1, grid) ;
+		grid = grid->child ;
+	}
+	grid = NULL ;
+	return ; 
 }
 /*============================================================================*/
 int amr_destroy_grid(struct amr_grid* grid) 

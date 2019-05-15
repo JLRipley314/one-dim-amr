@@ -104,6 +104,8 @@ struct amr_grid_hierarchy* amr_init_grid_hierarchy(
 	double bbox[2],
 	bool excision_on)
 ;
+void add_self_similar_initial_grids(struct amr_grid_hierarchy* gh, int num_grids) ;
+
 int amr_destroy_grid_hierarchy(struct amr_grid_hierarchy* gh) ;
  
 #endif /*_GRID_HIERARCHY_H_*/

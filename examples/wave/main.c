@@ -116,7 +116,7 @@ void initial_data(struct amr_grid* grid)
 {
 	set_globals(grid) ;
 
-	initial_data_Gaussian(Nx, dx, bbox[0], P_n, P_nm1, Q_n, Q_nm1) ;
+	initial_data_Gaussian(Nx, dx, bbox, P_n, P_nm1, Q_n, Q_nm1) ;
 	
 	return ;
 }
@@ -127,7 +127,7 @@ void wave_evolve(struct amr_grid* grid)
 {
 	set_globals(grid) ;
 
-	advance_tStep_wave(Nx, dt, dx, perim_interior, P_n, P_nm1, Q_n, Q_nm1) ;
+	advance_tStep_wave(Nx, dt, dx, bbox, perim_interior, P_n, P_nm1, Q_n, Q_nm1) ;
 	
 	return ;
 }
