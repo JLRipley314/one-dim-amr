@@ -14,7 +14,7 @@
 /*============================================================================*/
 
 
-#define AMR_MAX_LEVELS 2 
+#define AMR_MAX_LEVELS 3 
 #define REFINEMENT 4
 #define REGRID 8
 
@@ -49,8 +49,8 @@ struct amr_grid
 	int excised_jC ; /* excision point in this grids coordinates (if 0 then no excision in this grid) */
 	
 	double time ;
-	int tC ;
 	double dt, dx ;
+	int tC ;
 
 	double bbox[2] ; /* physical coordinates bounding the grid */
 

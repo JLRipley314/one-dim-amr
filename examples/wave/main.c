@@ -3,6 +3,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdbool.h>
+#include <bbhutil.h>
 
 #include "amr_evolve.h"
 #include "amr_grid_hierarchy.h"
@@ -23,6 +24,7 @@ double* Q_nm1 ;
 double cfl_num ;
 double bbox[2] ;
 double dt, dx ;
+double time ;
 
 int Nx, Nt, t_step_save ;
 int excised_jC ;
@@ -33,6 +35,8 @@ int perim_coords[2] ;
 
 char output_name_P[MAX_FILE_NAME+1] ;
 char output_name_Q[MAX_FILE_NAME+1] ;
+char output_name_P_sdf[MAX_FILE_NAME+1] ;
+char output_name_Q_sdf[MAX_FILE_NAME+1] ;
 
 FILE* output_file_P ;
 FILE* output_file_Q ;
@@ -46,8 +50,8 @@ bool made_files  = false ;
 void set_initial_run_data(void)
 {
 	Nx = pow(2,8)+1 ;
-	Nt = pow(2,1)+1 ;
-	t_step_save = 1 ;
+	Nt = pow(2,12)+1 ;
+	t_step_save = 4 ;
 
 	perim_interior[0] = false ;
 	perim_interior[1] = false ;
@@ -89,6 +93,8 @@ void set_globals(struct amr_grid* grid)
 
 	dt = grid->dt ;
 	dx = grid->dx ;
+
+	time = grid->time ;
 
 	bbox[0] = grid->bbox[0] ;
 	bbox[1] = grid->bbox[1] ;
@@ -135,6 +141,8 @@ void save_to_file(struct amr_grid* grid)
 	if (made_files == false) {
 		snprintf(output_name_P, MAX_FILE_NAME, "%sP.txt", OUTPUT_DIR) ;
 		snprintf(output_name_Q, MAX_FILE_NAME, "%sQ.txt", OUTPUT_DIR) ;
+		snprintf(output_name_P_sdf, MAX_FILE_NAME, "%sP.sdf", OUTPUT_DIR) ;
+		snprintf(output_name_Q_sdf, MAX_FILE_NAME, "%sQ.sdf", OUTPUT_DIR) ;
 		output_file_P = fopen(output_name_P, "w") ;
 		if (output_file_P == NULL ) {
 			printf("ERROR(main.c): output_file_P == NULL\n") ;
@@ -163,8 +171,8 @@ void save_to_file(struct amr_grid* grid)
 	}
 	made_files = true ;
 
-	save_to_txt_file(Nx, output_file_P, P_n) ;
-	save_to_txt_file(Nx, output_file_Q, Q_n) ;
+//	save_to_txt_file(Nx, output_file_P, P_n) ;
+//	save_to_txt_file(Nx, output_file_Q, Q_n) ;
 
 	fclose(output_file_P) ;
 	fclose(output_file_Q) ;
@@ -172,6 +180,8 @@ void save_to_file(struct amr_grid* grid)
 	output_file_P = NULL ;
 	output_file_Q = NULL ;
 
+	gft_out_bbox(output_name_P_sdf, time, &Nx, 1, bbox, P_n) ;
+	gft_out_bbox(output_name_Q_sdf, time, &Nx, 1, bbox, Q_n) ;
 	
 	return ;
 }
@@ -198,7 +208,6 @@ int main(int argc, char* argv[])
 		wave_evolve,
 		save_to_file)
 	;
-
 	amr_destroy_grid_hierarchy(gh) ;
 
 	return EXIT_SUCCESS ;

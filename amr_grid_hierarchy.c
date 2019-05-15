@@ -101,6 +101,7 @@ int amr_add_finer_grid(int left_coord, int right_coord, struct amr_grid* parent)
 
 	new_grid->dt = parent->dt/REFINEMENT ;
 	new_grid->dx = parent->dx/REFINEMENT ;
+	new_grid->time = parent->time ;
 
 	new_grid->perim_coords[0] = left_coord ;
 	new_grid->perim_coords[1] = right_coord ;
@@ -171,6 +172,7 @@ struct amr_grid_hierarchy* amr_init_grid_hierarchy(
 
 	base_grid->dx = (bbox[1]-bbox[0])/(Nx-1.) ;
 	base_grid->dt = cfl_num*base_grid->dx ;
+	base_grid->time = 0 ;
 
 	base_grid->perim_interior[0] = false ;
 	base_grid->perim_interior[1] = false ;
@@ -195,6 +197,7 @@ struct amr_grid_hierarchy* amr_init_grid_hierarchy(
 	fflush(NULL) ;
 /*	level one grid */
 	amr_add_finer_grid(0, Nx-1, base_grid) ;
+	amr_add_finer_grid(0, Nx-1, gh->grid->child) ;
 	
 	return gh ;
 }

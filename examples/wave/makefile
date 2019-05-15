@@ -2,7 +2,7 @@ CC = gcc -I/home/jripley/one-dim-amr
 
 CFLAGS = -g -fmax-errors=5 -Wall -O1
 
-LIBS = -lm -lamr
+LIBS = -lm -lamr -lbbhutil
 
 LDFLAGS = -L/home/jripley/one-dim-amr
 

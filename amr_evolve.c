@@ -58,7 +58,8 @@ static void amr_evolve_grid(
 	void (*evolve_pde)(struct amr_grid*))
 {
 	for (int tC=0; tC<num_t_steps; tC++) {
-		grid->tC += 1 ;
+		grid->tC   += 1 ;
+		grid->time += grid->dt ;
 		if (grid->tC%REGRID == 0) {
 			/* regrid all finer levels */
 		}
@@ -110,17 +111,16 @@ void amr_main(
 	set_initial_data(gh,initial_data) ;
 	save_to_file(gh->grid->child) ;
 
-	for (int tC=0; tC<(gh->Nt); tC++) {
-		printf("tC %d\n", tC) ;
-		fflush(NULL) ;
+	for (int tC=1; tC<(gh->Nt); tC++) {
 		amr_evolve_grid(
 			gh->grid,
 			1,
 			evolve_pde) 
 		;
 		if (tC%(gh->t_step_save)==0) {
-			printf("saving\n") ;
-			save_to_file(gh->grid->child) ;
+			for (struct amr_grid* grid = gh->grid; grid != NULL; grid=grid->child) {
+				save_to_file(grid) ;
+			}
 		}
 	}
 	return ;	
