@@ -100,6 +100,11 @@ void set_globals(struct amr_grid* grid)
 	Q_n   = grid->grid_funcs[Q_n_index  ] ;
 	Q_nm1 = grid->grid_funcs[Q_nm1_index] ;
 
+	Al_n   = grid->grid_funcs[Al_n_index  ] ;
+	Ze_nm1 = grid->grid_funcs[Ze_nm1_index] ;
+	Al_n   = grid->grid_funcs[Al_n_index  ] ;
+	Ze_nm1 = grid->grid_funcs[Ze_nm1_index] ;
+
 	Nx = grid->Nx ;
 
 	dt = grid->dt ;

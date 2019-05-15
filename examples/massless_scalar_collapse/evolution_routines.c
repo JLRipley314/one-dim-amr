@@ -6,12 +6,43 @@
 
 #define ERR_TOLERANCE ((double)1e-10)
 
-/****************************************************************************/
+#define S_L 100
+
+/*==========================================================================*/
+inline double D1_CrankNicolson_2ndOrder(
+	double f_np1, double f_n, double dt)
+{
+	return (f_np1-f_n)/dt ;
+}
+inline double D1_center_2ndOrder(
+	double f_np1, double f_nm1, double dx)
+{
+	return (f_np1-f_nm1)/(2*dx) ;
+}
+inline double D1_forward_2ndOrder(
+	double f_np2, double f_np1, double f_n, double dx)
+{
+	return ((-0.5*f_np2)+(2*f_np1)+(-1.5*f_n))/dx ;
+}
+/*==========================================================================*/
+inline double stereographic_r(double s_L, double x_j)
+{
+        return pow(1. - (x_j/s_L), -1) * x_j ;
+}
+inline double stereographic_dr(double s_L, double x_j, double dx)
+{
+        return pow(1. - (x_j/s_L), -2) * dx ;
+}
+inline double compute_weighted_infty_norm(double weight, double val_1, double val_2)
+{
+        return (fabs(val_2)>fabs(val_1)) ? fabs(weight*val_2) : fabs(weight*val_1) ;
+}
+/*==========================================================================*/
 static inline double max_fabs(double var_1, double var_2) 
 {
 	return (fabs(var_1)>fabs(var_2)) ? fabs(var_1) : fabs(var_2) ;
 }
-/****************************************************************************/
+/*==========================================================================*/
 static void copy_to_2nd_array(int Nx, double* array_1, double* array_2) 
 {
 	for (int iC=0; iC<Nx; iC++) {
@@ -19,9 +50,9 @@ static void copy_to_2nd_array(int Nx, double* array_1, double* array_2)
 	}
 	return ;
 }
-/*****************************************************************************
- * leftgoing Gaussian pulse 
- ****************************************************************************/
+/*==========================================================================*/
+/* leftgoing Gaussian pulse */
+/*==========================================================================*/
 void initial_data_Gaussian(
 	int Nx, 	double dx,
 	double bbox[2],
@@ -31,21 +62,23 @@ void initial_data_Gaussian(
 	double left_point = bbox[0] ;
 
 	double amp = 1 ;
-	double width = 2 ;
-	double x_0 = 0 ;
+	double width = 5 ;
+	double x_0 = 10 ;
 	double x = 0 ;
 
 	for (int iC=0; iC<Nx; iC++) {
 		x = (iC * dx) + left_point ;
-		Q_n[iC] = amp * (-(x-x_0)/pow(width,2)) * exp(-pow((x-x_0)/width,2)) ;
+		Q_n[iC] = amp * exp(-pow((x-x_0)/width,2)) * (
+			(-(x-x_0)/pow(width,2)) * pow(x,2) 
+		+	2*x
+		) ;
 		P_n[iC] = Q_n[iC] ;
 	}
 	copy_to_2nd_array(Nx, P_n, P_nm1) ;
 	copy_to_2nd_array(Nx, Q_n, Q_nm1) ;
 	return ;
 }
-/*****************************************************************************
- ****************************************************************************/
+/*==========================================================================*/
 void Kreiss_Oliger_Filter(
 	int Nx,
 	double* field)
@@ -63,91 +96,172 @@ void Kreiss_Oliger_Filter(
 /*****************************************************************************
  * Dirichlet boundary conditions. 
  ****************************************************************************/
-void advance_tStep_wave(
+static double compute_iteration_GR_Crank_Nicolson_PQ(
 	int Nx,
 	double dt, 	double dx,
 	double bbox[2],
 	bool perim_interior[2],
+	double* Al_n, 	double* Al_nm1,
+	double* Ze_n,	double* Ze_nm1,
 	double* P_n, 	double* P_nm1,
 	double* Q_n,	double* Q_nm1)
 {
-	copy_to_2nd_array(Nx, P_n, P_nm1) ;
-	copy_to_2nd_array(Nx, Q_n, Q_nm1) ;
+	int exc_jC = 0 ;
 
-	double t_der_P, x_der_P, t_der_Q, x_der_Q ;
-	double res_P, jac_P, res_Q, jac_Q ;
+	double lower_x = perim_interior[0] * dx ;
 
-	double res_infty_norm = 0 ;
-	do {
-		res_infty_norm = 0 ;
-/* inner region */
-		for (int iC=1; iC<Nx-1; iC++) {
-			t_der_P = (P_n[iC] - P_nm1[iC])/dt ;
-			t_der_Q = (Q_n[iC] - Q_nm1[iC])/dt ;
+	double  
+		x_jm1, x_j, x_jp1, x_jp2, 
+		r_jm1, r_j, r_jp1, r_jp2, dr 
+	;
+	double res_Q = 0 ;
+	double res_P = 0 ;
+	double jac_Q = 1 ;
+	double jac_P = 1 ;
 
-			x_der_P  = (P_n[iC+1]   - P_n[iC-1]  )/(2.*dx) ;
-			x_der_P += (P_nm1[iC+1] - P_nm1[iC-1])/(2.*dx) ;
-			x_der_P /= 2. ;
+	double res_infty_norm = 0 ; /* returning this */
+/****************************************************************************/
+/* interior */
+/****************************************************************************/
+	for (int jC=exc_jC+1;jC<Nx-1;jC++) {
+		x_j   = lower_x + (dx * (jC)  ) ;
+		x_jp1 = lower_x + (dx * (jC+1)) ;
+		x_jm1 = lower_x + (dx * (jC-1)) ;
 
-			x_der_Q  = (Q_n[iC+1]   - Q_n[iC-1]  )/(2.*dx) ;
-			x_der_Q += (Q_nm1[iC+1] - Q_nm1[iC-1])/(2.*dx) ;
-			x_der_Q /= 2. ;
+		r_j   = stereographic_r(S_L, x_j  ) ;
+		r_jp1 = stereographic_r(S_L, x_jp1) ;
+		r_jm1 = stereographic_r(S_L, x_jm1) ;
 
-			res_P = t_der_P - x_der_Q ;
-			res_Q = t_der_Q - x_der_P ;
+		dr = stereographic_dr(S_L, x_j, dx) ;
+	/* Q field */
+		res_Q = 
+			D1_CrankNicolson_2ndOrder(
+				Q_n[jC], 
+				Q_nm1[jC], 
+			dt)
+		;
+		res_Q -= (1./2.)*D1_center_2ndOrder(
+				Al_n[jC+1]*(P_n[jC+1] + Ze_n[jC+1]*Q_n[jC+1]),
+				Al_n[jC-1]*(P_n[jC-1] + Ze_n[jC-1]*Q_n[jC-1]),
+			dr)
+		;
+		res_Q -= (1./2.)*D1_center_2ndOrder(
+				Al_nm1[jC+1]*(P_nm1[jC+1] + Ze_nm1[jC+1]*Q_nm1[jC+1]),
+				Al_nm1[jC-1]*(P_nm1[jC-1] + Ze_nm1[jC-1]*Q_nm1[jC-1]),
+			dr)
+		;
+		jac_Q = (1./dt) ;
+	/* P field */
+		res_P = 
+			D1_CrankNicolson_2ndOrder(
+				P_n[jC], 
+				P_nm1[jC], 
+			dt)
+		;
+		res_P -= (1./2.)*pow(r_j,-2)*D1_center_2ndOrder(
+				pow(r_jp1,2)*Al_n[jC+1]*(Q_n[jC+1] + Ze_n[jC+1]*P_n[jC+1]),
+				pow(r_jm1,2)*Al_n[jC-1]*(Q_n[jC-1] + Ze_n[jC-1]*P_n[jC-1]),
+			dr)
+		;
+		res_P -= (1./2.)*pow(r_j,-2)*D1_center_2ndOrder(
+				pow(r_jp1,2)*Al_nm1[jC+1]*(Q_nm1[jC+1] + Ze_nm1[jC+1]*P_nm1[jC+1]),
+				pow(r_jm1,2)*Al_nm1[jC-1]*(Q_nm1[jC-1] + Ze_nm1[jC-1]*P_nm1[jC-1]),
+			dr)
+		;
+		jac_P = (1./dt) ;
+	/****/
+		Q_n[jC] -= res_Q / jac_Q ;
+		P_n[jC] -= res_P / jac_P ;
 
-			jac_P = (1/dt) ;
-			jac_Q = (1/dt) ;
+		res_infty_norm = compute_weighted_infty_norm(1-x_j/S_L, res_Q, res_infty_norm) ;
+		res_infty_norm = compute_weighted_infty_norm(1-x_j/S_L, res_P, res_infty_norm) ;
+	}
+/****************************************************************************/
+/* lower */
+/* Q[0] = 0, so do not change anything. r_Der_P=0 at r=0 */	
+/****************************************************************************/
+	if ((exc_jC == 0) 
+	) {
+		x_j = 0 ;
+		dr  = pow(1. - (x_j/S_L), -2) * dx;
 
-			P_n[iC] -= res_P/jac_P ;
-			Q_n[iC] -= res_Q/jac_Q ;
+		res_P = D1_forward_2ndOrder(
+			P_n[2], P_n[1], P_n[0], 
+		dr) ;
+		jac_P = - (3./2.) / dr ;
 
-			res_infty_norm = max_fabs(res_infty_norm,res_Q) ;
-			res_infty_norm = max_fabs(res_infty_norm,res_P) ;
-		}
-/***********************************************
- left boundary condition: phi = 0
- **********************************************/
-		if (perim_interior[0] == false) {
-			t_der_Q = (Q_n[0] - Q_nm1[0])/dt ;
+		P_n[0] -= res_P / jac_P ;
+	}
+	if (exc_jC > 0) {
+		x_j   = lower_x + (dx * (exc_jC))   ;
+		x_jp1 = lower_x + (dx * (exc_jC+1)) ;
+		x_jp2 = lower_x + (dx * (exc_jC+2)) ;
 
-			x_der_P  = (-P_n[2]   + (4.*P_n[1])   - (3*P_n[0]  ))/(2.*dx) ;
-			x_der_P  = (-P_nm1[2] + (4.*P_nm1[1]) - (3*P_nm1[0]))/(2.*dx) ;
-			x_der_P /= 2. ;
+		r_j   = stereographic_r(S_L, x_j  ) ;
+		r_jp1 = stereographic_r(S_L, x_jp1) ;
+		r_jp2 = stereographic_r(S_L, x_jp2) ;
 
-			res_Q = t_der_Q - x_der_P ;
+		dr = stereographic_dr(S_L, x_j, dx) ;
+	/* Q field */
+		res_Q = 
+			D1_CrankNicolson_2ndOrder(
+				Q_n[exc_jC], 
+				Q_nm1[exc_jC], 
+			dt)
+		;
+		res_Q -= (1./2.)*D1_forward_2ndOrder(
+				Al_n[exc_jC+2]*(P_n[exc_jC+2] + Ze_n[exc_jC+2]*Q_n[exc_jC+2]),
+				Al_n[exc_jC+1]*(P_n[exc_jC+1] + Ze_n[exc_jC+1]*Q_n[exc_jC+1]),
+				Al_n[exc_jC+0]*(P_n[exc_jC+0] + Ze_n[exc_jC+0]*Q_n[exc_jC+0]),
+			dr)
+		;
+		res_Q -= (1./2.)*D1_forward_2ndOrder(
+				Al_nm1[exc_jC+2]*(P_nm1[exc_jC+2] + Ze_nm1[exc_jC+2]*Q_nm1[exc_jC+2]),
+				Al_nm1[exc_jC+1]*(P_nm1[exc_jC+1] + Ze_nm1[exc_jC+1]*Q_nm1[exc_jC+1]),
+				Al_nm1[exc_jC+0]*(P_nm1[exc_jC+0] + Ze_nm1[exc_jC+0]*Q_nm1[exc_jC+0]),
+			dr)
+		;
+		jac_Q = 
+			1/dt 
+		- 	(1./2.) * (-3./(2*dr)) * Al_n[exc_jC]*Ze_n[exc_jC] 
+		;
+	/* P field */
+		res_P = 
+			D1_CrankNicolson_2ndOrder(
+				P_n[exc_jC], 
+				P_nm1[exc_jC], 
+			dt)
+		;
+		res_P -= (1./2.)*D1_forward_2ndOrder(
+				pow(r_jp2,2)*Al_n[exc_jC+2]*(Q_n[exc_jC+2] + Ze_n[exc_jC+2]*P_n[exc_jC+2]),
+				pow(r_jp1,2)*Al_n[exc_jC+1]*(Q_n[exc_jC+1] + Ze_n[exc_jC+1]*P_n[exc_jC+1]),
+				pow(r_j,  2)*Al_n[exc_jC+0]*(Q_n[exc_jC+0] + Ze_n[exc_jC+0]*P_n[exc_jC+0]),
+			dr)
+		;
+		res_P -= (1./2.)*D1_forward_2ndOrder(
+				pow(r_jp2,2)*Al_nm1[exc_jC+2]*(Q_nm1[exc_jC+2] + Ze_nm1[exc_jC+2]*P_nm1[exc_jC+2]),
+				pow(r_jp1,2)*Al_nm1[exc_jC+1]*(Q_nm1[exc_jC+1] + Ze_nm1[exc_jC+1]*P_nm1[exc_jC+1]),
+				pow(r_j  ,2)*Al_nm1[exc_jC+0]*(Q_nm1[exc_jC+0] + Ze_nm1[exc_jC+0]*P_nm1[exc_jC+0]),
+			dr)
+		;
+		jac_P = 
+			1./dt
+		-	(1./2.) * (-3./(2*dr)) * pow(r_j,2) * Al_n[exc_jC] * Ze_n[exc_jC]
+		;
+	/****/
+		Q_n[exc_jC] -= res_Q / jac_Q ;
+		P_n[exc_jC] -= res_P / jac_P ;
 
-			jac_Q = (1/dt) ;
-
-			Q_n[0] -= res_Q/jac_Q ;
-
-			res_infty_norm = max_fabs(res_infty_norm,res_Q) ;
-		}
-/***********************************************
- right boundary condition: phi = 0
- **********************************************/
-		if (perim_interior[1] == false) {	
-			t_der_Q = (Q_n[Nx-1] - Q_nm1[Nx-1])/dt ;
-
-			x_der_P  = (+P_n[Nx-1-2]   - (4.*P_n[Nx-1-1])   + (3*P_n[Nx-1-0]  ))/(2.*dx) ;
-			x_der_P  = (+P_nm1[Nx-1-2] - (4.*P_nm1[Nx-1-1]) + (3*P_nm1[Nx-1-0]))/(2.*dx) ;
-			x_der_P /= 2. ;
-
-			res_Q = t_der_Q - x_der_P ;
-
-			jac_Q = (1/dt) ;
-
-			Q_n[Nx-1] -= res_Q/jac_Q ;
-
-			res_infty_norm = max_fabs(res_infty_norm,res_Q) ;
-		}
-	} while (res_infty_norm > ERR_TOLERANCE) ;
-
-	Kreiss_Oliger_Filter(Nx, P_n) ;
-	Kreiss_Oliger_Filter(Nx, Q_n) ;
-
-	return ;
-}
+		res_infty_norm = compute_weighted_infty_norm(1-x_j/S_L, res_Q, res_infty_norm) ;
+		res_infty_norm = compute_weighted_infty_norm(1-x_j/S_L, res_P, res_infty_norm) ;
+	}
+/***************************************************************************/
+/* dirichlet outer boundary conditions if outermost level;
+ * otherwise do not evolve outer boundary anyways (it is interpolated) */
+/***************************************************************************/
+/***************************************************************************/
+	return res_infty_norm ;
+} 
 /*****************************************************************************
  ****************************************************************************/
 void save_to_txt_file(
