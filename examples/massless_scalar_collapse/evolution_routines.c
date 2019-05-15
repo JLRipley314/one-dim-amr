@@ -33,6 +33,7 @@ inline double stereographic_dr(double s_L, double x_j, double dx)
 {
         return pow(1. - (x_j/s_L), -2) * dx ;
 }
+/*==========================================================================*/
 inline double compute_weighted_infty_norm(double weight, double val_1, double val_2)
 {
         return (fabs(val_2)>fabs(val_1)) ? fabs(weight*val_2) : fabs(weight*val_1) ;
@@ -63,14 +64,17 @@ void initial_data_Gaussian(
 
 	double amp = 1 ;
 	double width = 5 ;
-	double x_0 = 10 ;
+	double r_0 = 10 ;
 	double x = 0 ;
+	double r = 0 ;
+
 
 	for (int iC=0; iC<Nx; iC++) {
 		x = (iC * dx) + left_point ;
-		Q_n[iC] = amp * exp(-pow((x-x_0)/width,2)) * (
-			(-(x-x_0)/pow(width,2)) * pow(x,2) 
-		+	2*x
+		r = stereographic_r(S_L, x) ;
+		Q_n[iC] = amp * exp(-pow((r-r_0)/width,2)) * (
+			(-(r-r_0)/pow(width,2)) * pow(r,2) 
+		+	2*r
 		) ;
 		P_n[iC] = Q_n[iC] ;
 	}
