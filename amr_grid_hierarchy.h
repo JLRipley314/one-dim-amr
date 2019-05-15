@@ -14,9 +14,13 @@
 /*============================================================================*/
 
 
-#define AMR_MAX_LEVELS 5 
-#define REFINEMENT 4
-#define REGRID 8
+#define AMR_MAX_LEVELS 5 /* maximum number of grid levels */
+#define REFINEMENT 4 /* spatial and temporal refinement scale */
+#define REGRID 8 /* regrid every REGRID time steps */
+
+#define TRUNC_ERR_TOLERANCE ((double)(1e-5)) /* when above this flag for finer grid */
+
+#define MIN_GRID_SHAPE ((double)(20)) /* number of coarser grid points before making new grid */
 
 #include <stdbool.h>
 

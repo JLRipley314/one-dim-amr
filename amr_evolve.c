@@ -10,7 +10,7 @@
 /*==========================================================================*/
 /* for now its linear prolongation */
 /*==========================================================================*/
-/*static*/ void prolong(
+/*static*/ void prolong_grid_func(
 	int Nx, int perim_coord_left, double* gf, double* gf_child)
 {
 	double coef_0 = 0 ;
@@ -26,6 +26,33 @@
 			;
 			for (int jC=0; jC<REFINEMENT; jC++) {
 				gf_child[iC+jC] = coef_0 + (coef_1*jC) ;
+			}
+		}
+	}
+	return ;
+}
+/*==========================================================================*/
+/* compute truncation error for given grid function*/
+/*==========================================================================*/
+/*static*/ void compute_truncation_error_grid_func(
+	int Nx, int perim_coord_left, double* gf_parent, double* gf, int* trunc_err_flags)
+{
+	trunc_err_flags[0] = -1 ;
+	trunc_err_flags[1] = -1 ;
+	double trunc_err = 0 ;
+
+	for (int iC=0; iC<Nx; iC++) {
+		if (iC%REFINEMENT==0) {
+			trunc_err = fabs(gf_parent[perim_coord_left+(iC/REFINEMENT)] - gf[iC]) ;
+			if ((trunc_err > TRUNC_ERR_TOLERANCE)
+			&&  (trunc_err_flags[0] == -1)
+			) {
+				trunc_err_flags[0] = iC ;
+			}
+			if ((trunc_err > TRUNC_ERR_TOLERANCE)
+			&&  (trunc_err_flags[0] > -1)
+			) {
+				trunc_err_flags[1] = iC ;
 			}
 		}
 	}
