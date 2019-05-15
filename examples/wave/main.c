@@ -50,8 +50,8 @@ bool made_files  = false ;
 void set_initial_run_data(void)
 {
 	Nx = pow(2,8)+1 ;
-	Nt = pow(2,12)+1 ;
-	t_step_save = 4 ;
+	Nt = pow(2,10)+1 ;
+	t_step_save = 1 ;
 
 	perim_interior[0] = false ;
 	perim_interior[1] = false ;

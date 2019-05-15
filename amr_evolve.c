@@ -34,7 +34,7 @@
 /*==========================================================================*/
 /* restriction along shared grid points */
 /*==========================================================================*/
-/*static*/ void inject_grid_func(
+static void inject_grid_func(
 	int Nx, int perim_coord_left, double* gf_parent, double* gf)
 {
 	for (int iC=0; iC<Nx; iC++) {
@@ -45,8 +45,58 @@
 	return ;
 }
 /*==========================================================================*/
-/*static*/ void inject_all_grid_funcs()
+static void inject_all_grid_funcs(struct amr_grid* parent, struct amr_grid* grid)
 {
+	for (int iC=0; iC<(grid->num_grid_funcs); iC++) {
+		inject_grid_func(
+			grid->Nx, 
+			grid->perim_coords[0], 
+			parent->grid_funcs[iC],
+			grid->grid_funcs[iC]
+		) ;
+	}
+	return ;
+}
+/*==========================================================================*/
+/* {ordered field_n, field_nm1, ...} */
+/*==========================================================================*/
+static void set_interior_hyperbolic_boundary(
+	struct amr_grid* parent,
+	struct amr_grid* grid)
+{
+	double coef_0, coef_1 ; 
+
+	int perim ;
+
+	int num_time_levels = 2 ;
+	int num_grid_funcs = grid->num_grid_funcs ;
+
+	for (int iC=0; iC<num_grid_funcs; iC += num_time_levels) {
+
+		if (grid->perim_interior[0] == true) {
+			perim  =  grid->perim_coords[0] ;
+			coef_0 =  parent->grid_funcs[iC+1][perim] ;
+			coef_1 = (
+				parent->grid_funcs[iC  ][perim]
+			-	parent->grid_funcs[iC+1][perim]
+			)/REFINEMENT ;
+
+			grid->grid_funcs[iC  ][0] = coef_0 + coef_1*(((grid->tC)%REFINEMENT)+1) ;
+			grid->grid_funcs[iC+1][0] = coef_0 + coef_1*(((grid->tC)%REFINEMENT)  ) ;
+		}
+		if (grid->perim_interior[1] == true) {
+			perim  =  grid->perim_coords[1] ;
+			coef_0 =  parent->grid_funcs[iC+1][perim] ;
+			coef_1 = (
+				parent->grid_funcs[iC  ][perim]
+			-	parent->grid_funcs[iC+1][perim]
+			)/REFINEMENT ;
+
+			grid->grid_funcs[iC  ][grid->Nx-1] = coef_0 + coef_1*(((grid->tC)%REFINEMENT)+1) ;
+			grid->grid_funcs[iC+1][grid->Nx-1] = coef_0 + coef_1*(((grid->tC)%REFINEMENT)  ) ;
+		}
+	}
+
 	return ;
 }
 /*==========================================================================*/
@@ -63,11 +113,8 @@ static void amr_evolve_grid(
 		if (grid->tC%REGRID == 0) {
 			/* regrid all finer levels */
 		}
-		if (grid->perim_interior[0] == true) { 
-			/*interpolate inner*/
-		}
-		if (grid->perim_interior[1] == true) { 
-			/*interpolate outer*/
+		if (grid->parent != NULL) {
+			set_interior_hyperbolic_boundary(grid->parent, grid) ;
 		}
 		evolve_pde(grid) ;
 		if (grid->child != NULL) {
@@ -79,10 +126,9 @@ static void amr_evolve_grid(
 		}
 	}
 	if (grid->parent != NULL) {
-		/* compute truncation error */
-		/* inject */
+		/* TO DO: compute truncation error */
+		inject_all_grid_funcs(grid->parent, grid) ;
 	}
-
 	return ;
 }
 /*==========================================================================*/

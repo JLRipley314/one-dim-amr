@@ -29,7 +29,7 @@ void initial_data_Gaussian(
 	double* Q_n, 	double* Q_nm1)
 {
 	double amp = 1 ;
-	double width = 5 ;
+	double width = 2 ;
 	double x_0 = 0 ;
 	double x = 0 ;
 
@@ -68,6 +68,9 @@ void advance_tStep_wave(
 	double* P_n, 	double* P_nm1,
 	double* Q_n,	double* Q_nm1)
 {
+	copy_to_2nd_array(Nx, P_n, P_nm1) ;
+	copy_to_2nd_array(Nx, Q_n, Q_nm1) ;
+
 	double t_der_P, x_der_P, t_der_Q, x_der_Q ;
 	double res_P, jac_P, res_Q, jac_Q ;
 
@@ -139,9 +142,6 @@ void advance_tStep_wave(
 
 	Kreiss_Oliger_Filter(Nx, P_n) ;
 	Kreiss_Oliger_Filter(Nx, Q_n) ;
-
-	copy_to_2nd_array(Nx, P_n, P_nm1) ;
-	copy_to_2nd_array(Nx, Q_n, Q_nm1) ;
 
 	return ;
 }

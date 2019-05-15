@@ -37,14 +37,6 @@ void free_double_2DArray(double** array)
         return ;
 }
 /*============================================================================*/
-int amr_get_grid_funcs(struct amr_grid* grid, double** grid_funcs) 
-{
-	for (int iC=0; iC<grid->num_grid_funcs; iC++) {
-		grid_funcs[iC] = grid->grid_funcs[iC] ;
-	}
-	return 0 ;
-}
-/*============================================================================*/
 /* finds grid at specified level then sets grid pointer to that grid */
 /*============================================================================*/
 int amr_find_grid(int level, struct amr_grid_hierarchy* gh, struct amr_grid* grid) 
@@ -102,6 +94,7 @@ int amr_add_finer_grid(int left_coord, int right_coord, struct amr_grid* parent)
 	new_grid->dt = parent->dt/REFINEMENT ;
 	new_grid->dx = parent->dx/REFINEMENT ;
 	new_grid->time = parent->time ;
+	new_grid->tC = 0 ;
 
 	new_grid->perim_coords[0] = left_coord ;
 	new_grid->perim_coords[1] = right_coord ;
@@ -111,7 +104,7 @@ int amr_add_finer_grid(int left_coord, int right_coord, struct amr_grid* parent)
 	new_grid->bbox[0] = parent->bbox[0] + (left_coord *parent->dx) ;
 	new_grid->bbox[1] = parent->bbox[0] + (right_coord*parent->dx) ;
 	
-	new_grid->num_grid_funcs = parent->num_grid_funcs ;
+	new_grid->num_grid_funcs  = parent->num_grid_funcs ;
 	new_grid->grid_funcs = allocate_double_2DArray(new_grid->num_grid_funcs, new_grid->Nx, 0.) ;
 
 	if ((parent->perim_interior[0] == false)
@@ -133,6 +126,8 @@ int amr_add_finer_grid(int left_coord, int right_coord, struct amr_grid* parent)
 	printf("bbox[1]\t%f\n", new_grid->bbox[1]) ;
 	printf("perim_coords[0]\t%d\n", new_grid->perim_coords[0]) ;
 	printf("perim_coords[1]\t%d\n", new_grid->perim_coords[1]) ;
+	printf("perim_interior[0]\t%s\n", new_grid->perim_interior[0] ? "true" : "false") ;
+	printf("perim_interior[1]\t%s\n", new_grid->perim_interior[1] ? "true" : "false") ;
 	printf("Nx\t%d\n", new_grid->Nx) ;
 	printf("dx\t%f\n", new_grid->dx) ;
 	printf("dt\t%f\n", new_grid->dt) ;
@@ -164,7 +159,7 @@ struct amr_grid_hierarchy* amr_init_grid_hierarchy(
 	
 	base_grid->grid_funcs = allocate_double_2DArray(num_grid_funcs, Nx, 1.) ; 
 	
-	base_grid->num_grid_funcs = num_grid_funcs ;
+	base_grid->num_grid_funcs  = num_grid_funcs ;
 	base_grid->Nx = Nx ;
 
 	base_grid->bbox[0] = bbox[0] ;
@@ -198,6 +193,8 @@ struct amr_grid_hierarchy* amr_init_grid_hierarchy(
 /*	level one grid */
 	amr_add_finer_grid(0, Nx-1, base_grid) ;
 	amr_add_finer_grid(0, Nx-1, gh->grid->child) ;
+	amr_add_finer_grid(0, Nx-1, gh->grid->child->child) ;
+	amr_add_finer_grid(0, Nx-1, gh->grid->child->child->child) ;
 	
 	return gh ;
 }

@@ -14,7 +14,7 @@
 /*============================================================================*/
 
 
-#define AMR_MAX_LEVELS 3 
+#define AMR_MAX_LEVELS 5 
 #define REFINEMENT 4
 #define REGRID 8
 
@@ -29,7 +29,9 @@ struct amr_var
 	struct amr_var *next;
 	char *name;    
 	int in_amr_hier;     /* whether the variable exists in the AMR hierarchy or not */
+	int index;           /* grid function index */
 	int num_time_level;  /* number of time-levels (in AMR hierarchy), from 1 .. num_time_level */
+	char* pde_type;      /* either hyperbolic or elliptic */
 }
 ;
 /*============================================================================*/
@@ -57,6 +59,7 @@ struct amr_grid
 	int perim_coords[2] ; /* coordinates with respect to parent grid */
 	
 	int num_grid_funcs;	/* total number of grid functions */
+	int num_time_levels;	/* total number of grid functions */
 	double** grid_funcs ;	/* pointer to array of pointer to grid function data */
 
 	bool perim_interior[2] ;
@@ -70,7 +73,7 @@ struct amr_grid_hierarchy
 	/* the following define the structure of the grid-hierarchy */
 
 	double cfl_num;		/* courant factor */
-	int num_grid_funcs;	/* total number of grid functions */
+	int num_time_levels;	/* total number of grid functions */
 	int t_step_save ;
 	int Nt ;
 	struct amr_var* vars;	/* pointer to a linked list of (num_vars) variable structures */
@@ -88,8 +91,6 @@ struct amr_grid_hierarchy
 /*============================================================================*/
 /* return 0 then no errors */
 /*============================================================================*/
-int amr_get_grid_funcs(struct amr_grid* grid, double** grid_funcs) ;
-
 int amr_find_grid(int level, struct amr_grid_hierarchy* gh, struct amr_grid* grid) ;
 
 int amr_add_finer_grid(int left_coord, int right_coord, struct amr_grid* parent) ;
