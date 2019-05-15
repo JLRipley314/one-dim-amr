@@ -197,7 +197,7 @@ int main(int argc, char* argv[])
 //		save_to_file)
 //	;
 
-//	amr_destroy_grid_hierarchy(gh) ;
+	amr_destroy_grid_hierarchy(gh) ;
 
 	return EXIT_SUCCESS ;
 }

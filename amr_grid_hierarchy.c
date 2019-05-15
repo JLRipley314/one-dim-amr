@@ -8,21 +8,23 @@
 #include <assert.h>
 
 /*============================================================================*/
-/* c: so row major order. arrays called as array[row][column] */
+/* arrays called as array[row][column] */
 /*============================================================================*/
 double** allocate_double_2DArray(int rows, int columns, double initializeValue)  
 {
-        double** pa_array   = malloc(rows * sizeof(double* )) ;
-        assert(pa_array    != NULL) ;    
-        pa_array[0]         = malloc(rows * columns * sizeof(double)) ; 
-        assert(pa_array[0] != NULL) ;    
+        double** array   = malloc(rows * sizeof(double* )) ;
+        assert(array    != NULL) ;    
+        array[0]         = malloc(rows * columns * sizeof(double)) ; 
+        assert(array[0] != NULL) ;    
         for (int iC=1; iC<rows; iC++) { 
-                pa_array[iC] = pa_array[0] + (iC * columns) ;    
-                for (int jC=0; jC<columns; jC++) {
-                        pa_array[iC][jC] = initializeValue ;    
-                }
+                array[iC] = array[0] + (iC * columns) ;    
         }
-        return pa_array ;
+	for (int iC=0; iC<rows; iC++) {
+                for (int jC=0; jC<columns; jC++) {
+                        array[iC][jC] = initializeValue ;    
+                }
+	}
+        return array ;
 }
 /*============================================================================*/
 void free_double_2DArray(double** array)  
@@ -106,7 +108,7 @@ int amr_add_finer_grid(int left_coord, int right_coord, struct amr_grid* parent)
 	new_grid->bbox[1] = parent->bbox[1] + (right_coord*parent->dx) ;
 	
 	new_grid->num_grid_funcs = parent->num_grid_funcs ;
-	new_grid->grid_funcs = allocate_double_2DArray(new_grid->num_grid_funcs, new_grid->Nx, 0.) ; 
+	new_grid->grid_funcs = allocate_double_2DArray(new_grid->num_grid_funcs, new_grid->Nx, 0.) ;
 
 	if ((parent->perim_interior[0] == false)
 	&&  (left_coord == 0)
@@ -142,9 +144,8 @@ struct amr_grid_hierarchy* amr_init_grid_hierarchy(
 	struct amr_grid* base_grid = malloc(sizeof(struct amr_grid)) ;
 	assert(base_grid != NULL) ;	
 	
-	double** grid_funcs = allocate_double_2DArray(num_grid_funcs, Nx, 1.) ; 
 	base_grid->grid_funcs = allocate_double_2DArray(num_grid_funcs, Nx, 1.) ; 
-
+	
 	base_grid->num_grid_funcs = num_grid_funcs ;
 	base_grid->Nx = Nx ;
 
@@ -174,11 +175,10 @@ struct amr_grid_hierarchy* amr_init_grid_hierarchy(
 	printf("dx\t%f\n", gh->grid->dx) ;
 	printf("dt\t%f\n", gh->grid->dt) ;
 	printf("num_grid_funcs\t%d\n", gh->grid->num_grid_funcs) ;
-	printf("grid_funcs[0][0]\t%f\n",grid_funcs[0][0]) ;
 	printf("grid_funcs[0][0]\t%f\n",base_grid->grid_funcs[0][0]) ;
-//	printf("grid_funcs[1][10]\t%f\n",gh->grid->grid_funcs[1][10]) ;
-//	printf("grid_funcs[2][10]\t%f\n",gh->grid->grid_funcs[2][10]) ;
-//	printf("grid_funcs[3][10]\t%f\n",gh->grid->grid_funcs[3][10]) ;
+	printf("grid_funcs[1][10]\t%f\n",gh->grid->grid_funcs[1][10]) ;
+	printf("grid_funcs[2][10]\t%f\n",gh->grid->grid_funcs[2][10]) ;
+	printf("grid_funcs[3][10]\t%f\n",gh->grid->grid_funcs[3][10]) ;
 	fflush(NULL) ;
 /*	level one grid */
 //	amr_add_finer_grid(0, Nx-1, base_grid) ;
@@ -187,8 +187,7 @@ struct amr_grid_hierarchy* amr_init_grid_hierarchy(
 }
 /*============================================================================*/
 int amr_destroy_grid(struct amr_grid* grid) 
-{
-	
+{	
 	free_double_2DArray(grid->grid_funcs) ;
 
 	grid->parent->child = grid->child  ;
