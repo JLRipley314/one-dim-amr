@@ -45,7 +45,7 @@ bool made_files  = false ;
 /*===========================================================================*/
 void set_initial_run_data(void)
 {
-	Nx = pow(2,9)+1 ;
+	Nx = pow(2,8)+1 ;
 	Nt = pow(2,1)+1 ;
 	t_step_save = 1 ;
 
@@ -190,64 +190,14 @@ int main(int argc, char* argv[])
 		bbox,
 		excision_on)
 	;
-//	amr_main(
-//		gh, 
-//		initial_data,
-//		wave_evolve,
-//		save_to_file)
-//	;
+	amr_main(
+		gh, 
+		initial_data,
+		wave_evolve,
+		save_to_file)
+	;
 
 	amr_destroy_grid_hierarchy(gh) ;
 
 	return EXIT_SUCCESS ;
 }
-/*
-int main(int argc, char* argv[])
-{
-	set_initial_run_data() ;
-	set_field_indices() ; 
-
-	snprintf(output_name_P, MAX_FILE_NAME, "%sP.txt", OUTPUT_DIR) ;
-	snprintf(output_name_Q, MAX_FILE_NAME, "%sQ.txt", OUTPUT_DIR) ;
-
-	FILE* output_file_P = fopen(output_name_P, "w") ;
-	if (output_file_P == NULL ) {
-		printf("ERROR(main.c): output_file_P == NULL\n") ;
-		exit(EXIT_FAILURE) ;
-	}
-	FILE* output_file_Q = fopen(output_name_Q, "w") ;
-	if (output_file_Q == NULL ) {
-		printf("ERROR(main.c): output_file_Q == NULL\n") ;
-		exit(EXIT_FAILURE) ;
-	}
-
-	double* P_n   = calloc(Nx,sizeof(double)) ;
-	double* P_nm1 = calloc(Nx,sizeof(double)) ;
-	double* Q_n   = calloc(Nx,sizeof(double)) ;
-	double* Q_nm1 = calloc(Nx,sizeof(double)) ;
-
-	initial_data_Gaussian(Nx, dx, bbox[0], P_n, P_nm1, Q_n, Q_nm1) ;
-	save_to_txt_file(Nx, output_file_P, P_n) ;
-	save_to_txt_file(Nx, output_file_Q, Q_n) ;
-	fflush(NULL) ;
-
-	for (int tC=1; tC<Nt; tC++) {
-		advance_tStep_wave(Nx, dt, dx, perim_interior, P_n, P_nm1, Q_n, Q_nm1) ;
-		if (tC%tss == 0) {
-			save_to_txt_file(Nx, output_file_P, P_n) ;
-			save_to_txt_file(Nx, output_file_Q, Q_n) ;
-			fflush(NULL) ;
-		}
-	}	
-
-	free(P_n) ;
-	free(P_nm1) ;
-	free(Q_n) ;
-	free(Q_nm1) ;
-
-	fclose(output_file_P) ;
-	fclose(output_file_Q) ;
-
-	return EXIT_SUCCESS ;
-}
-*/

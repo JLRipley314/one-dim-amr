@@ -116,7 +116,7 @@ void amr_main(
 			evolve_pde) 
 		;
 		if (tC%(gh->t_step_save)) {
-			save_to_file(gh->grid) ;
+			save_to_file(gh->grid->child) ;
 		}
 	}
 
