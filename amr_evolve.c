@@ -108,17 +108,20 @@ void amr_main(
 	void (*save_to_file)(struct amr_grid*))
 {
 	set_initial_data(gh,initial_data) ;
+	save_to_file(gh->grid->child) ;
 
 	for (int tC=0; tC<(gh->Nt); tC++) {
+		printf("tC %d\n", tC) ;
+		fflush(NULL) ;
 		amr_evolve_grid(
 			gh->grid,
 			1,
 			evolve_pde) 
 		;
-		if (tC%(gh->t_step_save)) {
+		if (tC%(gh->t_step_save)==0) {
+			printf("saving\n") ;
 			save_to_file(gh->grid->child) ;
 		}
 	}
-
 	return ;	
 }

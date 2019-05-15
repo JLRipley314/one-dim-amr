@@ -24,3 +24,5 @@ evolution_routines.o: evolution_routines.c $(DEPS_ER)
 
 clean_o:
 	rm *.o
+clean_output:
+	rm output/*

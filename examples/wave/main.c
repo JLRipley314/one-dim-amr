@@ -87,6 +87,9 @@ void set_globals(struct amr_grid* grid)
 
 	Nx = grid->Nx ;
 
+	dt = grid->dt ;
+	dx = grid->dx ;
+
 	bbox[0] = grid->bbox[0] ;
 	bbox[1] = grid->bbox[1] ;
 
@@ -95,9 +98,6 @@ void set_globals(struct amr_grid* grid)
 	
 	perim_coords[0] = grid->perim_coords[0] ;
 	perim_coords[1] = grid->perim_coords[1] ;
-
-	dt = grid->dt ;
-	dx = grid->dx ;
 
 	excised_jC = grid->excised_jC ;
 
@@ -109,9 +109,6 @@ void set_globals(struct amr_grid* grid)
 void initial_data(struct amr_grid* grid)
 {
 	set_globals(grid) ;
-
-	printf("set globals\n") ;
-	fflush(NULL) ;
 
 	initial_data_Gaussian(Nx, dx, bbox[0], P_n, P_nm1, Q_n, Q_nm1) ;
 	
@@ -138,30 +135,34 @@ void save_to_file(struct amr_grid* grid)
 	if (made_files == false) {
 		snprintf(output_name_P, MAX_FILE_NAME, "%sP.txt", OUTPUT_DIR) ;
 		snprintf(output_name_Q, MAX_FILE_NAME, "%sQ.txt", OUTPUT_DIR) ;
+		output_file_P = fopen(output_name_P, "w") ;
+		if (output_file_P == NULL ) {
+			printf("ERROR(main.c): output_file_P == NULL\n") ;
+			exit(EXIT_FAILURE) ;
+		}
+		output_file_Q = fopen(output_name_Q, "w") ;
+		if (output_file_Q == NULL ) {
+			printf("ERROR(main.c): output_file_Q == NULL\n") ;
+			exit(EXIT_FAILURE) ;
+		}
+		fclose(output_file_P) ;
+		fclose(output_file_Q) ;
 
-		FILE* output_file_P = fopen(output_name_P, "w") ;
-		if (output_file_P == NULL ) {
-			printf("ERROR(main.c): output_file_P == NULL\n") ;
-			exit(EXIT_FAILURE) ;
-		}
-		FILE* output_file_Q = fopen(output_name_Q, "w") ;
-		if (output_file_Q == NULL ) {
-			printf("ERROR(main.c): output_file_Q == NULL\n") ;
-			exit(EXIT_FAILURE) ;
-		}	
-		made_files = true ;
-	} else {
-		FILE* output_file_P = fopen(output_name_P, "a") ;
-		if (output_file_P == NULL ) {
-			printf("ERROR(main.c): output_file_P == NULL\n") ;
-			exit(EXIT_FAILURE) ;
-		}
-		FILE* output_file_Q = fopen(output_name_Q, "a") ;
-		if (output_file_Q == NULL ) {
-			printf("ERROR(main.c): output_file_Q == NULL\n") ;
-			exit(EXIT_FAILURE) ;
-		}
+		output_file_P = NULL ;
+		output_file_Q = NULL ;
 	}
+	output_file_P = fopen(output_name_P, "a") ;
+	if (output_file_P == NULL ) {
+		printf("ERROR(main.c): output_file_P == NULL\n") ;
+		exit(EXIT_FAILURE) ;
+	}
+	output_file_Q = fopen(output_name_Q, "a") ;
+	if (output_file_Q == NULL ) {
+		printf("ERROR(main.c): output_file_Q == NULL\n") ;
+		exit(EXIT_FAILURE) ;
+	}
+	made_files = true ;
+
 	save_to_txt_file(Nx, output_file_P, P_n) ;
 	save_to_txt_file(Nx, output_file_Q, Q_n) ;
 
@@ -170,6 +171,7 @@ void save_to_file(struct amr_grid* grid)
 
 	output_file_P = NULL ;
 	output_file_Q = NULL ;
+
 	
 	return ;
 }

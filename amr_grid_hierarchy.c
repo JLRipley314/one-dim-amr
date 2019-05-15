@@ -117,11 +117,15 @@ int amr_add_finer_grid(int left_coord, int right_coord, struct amr_grid* parent)
 	&&  (left_coord == 0)
 	) {
 		new_grid->perim_interior[0] = false ;
+	} else {
+		new_grid->perim_interior[0] = true ;
 	}
 	if ((parent->perim_interior[1] == false)
-	&&  (right_coord == parent->Nx)
+	&&  (right_coord == parent->Nx-1)
 	) {
 		new_grid->perim_interior[1] = false ;
+	} else {
+		new_grid->perim_interior[1] = true ;
 	}
 	printf("amr_add_finer_grid: made grid level %d\n", new_grid->level) ;
 	printf("bbox[0]\t%f\n", new_grid->bbox[0]) ;
