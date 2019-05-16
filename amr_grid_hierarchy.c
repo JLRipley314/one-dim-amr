@@ -43,8 +43,8 @@ int amr_add_field(struct amr_field* field, char* name, char* pde_type, int num_t
 	new_field->name = name ;
 	new_field->pde_type = pde_type
 	new_field->num_time_levels = num_time_levels ;
-	new_field->next = field ;
 	new_field->index = (field->index + field->num_time_levels) ;
+	new_field->next = field ;
 	return 0 ;
 }
 /*============================================================================*/
@@ -155,7 +155,7 @@ int amr_add_finer_grid(int left_coord, int right_coord, struct amr_grid* parent)
 /* set the base/level 0 (shadow) grid and the level one grid */
 /*============================================================================*/
 struct amr_grid_hierarchy* amr_init_grid_hierarchy(
-	int num_grid_funcs,
+	struct amr_field* fields,
 	int Nt, int Nx, int t_step_save,
 	double cfl_num,
 	double bbox[2],
@@ -166,16 +166,20 @@ struct amr_grid_hierarchy* amr_init_grid_hierarchy(
 	gh->cfl_num = cfl_num ;
 	gh->Nt  = Nt ;
 	gh->t_step_save = t_step_save ;
+	gh->fields = fields ;
 
+	int num_grid_funcs = 0 ;
+	for (struct amr_field* field=fields; field!=NULL; field=field->next) {
+		num_grid_funcs += field->num_time_levels ;
+	} 
 /*	base (shadow) grid */
 	struct amr_grid* base_grid = malloc(sizeof(struct amr_grid)) ;
 	assert(base_grid != NULL) ;	
-
 	base_grid->level = 0 ;
-	
-	base_grid->grid_funcs = allocate_double_2DArray(num_grid_funcs, Nx, 1.) ; 
-	
+
+	base_grid->grid_funcs = allocate_double_2DArray(num_grid_funcs, Nx, 1.) ; 	
 	base_grid->num_grid_funcs  = num_grid_funcs ;
+	
 	base_grid->Nx = Nx ;
 
 	base_grid->bbox[0] = bbox[0] ;
@@ -250,7 +254,8 @@ int amr_destroy_grid_hierarchy(struct amr_grid_hierarchy* gh)
 		amr_destroy_grid(grid) ;
 		grid = child ;
 	} while (grid != NULL) ;
-
+	
+	amr_delete_fields(gh->fields) ;
 	free(gh) ;
 	gh = NULL ;
 	

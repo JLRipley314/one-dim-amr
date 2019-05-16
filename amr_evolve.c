@@ -99,7 +99,6 @@ static void set_interior_hyperbolic_boundary_linear_interp(
 	int tC = (grid->tC)%REFINEMENT ;
 
 	int num_time_levels = 2 ;
-	int num_grid_funcs = grid->num_grid_funcs ;
 
 	if (grid->perim_interior[0] == true) {
 		perim  =  grid->perim_coords[0] ;
@@ -140,7 +139,6 @@ static void set_interior_hyperbolic_boundary_quad_interp(
 	int tC = (grid->tC)%REFINEMENT ;
 
 	int num_time_levels = 2 ;
-	int num_grid_funcs = grid->num_grid_funcs ;
 
 	if (grid->perim_interior[0] == true) {
 		perim  =  grid->perim_coords[0] ;
