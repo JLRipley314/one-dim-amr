@@ -181,7 +181,7 @@ void amr_main(
 	void (*evolve_pde)(struct amr_grid*),
 	void (*save_to_file)(struct amr_grid*))
 {
-	add_self_similar_initial_grids(gh, 2) ;
+//	add_self_similar_initial_grids(gh, 2) ;
 	set_initial_data(gh,initial_data) ;
 	save_to_file(gh->grid->child) ;
 

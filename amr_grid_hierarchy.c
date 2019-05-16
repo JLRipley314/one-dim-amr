@@ -105,7 +105,7 @@ int amr_add_finer_grid(int left_coord, int right_coord, struct amr_grid* parent)
 	new_grid->bbox[1] = parent->bbox[0] + (right_coord*parent->dx) ;
 	
 	new_grid->num_grid_funcs  = parent->num_grid_funcs ;
-	new_grid->grid_funcs = allocate_double_2DArray(new_grid->num_grid_funcs, new_grid->Nx, 0.) ;
+	new_grid->grid_funcs = allocate_double_2DArray(new_grid->num_grid_funcs, new_grid->Nx, 1.) ;
 
 	if ((parent->perim_interior[0] == false)
 	&&  (left_coord == 0)

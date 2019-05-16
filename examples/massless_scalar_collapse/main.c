@@ -11,20 +11,20 @@
 #include "evolution_routines.h"
 
 #define MAX_FILE_NAME 1024
-#define OUTPUT_DIR "/home/jripley/one-dim-amr/examples/wave/output/"
+#define OUTPUT_DIR "/home/jripley/one-dim-amr/examples/massless_scalar_collapse/output/"
 
 /*===========================================================================*/
 /* global variables for evolution-convenient for function calls */
 /*===========================================================================*/
-double* P_n ;
-double* P_nm1 ;
-double* Q_n ;
-double* Q_nm1 ;
-
 double* Al_n ;
-double* Al_nm1 ;
 double* Ze_n ;
+double* P_n ;
+double* Q_n ;
+
+double* Al_nm1 ;
 double* Ze_nm1 ;
+double* P_nm1 ;
+double* Q_nm1 ;
 
 double cfl_num ;
 double bbox[2] ;
@@ -39,13 +39,8 @@ int  P_n_index,  P_nm1_index,  Q_n_index,  Q_nm1_index,
     Al_n_index, Al_nm1_index, Ze_n_index, Ze_nm1_index ;
 int perim_coords[2] ;
 
-char output_name_P[MAX_FILE_NAME+1] ;
-char output_name_Q[MAX_FILE_NAME+1] ;
 char output_name_P_sdf[MAX_FILE_NAME+1] ;
 char output_name_Q_sdf[MAX_FILE_NAME+1] ;
-
-FILE* output_file_P ;
-FILE* output_file_Q ;
 
 bool perim_interior[2] ;
 bool excision_on = false ;
@@ -101,8 +96,8 @@ void set_globals(struct amr_grid* grid)
 	Q_nm1 = grid->grid_funcs[Q_nm1_index] ;
 
 	Al_n   = grid->grid_funcs[Al_n_index  ] ;
-	Ze_nm1 = grid->grid_funcs[Ze_nm1_index] ;
-	Al_n   = grid->grid_funcs[Al_n_index  ] ;
+	Al_nm1 = grid->grid_funcs[Al_nm1_index] ;
+	Ze_n   = grid->grid_funcs[Ze_n_index  ] ;
 	Ze_nm1 = grid->grid_funcs[Ze_nm1_index] ;
 
 	Nx = grid->Nx ;
@@ -132,8 +127,12 @@ void initial_data(struct amr_grid* grid)
 {
 	set_globals(grid) ;
 
-	initial_data_Gaussian(Nx, dx, bbox, P_n, P_nm1, Q_n, Q_nm1) ;
-	
+	initial_data_Gaussian(
+		Nx, 	dx,
+		bbox,
+		Al_n, Al_nm1, Ze_n, Ze_nm1,
+		 P_n,  P_nm1,  Q_n,  Q_nm1)
+	;	
 	return ;
 }
 /*===========================================================================*/
@@ -143,8 +142,11 @@ void wave_evolve(struct amr_grid* grid)
 {
 	set_globals(grid) ;
 
-	advance_tStep_wave(Nx, dt, dx, bbox, perim_interior, P_n, P_nm1, Q_n, Q_nm1) ;
-	
+	advance_tStep_massless_scalar(
+		Nx, dt, dx, bbox, perim_interior,
+		Al_n, Al_nm1, Ze_n, Ze_nm1,
+		 P_n,  P_nm1,  Q_n,  Q_nm1
+	) ;	
 	return ;
 }
 /*===========================================================================*/
@@ -155,46 +157,10 @@ void save_to_file(struct amr_grid* grid)
 	set_globals(grid) ;
 
 	if (made_files == false) {
-		snprintf(output_name_P, MAX_FILE_NAME, "%sP.txt", OUTPUT_DIR) ;
-		snprintf(output_name_Q, MAX_FILE_NAME, "%sQ.txt", OUTPUT_DIR) ;
 		snprintf(output_name_P_sdf, MAX_FILE_NAME, "%sP.sdf", OUTPUT_DIR) ;
 		snprintf(output_name_Q_sdf, MAX_FILE_NAME, "%sQ.sdf", OUTPUT_DIR) ;
-		output_file_P = fopen(output_name_P, "w") ;
-		if (output_file_P == NULL ) {
-			printf("ERROR(main.c): output_file_P == NULL\n") ;
-			exit(EXIT_FAILURE) ;
-		}
-		output_file_Q = fopen(output_name_Q, "w") ;
-		if (output_file_Q == NULL ) {
-			printf("ERROR(main.c): output_file_Q == NULL\n") ;
-			exit(EXIT_FAILURE) ;
-		}
-		fclose(output_file_P) ;
-		fclose(output_file_Q) ;
-
-		output_file_P = NULL ;
-		output_file_Q = NULL ;
-	}
-	output_file_P = fopen(output_name_P, "a") ;
-	if (output_file_P == NULL ) {
-		printf("ERROR(main.c): output_file_P == NULL\n") ;
-		exit(EXIT_FAILURE) ;
-	}
-	output_file_Q = fopen(output_name_Q, "a") ;
-	if (output_file_Q == NULL ) {
-		printf("ERROR(main.c): output_file_Q == NULL\n") ;
-		exit(EXIT_FAILURE) ;
 	}
 	made_files = true ;
-
-//	save_to_txt_file(Nx, output_file_P, P_n) ;
-//	save_to_txt_file(Nx, output_file_Q, Q_n) ;
-
-	fclose(output_file_P) ;
-	fclose(output_file_Q) ;
-
-	output_file_P = NULL ;
-	output_file_Q = NULL ;
 
 	gft_out_bbox(output_name_P_sdf, time, &Nx, 1, bbox, P_n) ;
 	gft_out_bbox(output_name_Q_sdf, time, &Nx, 1, bbox, Q_n) ;
