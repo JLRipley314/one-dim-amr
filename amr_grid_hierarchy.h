@@ -15,7 +15,7 @@
 
 
 #define AMR_MAX_LEVELS 5 /* maximum number of grid levels */
-#define REFINEMENT 4 /* spatial and temporal refinement scale */
+#define REFINEMENT 2 /* spatial and temporal refinement scale */
 #define REGRID 8 /* regrid every REGRID time steps */
 
 #define TRUNC_ERR_TOLERANCE ((double)(1e-5)) /* when above this flag for finer grid */
@@ -28,12 +28,11 @@
 /* 	keeps track of where variable is located in storage on each grid,
 	along with instructions for how to inject and interpolate */ 
 /*============================================================================*/
-struct amr_var 
+struct amr_field 
 {
-	struct amr_var *next;
+	struct amr_field *next;
 	char *name;    
-	int in_amr_hier;     /* whether the variable exists in the AMR hierarchy or not */
-	int index;           /* grid function index */
+	int index;           /* index of 0th time level */
 	int num_time_level;  /* number of time-levels (in AMR hierarchy), from 1 .. num_time_level */
 	char* pde_type;      /* either hyperbolic or elliptic */
 }
@@ -46,8 +45,8 @@ struct amr_grid
 {
 	struct amr_grid* child ; 	/* to finer grid */
 	struct amr_grid* parent ;	/* to coarser grid */
-	struct amr_grid* sibling ; 	/* same level same parent */
-	struct amr_grid* neighbor ; 	/* same level different parent */
+
+	struct amr_field* fields ; 
 
 	int level ;
 	int Nx ; /* number of grid points */
@@ -82,6 +81,8 @@ struct amr_grid_hierarchy
 	int Nt ;
 	struct amr_var* vars;	/* pointer to a linked list of (num_vars) variable structures */
 
+	int* field_indices ; /* labels grid function idex that corresponds to a field */ 
+
 /* 	big difference from Frans' code:  we do not have a ``context'' for different
 	instances of grid hieracrhies as our application is simpler (1+1D, no parallel)
 */
@@ -102,7 +103,7 @@ int amr_add_finer_grid(int left_coord, int right_coord, struct amr_grid* parent)
 int amr_destroy_grid(struct amr_grid* grid) ;
 
 struct amr_grid_hierarchy* amr_init_grid_hierarchy(
-	int num_grid_funcs,
+	int* field_indices, 
 	int Nt, int Nx, int t_step_save,
 	double cfl_num,
 	double bbox[2],
@@ -111,5 +112,7 @@ struct amr_grid_hierarchy* amr_init_grid_hierarchy(
 void add_self_similar_initial_grids(struct amr_grid_hierarchy* gh, int num_grids) ;
 
 int amr_destroy_grid_hierarchy(struct amr_grid_hierarchy* gh) ;
+
+int amr_add_field(struct amr_field* field, char* name, char* pde_type, int num_time_levels) ;
  
 #endif /*_GRID_HIERARCHY_H_*/

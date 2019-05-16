@@ -30,13 +30,19 @@ double cfl_num ;
 double bbox[2] ;
 double dt, dx ;
 double time ;
+double stereographic_L ; /* stereographic length: for compactification */
 
 int Nx, Nt, t_step_save ;
 int excised_jC ;
 
-int num_grid_funcs ;
-int  P_n_index,  P_nm1_index,  Q_n_index,  Q_nm1_index,
-    Al_n_index, Al_nm1_index, Ze_n_index, Ze_nm1_index ;
+int num_fields ;
+int 
+	Al_n_index, Al_nm1_index, Al_nm2_index,
+	Ze_n_index, Ze_nm1_index, Ze_nm2_index,
+
+	P_n_index, P_nm1_index, P_nm2_index,
+	Q_n_index, Q_nm1_index, Q_nm2_index
+;
 int perim_coords[2] ;
 
 char output_name_P_sdf[MAX_FILE_NAME+1] ;
@@ -51,16 +57,17 @@ bool made_files  = false ;
 void set_initial_run_data(void)
 {
 	Nx = pow(2,8)+1 ;
-	Nt = pow(2,9)+1 ;
+	Nt = pow(2,13)+1 ;
 	t_step_save = 1 ;
 
 	perim_interior[0] = false ;
 	perim_interior[1] = false ;
 
-	cfl_num = 0.25 ;
+	cfl_num = 0.05 ;
 
 	bbox[0] =   0 ;
 	bbox[1] =  50 ;
+	stereographic_L = bbox[1] ;
 
 	dx = (bbox[1] - bbox[0]) / (Nx-1) ;
 	dt = cfl_num * dx ;
@@ -143,6 +150,7 @@ void wave_evolve(struct amr_grid* grid)
 	set_globals(grid) ;
 
 	advance_tStep_massless_scalar(
+		stereographic_L,
 		Nx, dt, dx, bbox, perim_interior,
 		Al_n, Al_nm1, Ze_n, Ze_nm1,
 		 P_n,  P_nm1,  Q_n,  Q_nm1

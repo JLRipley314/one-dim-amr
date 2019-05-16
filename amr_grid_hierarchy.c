@@ -37,6 +37,24 @@ void free_double_2DArray(double** array)
         return ;
 }
 /*============================================================================*/
+int amr_add_field(struct amr_field* field, char* name, char* pde_type, int num_time_levels)
+{
+	struct amr_field* new_field = malloc(sizeof(struct amr_field)) ;
+	new_field->name = name ;
+	new_field->pde_type = pde_type
+	new_field->num_time_levels = num_time_levels ;
+	new_field->next = field ;
+	new_field->index = (field->index + field->num_time_levels) ;
+	return 0 ;
+}
+/*============================================================================*/
+int amr_delete_fields(struct amr_field* field)
+{
+	for (struct amr_field* iter=field; iter!=NULL; iter=iter->next) {
+		free(iter) ;
+	}
+}
+/*============================================================================*/
 /* finds grid at specified level then sets grid pointer to that grid */
 /*============================================================================*/
 int amr_find_grid(int level, struct amr_grid_hierarchy* gh, struct amr_grid* grid) 
@@ -86,8 +104,6 @@ int amr_add_finer_grid(int left_coord, int right_coord, struct amr_grid* parent)
 	parent->child = new_grid ;
 	new_grid->parent = parent ;
 	new_grid->child = NULL ;
-	new_grid->sibling = NULL ;
-	new_grid->neighbor = NULL ;
 
 	new_grid->level = parent->level+1 ;
 
@@ -176,8 +192,6 @@ struct amr_grid_hierarchy* amr_init_grid_hierarchy(
 
 	base_grid->child = NULL ;
 	base_grid->parent = NULL ;
-	base_grid->sibling = NULL ;
-	base_grid->neighbor = NULL ;	
 	
 	gh->grid = base_grid ;
 

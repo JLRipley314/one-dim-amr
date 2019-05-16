@@ -11,6 +11,7 @@ void initial_data_Gaussian(
 ;
 /* we set Dirichlet boundary conditions for now */
 void advance_tStep_massless_scalar(
+	double stereographic_L,
 	int Nx, 
 	double dt, double dx, double bbox[2], 
 	bool perim_interior[2],

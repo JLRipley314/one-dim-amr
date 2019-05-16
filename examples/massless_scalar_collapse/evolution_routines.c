@@ -6,8 +6,6 @@
 
 #define ERR_TOLERANCE ((double)1e-10)
 
-#define S_L 100
-
 /*==========================================================================*/
 inline double D1_CrankNicolson_2ndOrder(
 	double f_np1, double f_n, double dt)
@@ -70,29 +68,36 @@ void initial_data_Gaussian(
 	double left_point = bbox[0] ;
 
 	double amp = 1 ;
-	double width = 5 ;
-	double r_0 = 10 ;
+	double width = 2 ;
+	double r_0 = 5 ;
 	double x = 0 ;
 	double r = 0 ;
+
+	double s_L = bbox[1] ;
 
 	set_array_val(Nx, 1., Al_n  ) ;
 	set_array_val(Nx, 0., Ze_n  ) ;
 
-	for (int iC=0; iC<Nx; iC++) {
+	for (int iC=0; iC<Nx-1; iC++) {
 		x = (iC * dx) + left_point ;
-		r = stereographic_r(S_L, x) ;
+		r = stereographic_r(s_L, x) ;
 		Q_n[iC] = amp * exp(-pow((r-r_0)/width,2)) * (
 			(-(r-r_0)/pow(width,2)) * pow(r,2) 
 		+	2*r
 		) ;
 		P_n[iC] = Q_n[iC] ;
 	}
+	P_n[Nx-1] = 0 ;
+	Q_n[Nx-1] = 0 ;
+
 	copy_to_2nd_array(Nx, Al_n, Al_nm1) ;
 	copy_to_2nd_array(Nx, Ze_n, Ze_nm1) ;
 	copy_to_2nd_array(Nx,  P_n,  P_nm1) ;
 	copy_to_2nd_array(Nx,  Q_n,  Q_nm1) ;
 	return ;
 }
+/*==========================================================================*/
+/* see gr-qc/0302072 */
 /*==========================================================================*/
 void Kreiss_Oliger_Filter(
 	int Nx,
@@ -116,6 +121,7 @@ void Kreiss_Oliger_Filter(
  * Dirichlet boundary conditions. 
  ****************************************************************************/
 static double compute_iteration_GR_Crank_Nicolson_PQ(
+	double stereographic_L,
 	int Nx,
 	double dt, 	double dx,
 	double bbox[2],
@@ -125,7 +131,7 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 {
 	int exc_jC = 0 ;
 
-	double lower_x = perim_interior[0] * dx ;
+	double lower_x = bbox[0] ;
 
 	double  
 		x_jm1, x_j, x_jp1, x_jp2, 
@@ -136,20 +142,29 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 	double jac_Q = 1 ;
 	double jac_P = 1 ;
 
+	double s_L = stereographic_L ; 
+
+	int iterations = 0 ;
+	if (fabs(bbox[1]-stereographic_L)<1e-10) {
+		iterations = Nx-1 ;
+	} else {
+		iterations = Nx ;
+	}
 	double res_infty_norm = 0 ; /* returning this */
 /****************************************************************************/
-/* interior */
+/* interior: we go to Nx-2 as we do not want to actually include the point
+   at infinity in our computational domain */
 /****************************************************************************/
-	for (int jC=exc_jC+1;jC<Nx-1;jC++) {
+	for (int jC=exc_jC+1;jC<iterations-1;jC++) {
 		x_j   = lower_x + (dx * (jC)  ) ;
 		x_jp1 = lower_x + (dx * (jC+1)) ;
 		x_jm1 = lower_x + (dx * (jC-1)) ;
 
-		r_j   = stereographic_r(S_L, x_j  ) ;
-		r_jp1 = stereographic_r(S_L, x_jp1) ;
-		r_jm1 = stereographic_r(S_L, x_jm1) ;
+		r_j   = stereographic_r(s_L, x_j  ) ;
+		r_jp1 = stereographic_r(s_L, x_jp1) ;
+		r_jm1 = stereographic_r(s_L, x_jm1) ;
 
-		dr = stereographic_dr(S_L, x_j, dx) ;
+		dr = stereographic_dr(s_L, x_j, dx) ;
 	/* Q field */
 		res_Q = D1_CrankNicolson_2ndOrder(
 			Q_n[jC], 
@@ -189,17 +204,18 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 		Q_n[jC] -= res_Q / jac_Q ;
 		P_n[jC] -= res_P / jac_P ;
 
-		res_infty_norm = compute_weighted_infty_norm(1-x_j/S_L, res_Q, res_infty_norm) ;
-		res_infty_norm = compute_weighted_infty_norm(1-x_j/S_L, res_P, res_infty_norm) ;
+		res_infty_norm = compute_weighted_infty_norm(1-x_j/s_L, res_Q, res_infty_norm) ;
+		res_infty_norm = compute_weighted_infty_norm(1-x_j/s_L, res_P, res_infty_norm) ;
 	}
 /****************************************************************************/
 /* lower */
 /* Q[0] = 0, so do not change anything. r_Der_P=0 at r=0 */	
 /****************************************************************************/
 	if ((exc_jC == 0) 
+	&&  (perim_interior[0] == false)
 	) {
 		x_j = 0 ;
-		dr  = pow(1. - (x_j/S_L), -2) * dx;
+		dr  = pow(1. - (x_j/s_L), -2) * dx;
 
 		res_P = D1_forward_2ndOrder(
 			P_n[2], P_n[1], P_n[0], 
@@ -213,11 +229,11 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 		x_jp1 = lower_x + (dx * (exc_jC+1)) ;
 		x_jp2 = lower_x + (dx * (exc_jC+2)) ;
 
-		r_j   = stereographic_r(S_L, x_j  ) ;
-		r_jp1 = stereographic_r(S_L, x_jp1) ;
-		r_jp2 = stereographic_r(S_L, x_jp2) ;
+		r_j   = stereographic_r(s_L, x_j  ) ;
+		r_jp1 = stereographic_r(s_L, x_jp1) ;
+		r_jp2 = stereographic_r(s_L, x_jp2) ;
 
-		dr = stereographic_dr(S_L, x_j, dx) ;
+		dr = stereographic_dr(s_L, x_j, dx) ;
 	/* Q field */
 		res_Q = D1_CrankNicolson_2ndOrder(
 			Q_n[exc_jC], 
@@ -264,8 +280,8 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 		Q_n[exc_jC] -= res_Q / jac_Q ;
 		P_n[exc_jC] -= res_P / jac_P ;
 
-		res_infty_norm = compute_weighted_infty_norm(1-x_j/S_L, res_Q, res_infty_norm) ;
-		res_infty_norm = compute_weighted_infty_norm(1-x_j/S_L, res_P, res_infty_norm) ;
+		res_infty_norm = compute_weighted_infty_norm(1-x_j/s_L, res_Q, res_infty_norm) ;
+		res_infty_norm = compute_weighted_infty_norm(1-x_j/s_L, res_P, res_infty_norm) ;
 	}
 /***************************************************************************/
 /* dirichlet outer boundary conditions if outermost level;
@@ -275,6 +291,7 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 	return res_infty_norm ;
 } 
 void advance_tStep_massless_scalar(
+	double stereographic_L,
 	int Nx, 
 	double dt, double dx, double bbox[2], 
 	bool perim_interior[2],
@@ -287,6 +304,7 @@ void advance_tStep_massless_scalar(
 	copy_to_2nd_array(Nx,  Q_n,  Q_nm1) ;
 
 	compute_iteration_GR_Crank_Nicolson_PQ(
+		stereographic_L,
 		Nx,
 		dt, dx,
 		bbox,

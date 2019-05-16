@@ -87,41 +87,92 @@ static void inject_all_grid_funcs(struct amr_grid* parent, struct amr_grid* grid
 /*==========================================================================*/
 /* {ordered field_n, field_nm1, ...} */
 /*==========================================================================*/
-static void set_interior_hyperbolic_boundary(
+static void set_interior_hyperbolic_boundary_linear_interp(
 	struct amr_grid* parent,
-	struct amr_grid* grid)
+	struct amr_grid* grid,
+	int grid_func_index)
 {
 	double coef_0, coef_1 ; 
 
 	int perim ;
 
+	int tC = (grid->tC)%REFINEMENT ;
+
 	int num_time_levels = 2 ;
 	int num_grid_funcs = grid->num_grid_funcs ;
 
-	for (int iC=0; iC<num_grid_funcs; iC += num_time_levels) {
+	if (grid->perim_interior[0] == true) {
+		perim  =  grid->perim_coords[0] ;
+		coef_0 =  parent->grid_funcs[grid_func_index][perim] ;
+		coef_1 = (
+			parent->grid_funcs[grid_func_index  ][perim]
+		-	parent->grid_funcs[grid_func_index+1][perim]
+		)/REFINEMENT ;
 
-		if (grid->perim_interior[0] == true) {
-			perim  =  grid->perim_coords[0] ;
-			coef_0 =  parent->grid_funcs[iC+1][perim] ;
-			coef_1 = (
-				parent->grid_funcs[iC  ][perim]
-			-	parent->grid_funcs[iC+1][perim]
-			)/REFINEMENT ;
+		grid->grid_funcs[grid_func_index  ][0] = coef_0 + coef_1*(tC+1) ;
+		grid->grid_funcs[grid_func_index+1][0] = coef_0 + coef_1*(tC  ) ;
+	}
+	if (grid->perim_interior[1] == true) {
+		perim  =  grid->perim_coords[1] ;
+		coef_0 =  parent->grid_funcs[grid_func_index+1][perim] ;
+		coef_1 = (
+			parent->grid_funcs[grid_func_index  ][perim]
+		-	parent->grid_funcs[grid_func_index+1][perim]
+		)/REFINEMENT ;
 
-			grid->grid_funcs[iC  ][0] = coef_0 + coef_1*(((grid->tC)%REFINEMENT)+1) ;
-			grid->grid_funcs[iC+1][0] = coef_0 + coef_1*(((grid->tC)%REFINEMENT)  ) ;
-		}
-		if (grid->perim_interior[1] == true) {
-			perim  =  grid->perim_coords[1] ;
-			coef_0 =  parent->grid_funcs[iC+1][perim] ;
-			coef_1 = (
-				parent->grid_funcs[iC  ][perim]
-			-	parent->grid_funcs[iC+1][perim]
-			)/REFINEMENT ;
+		grid->grid_funcs[grid_func_index  ][grid->Nx-1] = coef_0 + coef_1*(tC+1) ;
+		grid->grid_funcs[grid_func_index+1][grid->Nx-1] = coef_0 + coef_1*(tC  ) ;
+	}
 
-			grid->grid_funcs[iC  ][grid->Nx-1] = coef_0 + coef_1*(((grid->tC)%REFINEMENT)+1) ;
-			grid->grid_funcs[iC+1][grid->Nx-1] = coef_0 + coef_1*(((grid->tC)%REFINEMENT)  ) ;
-		}
+	return ;
+}
+/*==========================================================================*/
+/*==========================================================================*/
+static void set_interior_hyperbolic_boundary_quad_interp(
+	struct amr_grid* parent,
+	struct amr_grid* grid,
+	int grid_func_index)
+{
+	double coef_0, coef_1, coef_2 ; 
+
+	int perim ;
+
+	int tC = (grid->tC)%REFINEMENT ;
+
+	int num_time_levels = 2 ;
+	int num_grid_funcs = grid->num_grid_funcs ;
+
+	if (grid->perim_interior[0] == true) {
+		perim  =  grid->perim_coords[0] ;
+		coef_0 =  parent->grid_funcs[grid_func_index][perim] ;
+		coef_1 = (
+			parent->grid_funcs[grid_func_index  ][perim]
+		- 	parent->grid_funcs[grid_func_index+2][perim]
+		)/(2*REFINEMENT) ;
+		coef_2 = (
+			   parent->grid_funcs[grid_func_index  ][perim]
+		- 	(2*parent->grid_funcs[grid_func_index+1][perim])
+		+    	   parent->grid_funcs[grid_func_index+2][perim]
+		)/pow(REFINEMENT,2) ;
+
+		grid->grid_funcs[grid_func_index  ][0] = coef_0 + coef_1*(tC+1) + 0.5*coef_2*pow(tC,2) ;
+		grid->grid_funcs[grid_func_index+1][0] = coef_0 + coef_1*(tC  ) + 0.5*coef_2*pow(tC,2) ;
+	}
+	if (grid->perim_interior[1] == true) {
+		perim  =  grid->perim_coords[1] ;
+		coef_0 =  parent->grid_funcs[grid_func_index][perim] ;
+		coef_1 = (
+			parent->grid_funcs[grid_func_index  ][perim]
+		- 	parent->grid_funcs[grid_func_index+2][perim]
+		)/(2*REFINEMENT) ;
+		coef_2 = (
+			   parent->grid_funcs[grid_func_index  ][perim]
+		-	(2*parent->grid_funcs[grid_func_index+1][perim])
+		+	   parent->grid_funcs[grid_func_index+2][perim]
+		)/pow(REFINEMENT,2) ;
+
+		grid->grid_funcs[grid_func_index  ][grid->Nx-1] = coef_0 + coef_1*(tC+1) + 0.5*coef_2*pow(tC,2) ;
+		grid->grid_funcs[grid_func_index+1][grid->Nx-1] = coef_0 + coef_1*(tC  ) + 0.5*coef_2*pow(tC,2) ;
 	}
 
 	return ;
@@ -181,7 +232,7 @@ void amr_main(
 	void (*evolve_pde)(struct amr_grid*),
 	void (*save_to_file)(struct amr_grid*))
 {
-	add_self_similar_initial_grids(gh, 1) ;
+	add_self_similar_initial_grids(gh, 2) ;
 	set_initial_data(gh,initial_data) ;
 	save_to_file(gh->grid->child) ;
 
