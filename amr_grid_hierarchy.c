@@ -37,15 +37,37 @@ void free_double_2DArray(double** array)
         return ;
 }
 /*============================================================================*/
+struct amr_field* amr_init_fields(char* name, char* pde_type, int num_time_levels)
+{
+	struct amr_field* field = malloc(sizeof(struct amr_field)) ;
+
+	field->name = name ;
+	field->pde_type = pde_type ;
+	field->num_time_levels = num_time_levels ;
+	field->index = 0 ;
+	field->next = NULL ;
+	return field ;
+}
+/*============================================================================*/
 int amr_add_field(struct amr_field* field, char* name, char* pde_type, int num_time_levels)
 {
 	struct amr_field* new_field = malloc(sizeof(struct amr_field)) ;
 	new_field->name = name ;
-	new_field->pde_type = pde_type
+	new_field->pde_type = pde_type ;
 	new_field->num_time_levels = num_time_levels ;
 	new_field->index = (field->index + field->num_time_levels) ;
 	new_field->next = field ;
 	return 0 ;
+}
+/*============================================================================*/
+int amr_find_field_index(struct amr_field* fields, char* name) 
+{
+	for (struct amr_field* field=fields; field!=NULL; field=field->next) {
+		if (strcmp(field->name,name) == 0) {
+			return field->index ;
+		}
+	}
+	return -1 ;
 }
 /*============================================================================*/
 int amr_delete_fields(struct amr_field* field)
@@ -53,6 +75,7 @@ int amr_delete_fields(struct amr_field* field)
 	for (struct amr_field* iter=field; iter!=NULL; iter=iter->next) {
 		free(iter) ;
 	}
+	return 0 ;
 }
 /*============================================================================*/
 /* finds grid at specified level then sets grid pointer to that grid */

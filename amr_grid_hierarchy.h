@@ -33,7 +33,7 @@ struct amr_field
 	struct amr_field *next;
 	char *name;    
 	int index;           /* index of 0th time level */
-	int num_time_level;  /* number of time-levels (in AMR hierarchy), from 1 .. num_time_level */
+	int num_time_levels; /* number of time-levels (in AMR hierarchy), from 1 .. num_time_level */
 	char* pde_type;      /* either hyperbolic or elliptic */
 }
 ;
@@ -45,8 +45,6 @@ struct amr_grid
 {
 	struct amr_grid* child ; 	/* to finer grid */
 	struct amr_grid* parent ;	/* to coarser grid */
-
-	struct amr_field* fields ; 
 
 	int level ;
 	int Nx ; /* number of grid points */
@@ -79,7 +77,7 @@ struct amr_grid_hierarchy
 	int num_time_levels;	/* total number of grid functions */
 	int t_step_save ;
 	int Nt ;
-	struct amr_var* vars;	/* pointer to a linked list of (num_vars) variable structures */
+	struct amr_field* fields; /* pointer to a linked list of (num_vars) variable structures */
 
 	int* field_indices ; /* labels grid function idex that corresponds to a field */ 
 
@@ -103,7 +101,7 @@ int amr_add_finer_grid(int left_coord, int right_coord, struct amr_grid* parent)
 int amr_destroy_grid(struct amr_grid* grid) ;
 
 struct amr_grid_hierarchy* amr_init_grid_hierarchy(
-	int* field_indices, 
+	struct amr_field* fields,
 	int Nt, int Nx, int t_step_save,
 	double cfl_num,
 	double bbox[2],
