@@ -28,7 +28,7 @@ static void shift_field(int index, int time_levels, amr_grid* grid)
 	}
 }
 /*==========================================================================*/
-static void shift_grid_fields_one_time_level(
+static void shift_fields_one_time_level(
 	amr_field* fields,
 	amr_grid* grid)
 {
@@ -39,6 +39,13 @@ static void shift_grid_fields_one_time_level(
 		shift_field(index,time_levels,grid) ;
 	}
 	return ;
+}
+/*==========================================================================*/
+static void shift_grids_one_time_level(amr_grid_hierarchy* gh)
+{
+	for (amr_grid* grid=gh->grid; grid!=NULL; grid=grid->child) {
+		shift_fields_one_time_level(gh->fields, grid) ;
+	}
 }
 /*==========================================================================*/
 /* for now its linear prolongation */
@@ -123,7 +130,7 @@ static void inject_overlaping_fields(
 /*==========================================================================*/
 /* {ordered field_n, field_nm1, ...} */
 /*==========================================================================*/
-static void set_interior_hyperbolic_boundary_linear_interp(
+/*static*/ void set_interior_hyperbolic_boundary_linear_interp(
 	amr_field* field,
 	amr_grid* parent,
 	amr_grid* grid)
@@ -217,9 +224,12 @@ void set_interior_hyperbolic_boundary(
 {
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		if (strcmp(field->pde_type,HYPERBOLIC) == 0) {
-			set_interior_hyperbolic_boundary_linear_interp(
+			set_interior_hyperbolic_boundary_quad_interp(
 				field, parent, grid)
 			;
+//			set_interior_hyperbolic_boundary_linear_interp(
+//				field, parent, grid)
+//			;
 		}
 	}
 	return ;
@@ -234,7 +244,7 @@ static void amr_evolve_grid(
 	void (*evolve_pde)(amr_grid*))
 {
 	for (int tC=0; tC<num_t_steps; tC++) {
-		shift_grid_fields_one_time_level(fields, grid) ;
+		shift_fields_one_time_level(fields, grid) ;
 		grid->tC   += 1 ;
 		grid->time += grid->dt ;
 		if (grid->tC%REGRID == 0) {
@@ -284,6 +294,8 @@ void amr_main(
 {
 	add_self_similar_initial_grids(gh, 2) ;
 	set_initial_data(gh, initial_data) ;
+	shift_grids_one_time_level(gh) ;
+	shift_grids_one_time_level(gh) ;
 	save_to_file(gh->grid->child) ; /* level zero is the shadow grid */
 
 	for (int tC=1; tC<(gh->Nt); tC++) {
