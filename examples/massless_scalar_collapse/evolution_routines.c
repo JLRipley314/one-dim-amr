@@ -48,13 +48,6 @@ static void set_array_val(int Nx, double val, double* array)
 		array[iC] = val ;
 	}
 	return ;
-}/*==========================================================================*/
-static void copy_to_2nd_array(int Nx, double* array_1, double* array_2) 
-{
-	for (int iC=0; iC<Nx; iC++) {
-		array_2[iC] = array_1[iC] ;
-	}
-	return ;
 }
 /*==========================================================================*/
 /* leftgoing Gaussian pulse */
@@ -294,11 +287,6 @@ void advance_tStep_massless_scalar(
 	double* Al_n, double* Al_nm1, double* Ze_n, double* Ze_nm1,
 	double*  P_n, double*  P_nm1, double*  Q_n, double*  Q_nm1)
 { 
-	copy_to_2nd_array(Nx, Al_n, Al_nm1) ;
-	copy_to_2nd_array(Nx, Ze_n, Ze_nm1) ;
-	copy_to_2nd_array(Nx,  P_n,  P_nm1) ;
-	copy_to_2nd_array(Nx,  Q_n,  Q_nm1) ;
-
 	compute_iteration_GR_Crank_Nicolson_PQ(
 		stereographic_L,
 		Nx,

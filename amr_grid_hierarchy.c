@@ -37,32 +37,48 @@ void free_double_2DArray(double** array)
         return ;
 }
 /*============================================================================*/
-struct amr_field* amr_init_fields(char* name, char* pde_type, int num_time_levels)
+/* head of the list of fields */
+/*============================================================================*/
+amr_field* amr_init_fields(char* name, char* pde_type, int time_levels)
 {
-	struct amr_field* field = malloc(sizeof(struct amr_field)) ;
+	amr_field* field = malloc(sizeof(amr_field)) ;
 
 	field->name = name ;
 	field->pde_type = pde_type ;
-	field->num_time_levels = num_time_levels ;
+	field->time_levels = time_levels ;
 	field->index = 0 ;
+	field->prev = NULL ;
 	field->next = NULL ;
 	return field ;
 }
 /*============================================================================*/
-int amr_add_field(struct amr_field* field, char* name, char* pde_type, int num_time_levels)
+/* add new field to end of fields list */
+/*============================================================================*/
+int amr_add_field(amr_field* fields, char* name, char* pde_type, int time_levels)
 {
-	struct amr_field* new_field = malloc(sizeof(struct amr_field)) ;
-	new_field->name = name ;
-	new_field->pde_type = pde_type ;
-	new_field->num_time_levels = num_time_levels ;
-	new_field->index = (field->index + field->num_time_levels) ;
-	new_field->next = field ;
+	amr_field* current = fields ;
+
+	while (current->next != NULL) {
+		current = current->next ;
+	}
+	current->next = malloc(sizeof(amr_field)) ;
+
+	current->next->name = name ;
+	current->next->pde_type = pde_type ;
+	current->next->time_levels = time_levels ;
+	current->next->index = (current->index + current->time_levels) ;
+
+	current->next->prev = current ;
+	current->next->next = NULL ;
+	printf("name %s\n",  current->next->name) ;
+	printf("index %d\n", current->next->index) ;
+
 	return 0 ;
 }
 /*============================================================================*/
-int amr_find_field_index(struct amr_field* fields, char* name) 
+int amr_find_field_index(amr_field* fields, char* name) 
 {
-	for (struct amr_field* field=fields; field!=NULL; field=field->next) {
+	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		if (strcmp(field->name,name) == 0) {
 			return field->index ;
 		}
@@ -70,17 +86,24 @@ int amr_find_field_index(struct amr_field* fields, char* name)
 	return -1 ;
 }
 /*============================================================================*/
-int amr_delete_fields(struct amr_field* field)
+int amr_delete_fields(amr_field** fields)
 {
-	for (struct amr_field* iter=field; iter!=NULL; iter=iter->next) {
-		free(iter) ;
+	if (*fields==NULL) {
+		return -1 ;
 	}
+	amr_field* iter = NULL ;
+	do {
+		iter = (*fields)->next ;
+		free(*fields) ;
+		(*fields) = iter ;
+	} while (iter!=NULL) ;
+	
 	return 0 ;
 }
 /*============================================================================*/
 /* finds grid at specified level then sets grid pointer to that grid */
 /*============================================================================*/
-int amr_find_grid(int level, struct amr_grid_hierarchy* gh, struct amr_grid* grid) 
+int amr_find_grid(int level, amr_grid_hierarchy* gh, amr_grid* grid) 
 {
 	if (level>AMR_MAX_LEVELS-1) {
 		printf("ERROR(find_grid): level>AMR_MAX_LEVELS-1\n") ;
@@ -99,7 +122,7 @@ int amr_find_grid(int level, struct amr_grid_hierarchy* gh, struct amr_grid* gri
 /*============================================================================*/
 /* finds grid at finest level then sets grid pointer to that grid */
 /*============================================================================*/
-int amr_find_finest_grid(struct amr_grid_hierarchy* gh, struct amr_grid* grid) 
+int amr_find_finest_grid(amr_grid_hierarchy* gh, amr_grid* grid) 
 {
 	grid = gh->grid ;
 	while (grid->child != NULL) {
@@ -112,13 +135,13 @@ int amr_find_finest_grid(struct amr_grid_hierarchy* gh, struct amr_grid* grid)
 /* initializes new grid. all the grid functions ('grid_funcs')
    are initialized to zero */
 /*============================================================================*/
-int amr_add_finer_grid(int left_coord, int right_coord, struct amr_grid* parent)
+int amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent)
 {
 	if (parent->level+1 >= AMR_MAX_LEVELS) {
 		printf("ERROR(amr_add_grid): level>=AMR_MAX_LEVELS\n") ;
 		return -1 ;
 	}
-	struct amr_grid* new_grid = malloc(sizeof(struct amr_grid)) ;
+	amr_grid* new_grid = malloc(sizeof(amr_grid)) ;
 	if (new_grid == NULL) {
 		printf("ERROR(amr_add_grid): new_grid=NULL\n") ;
 		return -1 ;
@@ -177,14 +200,14 @@ int amr_add_finer_grid(int left_coord, int right_coord, struct amr_grid* parent)
 /*============================================================================*/
 /* set the base/level 0 (shadow) grid and the level one grid */
 /*============================================================================*/
-struct amr_grid_hierarchy* amr_init_grid_hierarchy(
-	struct amr_field* fields,
+amr_grid_hierarchy* amr_init_grid_hierarchy(
+	amr_field* fields,
 	int Nt, int Nx, int t_step_save,
 	double cfl_num,
 	double bbox[2],
 	bool excision_on)
 {
-	struct amr_grid_hierarchy* gh = malloc(sizeof(struct amr_grid_hierarchy)) ;
+	amr_grid_hierarchy* gh = malloc(sizeof(amr_grid_hierarchy)) ;
 
 	gh->cfl_num = cfl_num ;
 	gh->Nt  = Nt ;
@@ -192,11 +215,11 @@ struct amr_grid_hierarchy* amr_init_grid_hierarchy(
 	gh->fields = fields ;
 
 	int num_grid_funcs = 0 ;
-	for (struct amr_field* field=fields; field!=NULL; field=field->next) {
-		num_grid_funcs += field->num_time_levels ;
+	for (amr_field* field=fields; field!=NULL; field=field->next) {
+		num_grid_funcs += field->time_levels ;
 	} 
 /*	base (shadow) grid */
-	struct amr_grid* base_grid = malloc(sizeof(struct amr_grid)) ;
+	amr_grid* base_grid = malloc(sizeof(amr_grid)) ;
 	assert(base_grid != NULL) ;	
 	base_grid->level = 0 ;
 
@@ -238,9 +261,9 @@ struct amr_grid_hierarchy* amr_init_grid_hierarchy(
 }
 /*============================================================================*/
 void add_self_similar_initial_grids(
-	struct amr_grid_hierarchy* gh, int num_grids) 
+	amr_grid_hierarchy* gh, int num_grids) 
 {
-	struct amr_grid* grid = gh->grid->child ;
+	amr_grid* grid = gh->grid->child ;
 	int Nx = gh->grid->Nx ;
 
 	for (int iC=0; iC<num_grids; iC++) {
@@ -251,7 +274,7 @@ void add_self_similar_initial_grids(
 	return ; 
 }
 /*============================================================================*/
-int amr_destroy_grid(struct amr_grid* grid) 
+int amr_destroy_grid(amr_grid* grid) 
 {	
 	free_double_2DArray(grid->grid_funcs) ;
 
@@ -267,10 +290,10 @@ int amr_destroy_grid(struct amr_grid* grid)
 	return 0 ;
 }
 /*============================================================================*/
-int amr_destroy_grid_hierarchy(struct amr_grid_hierarchy* gh) 
+int amr_destroy_grid_hierarchy(amr_grid_hierarchy* gh) 
 {
-	struct amr_grid* grid = gh->grid ;
-	struct amr_grid* child = NULL ;
+	amr_grid* grid = gh->grid ;
+	amr_grid* child = NULL ;
 
 	do {
 		child = grid->child ;
@@ -278,7 +301,7 @@ int amr_destroy_grid_hierarchy(struct amr_grid_hierarchy* gh)
 		grid = child ;
 	} while (grid != NULL) ;
 	
-	amr_delete_fields(gh->fields) ;
+	amr_delete_fields(&(gh->fields)) ;
 	free(gh) ;
 	gh = NULL ;
 	

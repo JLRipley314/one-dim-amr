@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <bbhutil.h>
+#include <assert.h>
 
 #include "amr_evolve.h"
 #include "amr_grid_hierarchy.h"
@@ -60,13 +61,13 @@ bool made_files  = false ;
 void set_run_data(void)
 {
 	Nx = pow(2,8)+1 ;
-	Nt = pow(2,13)+1 ;
+	Nt = pow(2,10)+1 ;
 	t_step_save = 1 ;
 
 	perim_interior[0] = false ;
 	perim_interior[1] = false ;
 
-	cfl_num = 0.05 ;
+	cfl_num = 0.2 ;
 
 	bbox[0] =   0 ;
 	bbox[1] =  50 ;
@@ -80,11 +81,11 @@ void set_run_data(void)
 /*==========================================================================*/
 /*number of time steps for evolution fields: 3 */
 /*==========================================================================*/
-struct amr_field* set_fields(void) 
+amr_field* set_fields(void) 
 {
-	struct amr_field* fields 
+	amr_field* fields 
 	= amr_init_fields("Al", "ode", 3) ;
-
+	
 	amr_add_field(fields, "Ze", "ode", 3) ;
 
 	amr_add_field(fields, "P", "hyperbolic", 3) ;
@@ -92,7 +93,7 @@ struct amr_field* set_fields(void)
 
 	return fields ;
 }
-void find_field_indices(struct amr_field* fields) 
+void find_field_indices(amr_field* fields) 
 {
 	Al_n_index   = amr_find_field_index(fields, "Al") ;
 	Al_nm1_index = Al_n_index + 1 ;
@@ -110,12 +111,17 @@ void find_field_indices(struct amr_field* fields)
 	Q_nm1_index = Q_n_index + 1 ;
 	Q_nm2_index = Q_n_index + 2 ;
 
+	assert(Al_n_index >= 0) ;
+	assert(Ze_n_index >= 0) ;
+	assert(P_n_index >= 0) ;
+	assert(Q_n_index >= 0) ;
+
 	return ;
 }
 /*===========================================================================*/
 /* call to set global variables for field evolution */
 /*===========================================================================*/
-void set_globals(struct amr_grid* grid)
+void set_globals(amr_grid* grid)
 {	
 
 	P_n   = grid->grid_funcs[P_n_index  ] ;
@@ -155,7 +161,7 @@ void set_globals(struct amr_grid* grid)
 /*===========================================================================*/
 /* computes one time step (to tolerance) of wave equation */
 /*===========================================================================*/
-void initial_data(struct amr_grid* grid)
+void initial_data(amr_grid* grid)
 {
 	set_globals(grid) ;
 
@@ -170,7 +176,7 @@ void initial_data(struct amr_grid* grid)
 /*===========================================================================*/
 /* computes one time step (to tolerance) of wave equation */
 /*===========================================================================*/
-void wave_evolve(struct amr_grid* grid)
+void wave_evolve(amr_grid* grid)
 {
 	set_globals(grid) ;
 
@@ -185,7 +191,7 @@ void wave_evolve(struct amr_grid* grid)
 /*===========================================================================*/
 /* computes one time step (to tolerance) of wave equation */
 /*===========================================================================*/
-void save_to_file(struct amr_grid* grid)
+void save_to_file(amr_grid* grid)
 {
 	set_globals(grid) ;
 
@@ -194,7 +200,7 @@ void save_to_file(struct amr_grid* grid)
 		snprintf(output_name_Q_sdf, MAX_FILE_NAME, "%sQ.sdf", OUTPUT_DIR) ;
 	}
 	made_files = true ;
-
+//	gft_set_multi() ;
 	gft_out_bbox(output_name_P_sdf, time, &Nx, 1, bbox, P_n) ;
 	gft_out_bbox(output_name_Q_sdf, time, &Nx, 1, bbox, Q_n) ;
 	
@@ -208,10 +214,10 @@ int main(int argc, char* argv[])
 {
 	set_run_data() ;
 
-	struct amr_field* fields = set_fields() ; 
+	amr_field* fields = set_fields() ; 
 	find_field_indices(fields) ; 
 
-	struct amr_grid_hierarchy* gh 
+	amr_grid_hierarchy* gh 
 	= amr_init_grid_hierarchy(
 		fields,
         	Nt, Nx, t_step_save,

@@ -22,26 +22,31 @@
 
 #define MIN_GRID_SHAPE ((double)(20)) /* number of coarser grid points before making new grid */
 
+#define HYPERBOLIC "hyperbolic"
+#define ELLIPTIC "elliptic"
+#define ODE "ODE"
+
 #include <stdbool.h>
 
 /*============================================================================*/
 /* 	keeps track of where variable is located in storage on each grid,
 	along with instructions for how to inject and interpolate */ 
 /*============================================================================*/
-struct amr_field 
+typedef struct amr_field 
 {
+	struct amr_field *prev;
 	struct amr_field *next;
 	char *name;    
 	int index;           /* index of 0th time level */
-	int num_time_levels; /* number of time-levels (in AMR hierarchy), from 1 .. num_time_level */
+	int time_levels; /* number of time-levels (in AMR hierarchy), from 1 .. num_time_level */
 	char* pde_type;      /* either hyperbolic or elliptic */
-}
+} amr_field 
 ;
 /*============================================================================*/
 /*	each grid holds storage for ``grid functions'': i.e. the fields
 	at each refinement level */
 /*============================================================================*/
-struct amr_grid
+typedef struct amr_grid
 {
 	struct amr_grid* child ; 	/* to finer grid */
 	struct amr_grid* parent ;	/* to coarser grid */
@@ -60,21 +65,21 @@ struct amr_grid
 	int perim_coords[2] ; /* coordinates with respect to parent grid */
 	
 	int num_grid_funcs;	/* total number of grid functions */
-	int num_time_levels;	/* total number of grid functions */
+	int time_levels;	/* total number of grid functions */
 	double** grid_funcs ;	/* pointer to array of pointer to grid function data */
 
 	bool perim_interior[2] ;
-}
+} amr_grid
 ;
 /*============================================================================*/
 /* contains base grid, which then points to all subsequent grids */
 /*============================================================================*/
-struct amr_grid_hierarchy 
+typedef struct amr_grid_hierarchy 
 {
 	/* the following define the structure of the grid-hierarchy */
 
 	double cfl_num;		/* courant factor */
-	int num_time_levels;	/* total number of grid functions */
+	int time_levels;	/* total number of grid functions */
 	int t_step_save ;
 	int Nt ;
 	struct amr_field* fields; /* pointer to a linked list of (num_vars) variable structures */
@@ -89,32 +94,32 @@ struct amr_grid_hierarchy
 	bool excision_on ;
 /*	user defined function to mask excised regions */
 	void (*app_fill_exc_mask)(double* mask, int dim, int* shape, double* bbox, double excised) ;
-}
+} amr_grid_hierarchy
 ;
 /*============================================================================*/
 /* return 0 then no errors */
 /*============================================================================*/
-int amr_find_grid(int level, struct amr_grid_hierarchy* gh, struct amr_grid* grid) ;
+int amr_find_grid(int level, amr_grid_hierarchy* gh, amr_grid* grid) ;
 
-int amr_add_finer_grid(int left_coord, int right_coord, struct amr_grid* parent) ;
+int amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent) ;
 
-int amr_destroy_grid(struct amr_grid* grid) ;
+int amr_destroy_grid(amr_grid* grid) ;
 
-struct amr_grid_hierarchy* amr_init_grid_hierarchy(
-	struct amr_field* fields,
+amr_grid_hierarchy* amr_init_grid_hierarchy(
+	amr_field* fields,
 	int Nt, int Nx, int t_step_save,
 	double cfl_num,
 	double bbox[2],
 	bool excision_on)
 ;
-void add_self_similar_initial_grids(struct amr_grid_hierarchy* gh, int num_grids) ;
+void add_self_similar_initial_grids(amr_grid_hierarchy* gh, int num_grids) ;
 
-int amr_destroy_grid_hierarchy(struct amr_grid_hierarchy* gh) ;
+int amr_destroy_grid_hierarchy(amr_grid_hierarchy* gh) ;
 
-int amr_add_field(struct amr_field* field, char* name, char* pde_type, int num_time_levels) ;
+int amr_add_field(amr_field* field, char* name, char* pde_type, int time_levels) ;
 
-struct amr_field* amr_init_fields(char* name, char* pde_type, int num_time_levels) ;
+amr_field* amr_init_fields(char* name, char* pde_type, int time_levels) ;
 
-int amr_find_field_index(struct amr_field* fields, char* name) ; 
+int amr_find_field_index(amr_field* fields, char* name) ; 
  
 #endif /*_GRID_HIERARCHY_H_*/
