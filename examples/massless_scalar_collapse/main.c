@@ -17,14 +17,17 @@
 /* global variables for evolution-convenient for function calls */
 /*===========================================================================*/
 double* Al_n ;
-double* Ze_n ;
-double* P_n ;
-double* Q_n ;
-
 double* Al_nm1 ;
+double* Al_nm2 ;
+double* Ze_n ;
 double* Ze_nm1 ;
+double* Ze_nm2 ;
+double* P_n ;
 double* P_nm1 ;
+double* P_nm2 ;
+double* Q_n ;
 double* Q_nm1 ;
+double* Q_nm2 ;
 
 double cfl_num ;
 double bbox[2] ;
@@ -54,7 +57,7 @@ bool made_files  = false ;
 /*===========================================================================*/
 /* call after variables have been defined */
 /*===========================================================================*/
-void set_initial_run_data(void)
+void set_run_data(void)
 {
 	Nx = pow(2,8)+1 ;
 	Nt = pow(2,13)+1 ;
@@ -74,20 +77,38 @@ void set_initial_run_data(void)
 
 	return ;
 }
-void set_field_indices(void) 
+/*==========================================================================*/
+/*number of time steps for evolution fields: 3 */
+/*==========================================================================*/
+struct amr_field* set_fields(void) 
 {
+	struct amr_field* fields 
+	= amr_init_fields("Al", "ode", 3) ;
 
-	P_n_index   = 0 ;
-	P_nm1_index = 1 ;
-	Q_n_index   = 2 ;
-	Q_nm1_index = 3 ;
+	amr_add_field(fields, "Ze", "ode", 3) ;
 
-	Al_n_index   = 4 ;
-	Al_nm1_index = 5 ;
-	Ze_n_index   = 6 ;
-	Ze_nm1_index = 7 ;
+	amr_add_field(fields, "P", "hyperbolic", 3) ;
+	amr_add_field(fields, "Q", "hyperbolic", 3) ;
 
-	num_grid_funcs = 8 ;
+	return fields ;
+}
+void find_field_indices(struct amr_field* fields) 
+{
+	Al_n_index   = amr_find_field_index(fields, "Al") ;
+	Al_nm1_index = Al_n_index + 1 ;
+	Al_nm2_index = Al_n_index + 2 ;
+
+	Ze_n_index   = amr_find_field_index(fields, "Ze") ;
+	Ze_nm1_index = Ze_n_index + 1 ;
+	Ze_nm2_index = Ze_n_index + 2 ;
+
+	P_n_index   = amr_find_field_index(fields, "P") ;
+	P_nm1_index = P_n_index + 1 ;
+	P_nm2_index = P_n_index + 2 ;
+
+	Q_n_index   = amr_find_field_index(fields, "Q") ;
+	Q_nm1_index = Q_n_index + 1 ;
+	Q_nm2_index = Q_n_index + 2 ;
 
 	return ;
 }
@@ -99,13 +120,17 @@ void set_globals(struct amr_grid* grid)
 
 	P_n   = grid->grid_funcs[P_n_index  ] ;
 	P_nm1 = grid->grid_funcs[P_nm1_index] ;
+	P_nm2 = grid->grid_funcs[P_nm2_index] ;
 	Q_n   = grid->grid_funcs[Q_n_index  ] ;
 	Q_nm1 = grid->grid_funcs[Q_nm1_index] ;
+	Q_nm2 = grid->grid_funcs[Q_nm2_index] ;
 
 	Al_n   = grid->grid_funcs[Al_n_index  ] ;
 	Al_nm1 = grid->grid_funcs[Al_nm1_index] ;
+	Al_nm2 = grid->grid_funcs[Al_nm2_index] ;
 	Ze_n   = grid->grid_funcs[Ze_n_index  ] ;
 	Ze_nm1 = grid->grid_funcs[Ze_nm1_index] ;
+	Ze_nm2 = grid->grid_funcs[Ze_nm2_index] ;
 
 	Nx = grid->Nx ;
 
@@ -137,8 +162,8 @@ void initial_data(struct amr_grid* grid)
 	initial_data_Gaussian(
 		Nx, 	dx,
 		bbox,
-		Al_n, Al_nm1, Ze_n, Ze_nm1,
-		 P_n,  P_nm1,  Q_n,  Q_nm1)
+		Al_n, Ze_n, 
+		 P_n,  Q_n)
 	;	
 	return ;
 }
@@ -181,12 +206,14 @@ void save_to_file(struct amr_grid* grid)
 
 int main(int argc, char* argv[])
 {
-	set_initial_run_data() ;
-	set_field_indices() ; 
+	set_run_data() ;
+
+	struct amr_field* fields = set_fields() ; 
+	find_field_indices(fields) ; 
 
 	struct amr_grid_hierarchy* gh 
 	= amr_init_grid_hierarchy(
-        	num_grid_funcs,
+		fields,
         	Nt, Nx, t_step_save,
 		cfl_num,
 		bbox,

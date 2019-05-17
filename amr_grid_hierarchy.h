@@ -112,5 +112,9 @@ void add_self_similar_initial_grids(struct amr_grid_hierarchy* gh, int num_grids
 int amr_destroy_grid_hierarchy(struct amr_grid_hierarchy* gh) ;
 
 int amr_add_field(struct amr_field* field, char* name, char* pde_type, int num_time_levels) ;
+
+struct amr_field* amr_init_fields(char* name, char* pde_type, int num_time_levels) ;
+
+int amr_find_field_index(struct amr_field* fields, char* name) ; 
  
 #endif /*_GRID_HIERARCHY_H_*/

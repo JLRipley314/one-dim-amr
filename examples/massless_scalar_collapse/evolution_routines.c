@@ -62,8 +62,8 @@ static void copy_to_2nd_array(int Nx, double* array_1, double* array_2)
 void initial_data_Gaussian(
 	int Nx, 	double dx,
 	double bbox[2],
-	double* Al_n, double* Al_nm1, double* Ze_n, double* Ze_nm1,
-	double*  P_n, double*  P_nm1, double*  Q_n, double*  Q_nm1)
+	double* Al_n, double* Ze_n, 
+	double*  P_n, double*  Q_n)
 {
 	double left_point = bbox[0] ;
 
@@ -90,10 +90,6 @@ void initial_data_Gaussian(
 	P_n[Nx-1] = 0 ;
 	Q_n[Nx-1] = 0 ;
 
-	copy_to_2nd_array(Nx, Al_n, Al_nm1) ;
-	copy_to_2nd_array(Nx, Ze_n, Ze_nm1) ;
-	copy_to_2nd_array(Nx,  P_n,  P_nm1) ;
-	copy_to_2nd_array(Nx,  Q_n,  Q_nm1) ;
 	return ;
 }
 /*==========================================================================*/

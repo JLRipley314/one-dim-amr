@@ -231,7 +231,7 @@ void amr_main(
 	void (*save_to_file)(struct amr_grid*))
 {
 	add_self_similar_initial_grids(gh, 2) ;
-	set_initial_data(gh,initial_data) ;
+	set_initial_data(gh, initial_data) ;
 	save_to_file(gh->grid->child) ;
 
 	for (int tC=1; tC<(gh->Nt); tC++) {
