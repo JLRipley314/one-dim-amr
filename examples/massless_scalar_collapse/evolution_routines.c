@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include "evolution_routines.h"
 
-#define ERR_TOLERANCE ((double)1e-10)
+#define ERR_TOLERANCE ((double)1e-12)
 
 /*==========================================================================*/
 inline double D1_CrankNicolson_2ndOrder(
@@ -103,6 +103,13 @@ void Kreiss_Oliger_Filter(
 		)
 		;
 	}
+	field[Nx-2] += (epsilon_ko/16.) * (
+			field[Nx-1] 
+		+ 	(-4.*field[Nx-2]) 
+		+ 	(6.*field[Nx-3]) 
+		+ 	(-4.*field[Nx-4]) 
+		+ 	field[Nx-5] 
+		) ;
 
 	return ;
 }

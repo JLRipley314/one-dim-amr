@@ -105,14 +105,17 @@ static void inject_grid_func(
 	return ;
 }
 /*==========================================================================*/
-static void inject_all_grid_funcs(amr_grid* parent, amr_grid* grid)
+static void inject_overlaping_fields(
+	amr_field* fields, amr_grid* parent, amr_grid* grid)
 {
-	for (int iC=0; iC<(grid->num_grid_funcs); iC++) {
+	int index = 0 ;
+	for (amr_field* iter=fields; iter!=NULL; iter=iter->next) {
+		index = iter->index ;
 		inject_grid_func(
 			grid->Nx, 
 			grid->perim_coords[0], 
-			parent->grid_funcs[iC],
-			grid->grid_funcs[iC]
+			parent->grid_funcs[index],
+			grid->grid_funcs[index]
 		) ;
 	}
 	return ;
@@ -252,7 +255,7 @@ static void amr_evolve_grid(
 	}
 	if (grid->parent != NULL) {
 		/* TO DO: compute truncation error */
-		inject_all_grid_funcs(grid->parent, grid) ;
+		inject_overlaping_fields(fields, grid->parent, grid) ;
 	}
 	return ;
 }

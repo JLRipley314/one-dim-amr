@@ -61,7 +61,7 @@ bool made_files  = false ;
 void set_run_data(void)
 {
 	Nx = pow(2,8)+1 ;
-	Nt = pow(2,10)+1 ;
+	Nt = pow(2,12)+1 ;
 	t_step_save = 1 ;
 
 	perim_interior[0] = false ;
@@ -200,7 +200,6 @@ void save_to_file(amr_grid* grid)
 		snprintf(output_name_Q_sdf, MAX_FILE_NAME, "%sQ.sdf", OUTPUT_DIR) ;
 	}
 	made_files = true ;
-//	gft_set_multi() ;
 	gft_out_bbox(output_name_P_sdf, time, &Nx, 1, bbox, P_n) ;
 	gft_out_bbox(output_name_Q_sdf, time, &Nx, 1, bbox, Q_n) ;
 	
