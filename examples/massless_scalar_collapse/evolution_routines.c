@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include "evolution_routines.h"
 
-#define ERR_TOLERANCE ((double)1e-12)
+#define ERR_TOLERANCE ((double)1e-8)
 #define MACHINE_EPSILON ((double)1e-14)
 
 /*==========================================================================*/
@@ -65,42 +65,6 @@ static void rescale_array(double rescale_val, int Nx, double* array)
 	return ;
 }
 /*==========================================================================*/
-/* leftgoing Gaussian pulse */
-/*==========================================================================*/
-void initial_data_Gaussian(
-	int Nx, 	double dx,
-	double bbox[2],
-	double* Al_n, double* Ze_n, 
-	double*  P_n, double*  Q_n)
-{
-	double left_point = bbox[0] ;
-
-	double amp = 1 ;
-	double width = 2 ;
-	double r_0 = 5 ;
-	double x = 0 ;
-	double r = 0 ;
-
-	double s_L = bbox[1] ;
-
-	set_array_val(Nx, 1., Al_n  ) ;
-	set_array_val(Nx, 0., Ze_n  ) ;
-
-	for (int iC=0; iC<Nx-1; iC++) {
-		x = (iC * dx) + left_point ;
-		r = stereographic_r(s_L, x) ;
-		Q_n[iC] = amp * exp(-pow((r-r_0)/width,2)) * (
-			(-(r-r_0)/pow(width,2)) * pow(r,2) 
-		+	2*r
-		) ;
-		P_n[iC] = Q_n[iC] ;
-	}
-	P_n[Nx-1] = 0 ;
-	Q_n[Nx-1] = 0 ;
-
-	return ;
-}
-/*==========================================================================*/
 /* see gr-qc/0302072 */
 /*==========================================================================*/
 void Kreiss_Oliger_Filter(
@@ -154,13 +118,10 @@ static double compute_iteration_GR_Al(
         double
                 Jr_j1h
         ;
-
         double res_Al = 0 ;
         double jac_Al = 1 ;
- /* scalar field functions */
-
         double res_infty_norm = 0 ; /* returning this */
-
+ /* scalar field functions */
         for (int jC=exc_jC; jC<Nx-1; jC++) {
                 x_j1h = ((jC+1) + jC) * dx / 2 ;
 
@@ -187,8 +148,7 @@ static double compute_iteration_GR_Al(
                 &&  (fabs(Ze_j1h) < 10*MACHINE_EPSILON)
                 ) {
                         Al[jC+1] = Al[jC] ;
-                }
-                else {
+                } else {
                         res_Al =
                         +       r_Der_Al_j1h*Ze_j1h
                         -       (r_j1h*Al_j1h*Jr_j1h)/2.
@@ -208,7 +168,7 @@ static double compute_iteration_GR_Al(
                 }
                 res_infty_norm = compute_weighted_infty_norm(1-x_j1h/s_L, res_Al, res_infty_norm) ;
         }
-        rescale_array(Al[Nx-1], Nx, Al) ;
+        rescale_array(Al[0], Nx, Al) ;
 
         return res_infty_norm ;
 }
@@ -238,14 +198,16 @@ static double compute_iteration_GR_Ze(
         double
                 rho_j1h
         ;
-
+	int size = 0 ;
+	if (fabs(bbox[1]-s_L)<MACHINE_EPSILON) size = Nx-1 ;
+	else size = Nx ;
         double res_Ze_sqrd = 0 ; 
         double jac_Ze_sqrd = 1 ; 
  /* scalar field functions */   
 
         double res_infty_norm = 0 ; /* returning this */
 
-        for (int jC=exc_jC; jC<Nx-1; jC++) {
+        for (int jC=exc_jC; jC<size-1; jC++) {
                 x_j1h = ((jC+1) + jC) * dx / 2 ; 
 
                 x_jp1 = (jC+1) * dx ;
@@ -288,7 +250,6 @@ static double compute_iteration_GR_Ze(
                         )/dr
                 )
                 ;
-
                 Ze_sqrd_jp1 -= res_Ze_sqrd/jac_Ze_sqrd ;
                 Ze[jC+1]  = sqrt(Ze_sqrd_jp1) ;
 /************************************************/
@@ -300,12 +261,51 @@ static double compute_iteration_GR_Ze(
                 }
                 res_infty_norm = compute_weighted_infty_norm(1-x_j1h/s_L, res_Ze_sqrd, res_infty_norm) ;
         }
+	if (size==Nx-1) Ze[Nx-1] = 0 ;
 
         return res_infty_norm ;
 }
-/*****************************************************************************
- * Dirichlet boundary conditions. 
- ****************************************************************************/
+/*==========================================================================*/
+static void solve_Al_Ze(
+	double s_L,
+	int Nx,
+	double dt, 	double dx,
+	int exc_jC,
+	double bbox[2],
+	bool perim_interior[2],
+	double* Al, 	double* Ze, 
+	double*  P, 	double*  Q)
+{
+	double res = 0 ;
+	int iters = 0 ;
+	do {
+		iters+=1 ;
+		res = compute_iteration_GR_Ze(
+			s_L,
+			Nx,
+			dt, 	dx,
+			exc_jC,
+			bbox,
+			perim_interior,
+			Al, 	Ze, 
+			P, 	Q)
+		;
+		printf("***\nZe: %.2e\n***\n",res) ;
+/*		res = compute_iteration_GR_Al(
+			s_L,
+			Nx,
+			dt, 	dx,
+			exc_jC,
+			bbox,
+			perim_interior,
+			Al, 	Ze, 
+			P, 	Q)
+		;
+		printf("***\nAl: %.2e\n***\n",res) ;
+*/	} while (res>ERR_TOLERANCE) ;
+	return ;
+}
+/*==========================================================================*/
 static double compute_iteration_GR_Crank_Nicolson_PQ(
 	double s_L,
 	int Nx,
@@ -328,11 +328,8 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 	double jac_P = 1 ;
 
 	int size = 0 ;
-	if (fabs(bbox[1]-s_L)<1e-10) {
-		size = Nx-1 ;
-	} else {
-		size = Nx ;
-	}
+	if (fabs(bbox[1]-s_L)<MACHINE_EPSILON) size = Nx-1 ;
+	else size = Nx ;
 	double res_infty_norm = 0 ; /* returning this */
 /****************************************************************************/
 /* interior: we go to Nx-2 as we do not want to actually include the point
@@ -485,21 +482,83 @@ void advance_tStep_massless_scalar(
 	double* Al_n, double* Al_nm1, double* Ze_n, double* Ze_nm1,
 	double*  P_n, double*  P_nm1, double*  Q_n, double*  Q_nm1)
 { 
-	compute_iteration_GR_Crank_Nicolson_PQ(
-		s_L,
-		Nx,
-		dt, dx,
-		exc_jC, 
-		bbox,
-		perim_interior,
-		Al_n, Al_nm1, Ze_n, Ze_nm1,
-		 P_n,  P_nm1,  Q_n,  Q_nm1)
-	;
+	double res = 0 ;
+	do {
+		res = compute_iteration_GR_Crank_Nicolson_PQ(
+			s_L,
+			Nx,
+			dt, dx,
+			exc_jC, 
+			bbox,
+			perim_interior,
+			Al_n, Al_nm1, Ze_n, Ze_nm1,
+			 P_n,  P_nm1,  Q_n,  Q_nm1)
+		;
+		solve_Al_Ze(
+			s_L,
+			Nx,
+			dt, 	dx,
+			exc_jC,
+			bbox,
+			perim_interior,
+			Al_n, 	Ze_n, 
+			P_n, 	Q_n)
+		;
+	} while (res>ERR_TOLERANCE) ;
+
 	Kreiss_Oliger_Filter(Nx, P_n) ;
 	Kreiss_Oliger_Filter(Nx, Q_n) ;
 
 	return ;
 }	
+/*==========================================================================*/
+/* leftgoing Gaussian pulse */
+/*==========================================================================*/
+void initial_data_Gaussian(
+	double s_L,
+	int Nx, 	
+	double dt, double dx,
+	int exc_jC,
+	double bbox[2],
+	bool perim_interior[2],
+	double* Al, double* Ze, 
+	double*  P, double*  Q)
+{
+	double left_point = bbox[0] ;
+
+	double amp = 1 ;
+	double width = 2 ;
+	double r_0 = 5 ;
+	double x = 0 ;
+	double r = 0 ;
+
+	set_array_val(Nx, 1., Al) ;
+	set_array_val(Nx, 0., Ze) ;
+
+	for (int iC=0; iC<Nx-1; iC++) {
+		x = (iC * dx) + left_point ;
+		r = stereographic_r(s_L, x) ;
+		Q[iC] = amp * exp(-pow((r-r_0)/width,2)) * (
+			(-(r-r_0)/pow(width,2)) * pow(r,2) 
+		+	2*r
+		) ;
+		P[iC] = Q[iC] ;
+	}
+	P[Nx-1] = 0 ;
+	Q[Nx-1] = 0 ;
+
+	solve_Al_Ze(
+		s_L,
+		Nx,
+		dt, 	dx,
+		exc_jC,
+		bbox,
+		perim_interior,
+		Al, 	Ze, 
+		P, 	Q)
+	;
+	return ;
+}
 /*===========================================================================*/
 /*===========================================================================*/
 void save_to_txt_file(

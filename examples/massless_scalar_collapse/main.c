@@ -49,6 +49,8 @@ int
 ;
 int perim_coords[2] ;
 
+char output_name_Al_sdf[MAX_FILE_NAME+1] ;
+char output_name_Ze_sdf[MAX_FILE_NAME+1] ;
 char output_name_P_sdf[MAX_FILE_NAME+1] ;
 char output_name_Q_sdf[MAX_FILE_NAME+1] ;
 
@@ -61,7 +63,7 @@ bool made_files  = false ;
 void set_run_data(void)
 {
 	Nx = pow(2,8)+1 ;
-	Nt = pow(2,4)+1 ;
+	Nt = pow(2,0)+1 ;
 	t_step_save = 1 ;
 
 	perim_interior[0] = false ;
@@ -166,11 +168,15 @@ void initial_data(amr_grid* grid)
 	set_globals(grid) ;
 
 	initial_data_Gaussian(
-		Nx, 	dx,
+		stereographic_L,
+		Nx, 	
+		dt, dx,
+		excised_jC,
 		bbox,
+		perim_interior,
 		Al_n, Ze_n, 
-		 P_n,  Q_n)
-	;	
+		P_n,   Q_n)
+	;
 	return ;
 }
 /*===========================================================================*/
@@ -198,10 +204,14 @@ void save_to_file(amr_grid* grid)
 	set_globals(grid) ;
 
 	if (made_files == false) {
+		snprintf(output_name_Al_sdf, MAX_FILE_NAME, "%sAl.sdf", OUTPUT_DIR) ;
+		snprintf(output_name_Ze_sdf, MAX_FILE_NAME, "%sZe.sdf", OUTPUT_DIR) ;
 		snprintf(output_name_P_sdf, MAX_FILE_NAME, "%sP.sdf", OUTPUT_DIR) ;
 		snprintf(output_name_Q_sdf, MAX_FILE_NAME, "%sQ.sdf", OUTPUT_DIR) ;
 	}
 	made_files = true ;
+	gft_out_bbox(output_name_Al_sdf, time, &Nx, 1, bbox, Al_n) ;
+	gft_out_bbox(output_name_Ze_sdf, time, &Nx, 1, bbox, Ze_n) ;
 	gft_out_bbox(output_name_P_sdf, time, &Nx, 1, bbox, P_n) ;
 	gft_out_bbox(output_name_Q_sdf, time, &Nx, 1, bbox, Q_n) ;
 	

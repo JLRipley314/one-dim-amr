@@ -163,6 +163,8 @@ int amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent)
 
 	new_grid->Nx = REFINEMENT*(right_coord-left_coord) + 1 ;
 
+	new_grid->excised_jC = 0 ;
+
 	new_grid->bbox[0] = parent->bbox[0] + (left_coord *parent->dx) ;
 	new_grid->bbox[1] = parent->bbox[0] + (right_coord*parent->dx) ;
 	
@@ -227,6 +229,7 @@ amr_grid_hierarchy* amr_init_grid_hierarchy(
 	base_grid->num_grid_funcs  = num_grid_funcs ;
 	
 	base_grid->Nx = Nx ;
+	base_grid->excised_jC = 0 ;
 
 	base_grid->bbox[0] = bbox[0] ;
 	base_grid->bbox[1] = bbox[1] ;

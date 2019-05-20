@@ -4,10 +4,14 @@
 #include <stdbool.h>
 
 void initial_data_Gaussian(
-	int Nx, 	double dx,
+	double s_L,
+	int Nx, 	
+	double dt, double dx,
+	int exc_jC,
 	double bbox[2],
-	double* Al_n, double* Ze_n,
-	double*  P_n, double*  Q_n)
+	bool perim_interior[2],
+	double* Al, double* Ze, 
+	double*  P, double*  Q)
 ;
 /* we set Dirichlet boundary conditions for now */
 void advance_tStep_massless_scalar(
