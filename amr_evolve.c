@@ -294,12 +294,13 @@ void amr_main(
 	void (*evolve_pde)(amr_grid*),
 	void (*save_to_file)(amr_grid*))
 {
-	add_self_similar_initial_grids(gh, 2) ;
+	add_self_similar_initial_grids(gh, 4) ;
 	set_initial_data(gh, initial_data) ;
 	shift_grids_one_time_level(gh) ;
 	shift_grids_one_time_level(gh) ;
-	save_to_file(gh->grid) ; 
-	save_to_file(gh->grid->child) ; /* level zero is the shadow grid */
+	for (amr_grid* grid=gh->grid; grid != NULL; grid=grid->child) {
+		save_to_file(grid) ;
+	}
 
 	for (int tC=1; tC<(gh->Nt); tC++) {
 		amr_evolve_grid(

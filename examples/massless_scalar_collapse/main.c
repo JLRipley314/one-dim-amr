@@ -36,6 +36,8 @@ double dt, dx ;
 double time ;
 double stereographic_L ; /* stereographic length: for compactification */
 
+double rescale_Al = 1 ;
+
 int Nx, Nt, t_step_save ;
 int excised_jC ;
 
@@ -63,7 +65,7 @@ bool made_files  = false ;
 void set_run_data(void)
 {
 	Nx = pow(2,8)+1 ;
-	Nt = pow(2,14)+1 ;
+	Nt = pow(2,8)+1 ;
 	t_step_save = 2 ;
 
 	perim_interior[0] = false ;
@@ -156,6 +158,9 @@ void set_globals(amr_grid* grid)
 	perim_coords[0] = grid->perim_coords[0] ;
 	perim_coords[1] = grid->perim_coords[1] ;
 
+	if (grid->parent == NULL) {	
+		rescale_Al = Al_n[Nx-1] ;
+	}
 	excised_jC = grid->excised_jC ;
 
 	return ;
@@ -166,7 +171,6 @@ void set_globals(amr_grid* grid)
 void initial_data(amr_grid* grid)
 {
 	set_globals(grid) ;
-
 	initial_data_Gaussian(
 		stereographic_L,
 		Nx, 	
@@ -185,10 +189,13 @@ void initial_data(amr_grid* grid)
 void wave_evolve(amr_grid* grid)
 {
 	set_globals(grid) ;
-
+	for (int iC=0; iC<Nx; iC++) {
+		Al_n[iC] /= rescale_Al ;
+	}
 	advance_tStep_massless_scalar(
 		stereographic_L,
 		Nx, dt, dx, 
+		excision_on,
 		excised_jC,
 		bbox, perim_interior,
 		Al_n, Al_nm1, Ze_n, Ze_nm1,

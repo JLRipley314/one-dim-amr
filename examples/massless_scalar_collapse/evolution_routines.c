@@ -57,13 +57,6 @@ static void set_array_val(int Nx, double val, double* array)
 	}
 	return ;
 }
-static void rescale_array(double rescale_val, int Nx, double* array)
-{
-	for (int iC=0; iC<Nx; iC++) {
-		array[iC] /= rescale_val ;
-	}
-	return ;
-}
 /*==========================================================================*/
 /* see gr-qc/0302072 */
 /*==========================================================================*/
@@ -168,7 +161,6 @@ static double compute_iteration_GR_Al(
                 }
                 res_infty_norm = compute_weighted_infty_norm(1-x_j1h/s_L, res_Al, res_infty_norm) ;
         }
-        rescale_array(Al[0], Nx, Al) ;
 
         return res_infty_norm ;
 }
@@ -266,39 +258,103 @@ static double compute_iteration_GR_Ze(
         return res_infty_norm ;
 }
 /*==========================================================================*/
-static void solve_Al_Ze(
+static double compute_iteration_GR_excision_boundary_condition_Ze(
 	double s_L,
 	int Nx,
 	double dt, 	double dx,
 	int exc_jC,
 	double bbox[2],
 	bool perim_interior[2],
-	double* Al, 	double* Ze, 
-	double*  P, 	double*  Q)
+	double* Al_n,  double* Al_nm1, double* Ze_n, double* Ze_nm1,
+	double* P_n,   double* P_nm1,  double* Q_n,  double* Q_nm1)
+{
+        double x_j = dx * exc_jC ;
+        double r_j = stereographic_r( s_L, x_j) ;
+        double dr  = stereographic_dr(s_L, x_j, dx) ;
+
+        double Al = (Al_n[exc_jC] + Al_nm1[exc_jC]) / 2. ;
+        double Ze = (Ze_n[exc_jC] + Ze_nm1[exc_jC]) / 2. ;
+        double P  = (P_n[exc_jC]  + P_nm1[exc_jC])  / 2. ;
+        double Q  = (Q_n[exc_jC]  + Q_nm1[exc_jC])  / 2. ;
+
+        double t_Der_Ze = D1_CrankNicolson_2ndOrder(Ze_n[exc_jC], Ze_nm1[exc_jC], dt) ;
+
+        double	r_Der_Ze  = D1_forward_2ndOrder(Ze_n[exc_jC+2],   Ze_n[exc_jC+1],   Ze_n[exc_jC],   dr) ;
+		r_Der_Ze += D1_forward_2ndOrder(Ze_nm1[exc_jC+2], Ze_nm1[exc_jC+1], Ze_nm1[exc_jC], dr) ;
+		r_Der_Ze /= 2 ;
+
+        double SE_LL_TR        = (Al*(2*P*Q + (pow(P,2) + pow(Q,2))*Ze))/2. ;
+        double Ze_Der_SE_LL_TR = (Al*(0     + (pow(P,2) + pow(Q,2))*1 ))/2. ;
+
+        double res_Ze = 
+		t_Der_Ze
+	-       (r_j*SE_LL_TR)/(2.*Ze)
+	-       r_Der_Ze*Al*Ze
+	-       (Al*pow(Ze,2))/(2.*r_j)
+
+        ;
+        double jac_Ze = 
+		1/dt
+	-       (r_Der_Ze*Al)/2.
+	+       (
+			pow(r_j,2)*SE_LL_TR
+		-       pow(r_j,2)*Ze_Der_SE_LL_TR*Ze
+		-       2*Al*pow(Ze,3)
+	)/(4.*r_j*pow(Ze,2))
+        ;
+
+        Ze_n[exc_jC] -= res_Ze/jac_Ze ;
+
+        return fabs(res_Ze) ;
+}
+/*==========================================================================*/
+static void solve_Al_Ze(
+	double s_L,
+	int Nx,
+	double dt, 	double dx,
+	bool excision_on,
+	int exc_jC,
+	double bbox[2],
+	bool perim_interior[2],
+	double* Al_n, 	double* Al_nm1, double* Ze_n, double* Ze_nm1,
+	double*  P_n, 	double*  P_nm1, double*  Q_n, double*  Q_nm1)
 {
 	double res = 0 ;
-	int iters = 0 ;
 	do {
-		iters+=1 ;
-		res = compute_iteration_GR_Ze(
+		res = 0 ;
+		if ((excision_on == true)
+		&&  (exc_jC>0)
+		) {
+			res += compute_iteration_GR_excision_boundary_condition_Ze(
+				s_L,
+				Nx,
+				dt, 	dx,
+				exc_jC,
+				bbox,
+				perim_interior,
+				Al_n,  Al_nm1, Ze_n, Ze_nm1,
+				 P_n,   P_nm1,  Q_n,  Q_nm1)
+			;
+		}
+		res += compute_iteration_GR_Ze(
 			s_L,
 			Nx,
 			dt, 	dx,
 			exc_jC,
 			bbox,
 			perim_interior,
-			Al, 	Ze, 
-			P, 	Q)
+			Al_n, 	Ze_n, 
+			P_n, 	Q_n)
 		;
-		res = compute_iteration_GR_Al(
+		res += compute_iteration_GR_Al(
 			s_L,
 			Nx,
 			dt, 	dx,
 			exc_jC,
 			bbox,
 			perim_interior,
-			Al, 	Ze, 
-			P, 	Q)
+			Al_n, 	Ze_n, 
+			P_n, 	Q_n)
 		;
 	} while (res>ERR_TOLERANCE) ;
 	return ;
@@ -474,6 +530,7 @@ void advance_tStep_massless_scalar(
 	double s_L,
 	int Nx, 
 	double dt, double dx, 
+	bool excision_on,
 	int exc_jC,
 	double bbox[2], 
 	bool perim_interior[2],
@@ -496,11 +553,12 @@ void advance_tStep_massless_scalar(
 			s_L,
 			Nx,
 			dt, 	dx,
+			excision_on,
 			exc_jC,
 			bbox,
 			perim_interior,
-			Al_n, 	Ze_n, 
-			P_n, 	Q_n)
+			Al_n, 	Al_nm1,	Ze_n,	Ze_nm1,
+			P_n, 	P_nm1,	Q_n,	Q_nm1)
 		;
 	} while (res>ERR_TOLERANCE) ;
 
@@ -524,7 +582,7 @@ void initial_data_Gaussian(
 {
 	double left_point = bbox[0] ;
 
-	double amp = 0.002 ;
+	double amp = 0.01 ;
 	double width = 2 ;
 	double r_0 = 5 ;
 	double x = 0 ;
@@ -545,15 +603,17 @@ void initial_data_Gaussian(
 	P[Nx-1] = 0 ;
 	Q[Nx-1] = 0 ;
 
+	bool excision_on = false ;
 	solve_Al_Ze(
 		s_L,
 		Nx,
 		dt, 	dx,
+		excision_on,
 		exc_jC,
 		bbox,
 		perim_interior,
-		Al, 	Ze, 
-		P, 	Q)
+		Al, 	Al,	Ze,	Ze, 
+		P, 	P,	Q,	Q)
 	;
 	return ;
 }

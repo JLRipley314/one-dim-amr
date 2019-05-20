@@ -18,6 +18,7 @@ void advance_tStep_massless_scalar(
 	double stereographic_L,
 	int Nx, 
 	double dt, double dx, 
+	bool excision_on,
 	int exc_jC,
 	double bbox[2], 
 	bool perim_interior[2],
