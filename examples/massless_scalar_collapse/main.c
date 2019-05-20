@@ -61,7 +61,7 @@ bool made_files  = false ;
 void set_run_data(void)
 {
 	Nx = pow(2,8)+1 ;
-	Nt = pow(2,10)+1 ;
+	Nt = pow(2,4)+1 ;
 	t_step_save = 1 ;
 
 	perim_interior[0] = false ;
@@ -182,7 +182,9 @@ void wave_evolve(amr_grid* grid)
 
 	advance_tStep_massless_scalar(
 		stereographic_L,
-		Nx, dt, dx, bbox, perim_interior,
+		Nx, dt, dx, 
+		excised_jC,
+		bbox, perim_interior,
 		Al_n, Al_nm1, Ze_n, Ze_nm1,
 		 P_n,  P_nm1,  Q_n,  Q_nm1
 	) ;	

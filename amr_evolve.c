@@ -169,6 +169,9 @@ static void inject_overlaping_fields(
 	return ;
 }
 /*==========================================================================*/
+/* We interpolate by computing the Taylor expansion about grid point nm1
+   to second order (quadratic order) 
+   We need at least three time levels for this to work */
 /*==========================================================================*/
 /*static*/ void set_interior_hyperbolic_boundary_quad_interp(
 	amr_field* field, 
@@ -215,7 +218,6 @@ static void inject_overlaping_fields(
 		grid->grid_funcs[index  ][grid->Nx-1] = coef_0 + coef_1*(tC+1) + 0.5*coef_2*pow(tC,2) ;
 		grid->grid_funcs[index+1][grid->Nx-1] = coef_0 + coef_1*(tC  ) + 0.5*coef_2*pow(tC,2) ;
 	}
-
 	return ;
 }
 /*==========================================================================*/
