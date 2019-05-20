@@ -582,14 +582,14 @@ void initial_data_Gaussian(
 {
 	double left_point = bbox[0] ;
 
-	double amp = 0.01 ;
+	double amp = 0.008 ;
 	double width = 2 ;
 	double r_0 = 5 ;
 	double x = 0 ;
 	double r = 0 ;
 
-	set_array_val(Nx, 1., Al) ;
-	set_array_val(Nx, 0., Ze) ;
+	set_array_val(Nx, 1.0, Al) ;
+	set_array_val(Nx, 0.0, Ze) ;
 
 	for (int iC=0; iC<Nx-1; iC++) {
 		x = (iC * dx) + left_point ;
