@@ -290,8 +290,7 @@ static void solve_Al_Ze(
 			Al, 	Ze, 
 			P, 	Q)
 		;
-		printf("***\nZe: %.2e\n***\n",res) ;
-/*		res = compute_iteration_GR_Al(
+		res = compute_iteration_GR_Al(
 			s_L,
 			Nx,
 			dt, 	dx,
@@ -301,8 +300,7 @@ static void solve_Al_Ze(
 			Al, 	Ze, 
 			P, 	Q)
 		;
-		printf("***\nAl: %.2e\n***\n",res) ;
-*/	} while (res>ERR_TOLERANCE) ;
+	} while (res>ERR_TOLERANCE) ;
 	return ;
 }
 /*==========================================================================*/
@@ -526,7 +524,7 @@ void initial_data_Gaussian(
 {
 	double left_point = bbox[0] ;
 
-	double amp = 1 ;
+	double amp = 0.002 ;
 	double width = 2 ;
 	double r_0 = 5 ;
 	double x = 0 ;
