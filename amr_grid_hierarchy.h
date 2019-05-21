@@ -56,6 +56,7 @@ typedef struct amr_grid
 	int Nx ; /* number of grid points */
 
 	int excised_jC ; /* excision point in this grids coordinates (if 0 then no excision in this grid) */
+	bool excision_on ;
 	
 	double time ;
 	double dt, dx ;
@@ -91,7 +92,7 @@ typedef struct amr_grid_hierarchy
 	instances of grid hieracrhies as our application is simpler (1+1D, no parallel)
 */
 	struct amr_grid* grid ;
-/* 	excision functions */
+
 	bool excision_on ;
 /*	user defined function to mask excised regions */
 	void (*app_fill_exc_mask)(double* mask, int dim, int* shape, double* bbox, double excised) ;

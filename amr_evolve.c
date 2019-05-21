@@ -243,7 +243,7 @@ static void amr_evolve_grid(
 	amr_field* fields,
 	amr_grid* grid,
 	int num_t_steps,
-	void (*evolve_pde)(char*,amr_grid*))
+	void (*evolve_pde)(amr_grid*))
 {
 	for (int tC=0; tC<num_t_steps; tC++) {
 		shift_fields_one_time_level(fields, grid) ;
@@ -255,7 +255,7 @@ static void amr_evolve_grid(
 		if (grid->parent != NULL) {
 			set_interior_hyperbolic_boundary(fields, grid->parent, grid) ;
 		}
-		evolve_pde("full_system",grid) ;
+		evolve_pde(grid) ;
 		if (grid->child != NULL) {
 			amr_evolve_grid(
 				fields,
@@ -265,24 +265,24 @@ static void amr_evolve_grid(
 			;
 		}
 	}
+/*--------------------------------------------------------------------------*/
+/* resolve the coarser pde outside the finer pde */
+/*--------------------------------------------------------------------------*/
+	bool temp_excision_on = false ;
+	int temp_excised_jC = 0 ;
 	if (grid->parent != NULL) {
 		/* TO DO: compute truncation error */
-		inject_overlaping_fields(fields, grid->parent, grid) ;
-	}
-	return ;
-}
-/*==========================================================================*/
-/* all levels in sync: resolves the ODEs, from finest to coarsest level */
-/*==========================================================================*/
-static void amr_resolve_odes(
-	amr_grid* grid,
-	void (*evolve_pde)(char*,amr_grid*))
-{
-	while (grid->child!=NULL) grid=grid->child ;
+		inject_overlaping_fields(fields, grid->parent, grid) ;	
 
-	while (grid->parent!=NULL) {
-		evolve_pde("ode",grid) ;
-		grid=grid->parent ;
+		if (grid->parent->parent!=NULL) { 
+			temp_excised_jC  = grid->parent->excised_jC ;
+			temp_excision_on = grid->parent->excision_on ;
+			grid->parent->excision_on = false ;
+			grid->parent->excised_jC = grid->perim_coords[1]-1 ;
+		//	evolve_pde(grid->parent) ;
+			grid->parent->excision_on = temp_excision_on ;
+			grid->parent->excised_jC = temp_excised_jC ;
+		}
 	}
 	return ;
 }
@@ -306,7 +306,7 @@ static void set_initial_data(
 void amr_main(
 	amr_grid_hierarchy* gh, 
 	void (*initial_data)(amr_grid*),
-	void (*evolve_pde)(char*, amr_grid*),
+	void (*evolve_pde)(amr_grid*),
 	void (*save_to_file)(amr_grid*))
 {
 	add_self_similar_initial_grids(gh, 2) ;
@@ -321,10 +321,6 @@ void amr_main(
 			gh->fields, 
 			gh->grid,
 			1,
-			evolve_pde) 
-		;
-		amr_resolve_odes(
-			gh->grid,
 			evolve_pde) 
 		;
 		if (tC%(gh->t_step_save)==0) {

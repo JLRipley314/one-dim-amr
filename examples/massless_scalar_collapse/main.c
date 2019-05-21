@@ -62,7 +62,7 @@ char output_name_Ricci_scalar[MAX_FILE_NAME+1] ;
 char output_name_Gauss_Bonner_scalar[MAX_FILE_NAME+1] ;
 /*---------------------------------------------------------------------------*/
 bool perim_interior[2] ;
-bool excision_on = false ;
+bool excision_on = true ;
 bool made_files  = false ;
 /*===========================================================================*/
 /* call after variables have been defined */
@@ -70,7 +70,7 @@ bool made_files  = false ;
 void set_run_data(void)
 {
 	Nx = pow(2,8)+1 ;
-	Nt = pow(2,10)+1 ;
+	Nt = pow(2,9)+1 ;
 	t_step_save = 2 ;
 
 	perim_interior[0] = false ;
@@ -186,6 +186,8 @@ void set_globals(amr_grid* grid)
 	perim_coords[0] = grid->perim_coords[0] ;
 	perim_coords[1] = grid->perim_coords[1] ;
 
+	excision_on = grid->excision_on ;
+
 	if ((grid->parent)!=NULL) {
 		if ((grid->parent->excised_jC)>perim_coords[0]) {
 			excised_jC = (grid->parent->excised_jC-perim_coords[0]) * REFINEMENT ;
@@ -218,23 +220,18 @@ void initial_data(amr_grid* grid)
 /*===========================================================================*/
 /* computes one time step (to tolerance) of wave equation */
 /*===========================================================================*/
-void evolve_system(char* solution_method, amr_grid* grid)
+void evolve_pde(amr_grid* grid)
 {
 	set_globals(grid) ;
-	if (strcmp(solution_method,"full_system") == 0) {
-		advance_tStep_massless_scalar(
-			stereographic_L,
-			Nx, dt, dx, 
-			excision_on,
-			excised_jC,
-			bbox, perim_interior,
-			Al_n, Al_nm1, Ze_n, Ze_nm1,
-			 P_n,  P_nm1,  Q_n,  Q_nm1
-		) ;	
-	}
-	if (strcmp(solution_method,"ode")==0) {
-		/* work in progress */
-	}
+	advance_tStep_massless_scalar(
+		stereographic_L,
+		Nx, dt, dx, 
+		excision_on,
+		excised_jC,
+		bbox, perim_interior,
+		Al_n, Al_nm1, Ze_n, Ze_nm1,
+		 P_n,  P_nm1,  Q_n,  Q_nm1
+	) ;	
 	compute_checks_diagnostics_general(
 		Nx, excised_jC, 
 		stereographic_L,
@@ -304,7 +301,7 @@ int main(int argc, char* argv[])
 	amr_main(
 		gh, 
 		initial_data,
-		evolve_system,
+		evolve_pde,
 		save_to_file)
 	;
 	amr_destroy_grid_hierarchy(gh) ;

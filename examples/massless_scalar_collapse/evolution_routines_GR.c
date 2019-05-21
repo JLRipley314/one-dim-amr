@@ -338,6 +338,7 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 	double s_L,
 	int Nx,
 	double dt, 	double dx,
+	bool excision_on,
 	int exc_jC,
 	double bbox[2],
 	bool perim_interior[2],
@@ -359,11 +360,17 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 	if (fabs(bbox[1]-s_L)<MACHINE_EPSILON) size = Nx-1 ;
 	else size = Nx ;
 	double res_infty_norm = 0 ; /* returning this */
+	int start = exc_jC + 1 ;
+	if ((excision_on == false) 
+	&&  (exc_jC > 1) 
+	) {
+		start = exc_jC - 1 ;
+	}
 /*--------------------------------------------------------------------------*/
 /* interior: we go to Nx-2 as we do not want to actually include the point
    at infinity in our computational domain */
 /*--------------------------------------------------------------------------*/
-	for (int jC=exc_jC+1;jC<size-1;jC++) {
+	for (int jC=start;jC<size-1;jC++) {
 		x_j   = lower_x + (dx * (jC)  ) ;
 		x_jp1 = lower_x + (dx * (jC+1)) ;
 		x_jm1 = lower_x + (dx * (jC-1)) ;
@@ -432,7 +439,9 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 
 		P_n[0] -= res_P / jac_P ;
 	}
-	if (exc_jC > 0) {
+	if ((exc_jC > 0) 
+	&&  (excision_on==true)
+	) {
 		x_j   = lower_x + (dx * (exc_jC))   ;
 		x_jp1 = lower_x + (dx * (exc_jC+1)) ;
 		x_jp2 = lower_x + (dx * (exc_jC+2)) ;
@@ -515,6 +524,7 @@ void advance_tStep_massless_scalar(
 			s_L,
 			Nx,
 			dt, dx,
+			excision_on,
 			exc_jC, 
 			bbox,
 			perim_interior,
