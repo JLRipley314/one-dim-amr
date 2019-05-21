@@ -32,11 +32,12 @@ int compute_excision_point(
 			inner_trapped = jC ;
 		} 
 		if ((outgoing_null_characteristic[jC] < 0)
-		&&  (outer_trapped > 0)
+		&&  (inner_trapped > 0)
 		) {
 			outer_trapped = jC ;
 		} 
 	}
+	if (inner_trapped>0 && outer_trapped>0) printf("inner trapped %d\touter trapped %d\n", inner_trapped, outer_trapped) ;
 	if ((outer_trapped-inner_trapped) > buffer_size) {
 		return outer_trapped-buffer_size ;
 	}
@@ -96,6 +97,9 @@ int compute_Ricci_scalar(
 		)/(pow(r_j,2)*pow(Al,3))
 		;
 	}
+	Ricci_scalar[exc_jC] = Ricci_scalar[exc_jC+1] ; 
+	Ricci_scalar[Nx-1]   = Ricci_scalar[Nx-2] ; 
+
 	return 0 ;
 }
 /*==========================================================================*/
@@ -152,10 +156,12 @@ int compute_Gauss_Bonnet_scalar(
 		)/(pow(r_j,2)*pow(Al,3))
 		;
 	}
+	Gauss_Bonnet_scalar[exc_jC] = Gauss_Bonnet_scalar[exc_jC+1] ; 
+	Gauss_Bonnet_scalar[Nx-1]   = Gauss_Bonnet_scalar[Nx-2] ; 
 	return 0 ;
 }
 /*==========================================================================*/
-void comput_checks_diagnostics_general(
+void compute_checks_diagnostics_general(
 	int Nx, int exc_jC, 
 	double s_L,
 	double dt, double dx,

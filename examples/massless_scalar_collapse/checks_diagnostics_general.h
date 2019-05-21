@@ -1,7 +1,7 @@
 #ifndef _CHECKS_DIAGNOSTICS_GENERAL_H_
 #define _CHECKS_DIAGNOSTICS_GENERAL_H_
 
-void comput_checks_diagnostics_general(
+void compute_checks_diagnostics_general(
 	int Nx, int exc_jC, 
 	double s_L,
 	double dt, double dx,

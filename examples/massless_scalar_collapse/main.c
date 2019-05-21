@@ -70,7 +70,7 @@ bool made_files  = false ;
 void set_run_data(void)
 {
 	Nx = pow(2,8)+1 ;
-	Nt = pow(2,8)+1 ;
+	Nt = pow(2,10)+1 ;
 	t_step_save = 2 ;
 
 	perim_interior[0] = false ;
@@ -186,8 +186,13 @@ void set_globals(amr_grid* grid)
 	perim_coords[0] = grid->perim_coords[0] ;
 	perim_coords[1] = grid->perim_coords[1] ;
 
-	excised_jC = grid->excised_jC ;
-
+	if ((grid->parent)!=NULL) {
+		if ((grid->parent->excised_jC)>perim_coords[0]) {
+			excised_jC = (grid->parent->excised_jC-perim_coords[0]) * REFINEMENT ;
+		} else {
+			excised_jC = 0 ;
+		}
+	} 
 	return ;
 }
 /*===========================================================================*/
@@ -213,27 +218,24 @@ void initial_data(amr_grid* grid)
 /*===========================================================================*/
 /* computes one time step (to tolerance) of wave equation */
 /*===========================================================================*/
-void wave_evolve(amr_grid* grid)
+void evolve_system(char* solution_method, amr_grid* grid)
 {
 	set_globals(grid) ;
-	advance_tStep_massless_scalar(
-		stereographic_L,
-		Nx, dt, dx, 
-		excision_on,
-		excised_jC,
-		bbox, perim_interior,
-		Al_n, Al_nm1, Ze_n, Ze_nm1,
-		 P_n,  P_nm1,  Q_n,  Q_nm1
-	) ;	
-	if (grid->parent == NULL) {
-		rescale_Al = grid->grid_funcs[Al_n_index][Nx-1] ;
-		for (amr_grid* iter=grid; iter!=NULL; iter=iter->child) {
-			for (int iC=0; iC<(grid->Nx); iC++) {
-				iter->grid_funcs[Al_n_index][iC] /= rescale_Al ;
-			}
-		}
+	if (strcmp(solution_method,"full_system") == 0) {
+		advance_tStep_massless_scalar(
+			stereographic_L,
+			Nx, dt, dx, 
+			excision_on,
+			excised_jC,
+			bbox, perim_interior,
+			Al_n, Al_nm1, Ze_n, Ze_nm1,
+			 P_n,  P_nm1,  Q_n,  Q_nm1
+		) ;	
 	}
-	comput_checks_diagnostics_general(
+	if (strcmp(solution_method,"ode")==0) {
+		/* work in progress */
+	}
+	compute_checks_diagnostics_general(
 		Nx, excised_jC, 
 		stereographic_L,
 		dt, dx,
@@ -302,7 +304,7 @@ int main(int argc, char* argv[])
 	amr_main(
 		gh, 
 		initial_data,
-		wave_evolve,
+		evolve_system,
 		save_to_file)
 	;
 	amr_destroy_grid_hierarchy(gh) ;
