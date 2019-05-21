@@ -294,7 +294,7 @@ void amr_main(
 	void (*evolve_pde)(amr_grid*),
 	void (*save_to_file)(amr_grid*))
 {
-	add_self_similar_initial_grids(gh, 4) ;
+	add_self_similar_initial_grids(gh, 2) ;
 	set_initial_data(gh, initial_data) ;
 	shift_grids_one_time_level(gh) ;
 	shift_grids_one_time_level(gh) ;

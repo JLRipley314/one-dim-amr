@@ -14,7 +14,7 @@
 /*============================================================================*/
 
 
-#define AMR_MAX_LEVELS 5 /* maximum number of grid levels */
+#define AMR_MAX_LEVELS 6 /* maximum number of grid levels */
 #define REFINEMENT 2 /* spatial and temporal refinement scale */
 #define REGRID 8 /* regrid every REGRID time steps */
 

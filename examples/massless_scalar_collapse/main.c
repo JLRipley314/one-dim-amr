@@ -8,6 +8,7 @@
 
 #include "amr_evolve.h"
 #include "amr_grid_hierarchy.h"
+#include "general_checks_diagnostics.h"
 
 #include "evolution_routines.h"
 
@@ -17,18 +18,13 @@
 /*===========================================================================*/
 /* global variables for evolution-convenient for function calls */
 /*===========================================================================*/
-double* Al_n ;
-double* Al_nm1 ;
-double* Al_nm2 ;
-double* Ze_n ;
-double* Ze_nm1 ;
-double* Ze_nm2 ;
-double* P_n ;
-double* P_nm1 ;
-double* P_nm2 ;
-double* Q_n ;
-double* Q_nm1 ;
-double* Q_nm2 ;
+double *Al_n, *Al_nm1, *Al_nm2 ;
+double *Ze_n, *Ze_nm1, *Ze_nm2 ;
+double  *P_n,  *P_nm1,  *P_nm2 ;
+double  *Q_n,  *Q_nm1,  *Q_nm2 ;
+
+double *ingoing_null_characteristic ;
+double *outgoing_null_characteristic ;
 
 double cfl_num ;
 double bbox[2] ;
@@ -65,7 +61,7 @@ bool made_files  = false ;
 void set_run_data(void)
 {
 	Nx = pow(2,8)+1 ;
-	Nt = pow(2,10)+1 ;
+	Nt = pow(2,9)+1 ;
 	t_step_save = 2 ;
 
 	perim_interior[0] = false ;

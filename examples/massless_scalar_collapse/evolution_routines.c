@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include "evolution_routines.h"
 
-#define ERR_TOLERANCE ((double)1e-8)
+#define ERR_TOLERANCE ((double)1e-10)
 #define MACHINE_EPSILON ((double)1e-14)
 
 /*==========================================================================*/
@@ -121,12 +121,12 @@ static double compute_iteration_GR_Al(
                 r_j1h = stereographic_r(s_L, x_j1h) ;
 
                 dr = stereographic_dr(s_L, x_j1h, dx) ;
-/*--------------------------------------------------*/
+/*--------------------------------------------------------------------------*/
 /* there is Jr/Ze term that is zero in empty
  * space but undefined if below machine precision.
  * The slope is zero though in empty spacce so
  * to that precision we do this. */
-/*--------------------------------------------------*/
+/*--------------------------------------------------------------------------*/
                 Al_j1h = (Al[jC+1] + Al[jC]) / 2 ;
                 Ze_j1h = (Ze[jC+1] + Ze[jC]) / 2 ;
 
@@ -152,7 +152,7 @@ static double compute_iteration_GR_Al(
                         ;
                         Al[jC+1] -= res_Al / jac_Al ;
                 }
-/*--------------------------------------------------*/
+/*--------------------------------------------------------------------------*/
                 if ((isnan(res_Al) != 0)
                 ||  (isnan(jac_Al) != 0)
                 ) {
@@ -210,9 +210,7 @@ static double compute_iteration_GR_Ze(
                 r_j   = stereographic_r(s_L, x_j  ) ; 
 
                 dr = stereographic_dr(s_L, x_j1h, dx) ;
-/************************************************/
-/*      Ze^2 terms: Hamiltonian constraint */
-/************************************************/
+
                 Al_j1h = (Al[jC+1] + Al[jC]) / 2. ;
 
                 Al_sqrd_jp1 = pow(Al[jC+1], 2) ;
@@ -225,7 +223,7 @@ static double compute_iteration_GR_Ze(
                 P_j1h = (P[jC+1] + P[jC]) / 2. ;
 
                 rho_j1h = (1./2) * (pow(Q_j1h,2) + pow(P_j1h,2)) ;
-/************************************************/
+/*---------------------------------------------------------------------------*/
                 res_Ze_sqrd = 
                 (
                         (       (r_jp1)*Al_sqrd_jp1*Ze_sqrd_jp1
@@ -244,7 +242,7 @@ static double compute_iteration_GR_Ze(
                 ;
                 Ze_sqrd_jp1 -= res_Ze_sqrd/jac_Ze_sqrd ;
                 Ze[jC+1]  = sqrt(Ze_sqrd_jp1) ;
-/************************************************/
+/*---------------------------------------------------------------------------*/
                 if ((isnan(res_Ze_sqrd) != 0)    
                 ||  (isnan(jac_Ze_sqrd) != 0)
                 ) {    
@@ -385,10 +383,10 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 	if (fabs(bbox[1]-s_L)<MACHINE_EPSILON) size = Nx-1 ;
 	else size = Nx ;
 	double res_infty_norm = 0 ; /* returning this */
-/****************************************************************************/
+/*--------------------------------------------------------------------------*/
 /* interior: we go to Nx-2 as we do not want to actually include the point
    at infinity in our computational domain */
-/****************************************************************************/
+/*--------------------------------------------------------------------------*/
 	for (int jC=exc_jC+1;jC<size-1;jC++) {
 		x_j   = lower_x + (dx * (jC)  ) ;
 		x_jp1 = lower_x + (dx * (jC+1)) ;
@@ -441,10 +439,10 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 		res_infty_norm = compute_weighted_infty_norm(1-x_j/s_L, res_Q, res_infty_norm) ;
 		res_infty_norm = compute_weighted_infty_norm(1-x_j/s_L, res_P, res_infty_norm) ;
 	}
-/****************************************************************************/
+/*--------------------------------------------------------------------------*/
 /* lower */
 /* Q[0] = 0, so do not change anything. r_Der_P=0 at r=0 */	
-/****************************************************************************/
+/*--------------------------------------------------------------------------*/
 	if ((exc_jC == 0) 
 	&&  (perim_interior[0] == false)
 	) {
@@ -517,14 +515,12 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 		res_infty_norm = compute_weighted_infty_norm(1-x_j/s_L, res_Q, res_infty_norm) ;
 		res_infty_norm = compute_weighted_infty_norm(1-x_j/s_L, res_P, res_infty_norm) ;
 	}
-/***************************************************************************/
+/*--------------------------------------------------------------------------*/
 /* dirichlet outer boundary conditions if outermost level;
  * otherwise do not evolve outer boundary anyways (it is interpolated) */
-/***************************************************************************/
-/***************************************************************************/
+/*--------------------------------------------------------------------------*/
 	return res_infty_norm ;
 } 
-/*===========================================================================*/
 /*===========================================================================*/
 void advance_tStep_massless_scalar(
 	double s_L,
@@ -582,7 +578,7 @@ void initial_data_Gaussian(
 {
 	double left_point = bbox[0] ;
 
-	double amp = 0.008 ;
+	double amp = 0.005 ;
 	double width = 2 ;
 	double r_0 = 5 ;
 	double x = 0 ;
@@ -603,12 +599,12 @@ void initial_data_Gaussian(
 	P[Nx-1] = 0 ;
 	Q[Nx-1] = 0 ;
 
-	bool excision_on = false ;
+	bool initial_condition_excision_on = false ;
 	solve_Al_Ze(
 		s_L,
 		Nx,
 		dt, 	dx,
-		excision_on,
+		initial_condition_excision_on,
 		exc_jC,
 		bbox,
 		perim_interior,
@@ -617,7 +613,6 @@ void initial_data_Gaussian(
 	;
 	return ;
 }
-/*===========================================================================*/
 /*===========================================================================*/
 void save_to_txt_file(
 	int Nx,
