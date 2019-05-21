@@ -23,9 +23,9 @@ double *Ze_n, *Ze_nm1, *Ze_nm2 ;
 double  *P_n,  *P_nm1,  *P_nm2 ;
 double  *Q_n,  *Q_nm1,  *Q_nm2 ;
 
-double *ingoing_null_characteristic ;
-double *outgoing_null_characteristic ;
-
+double *ingoing_null_characteristic, *outgoing_null_characteristic ;
+double *Ricci_scalar, *Gauss_Bonnet_scalar ;
+/*---------------------------------------------------------------------------*/
 double cfl_num ;
 double bbox[2] ;
 double dt, dx ;
@@ -38,20 +38,26 @@ int excised_jC ;
 double rescale_Al = 1 ;
 
 int num_fields ;
-int 
-	Al_n_index, Al_nm1_index, Al_nm2_index,
+
+int 	Al_n_index, Al_nm1_index, Al_nm2_index,
 	Ze_n_index, Ze_nm1_index, Ze_nm2_index,
 
 	P_n_index, P_nm1_index, P_nm2_index,
 	Q_n_index, Q_nm1_index, Q_nm2_index
 ;
 int perim_coords[2] ;
+/*---------------------------------------------------------------------------*/
+char output_name_Al[MAX_FILE_NAME+1] ;
+char output_name_Ze[MAX_FILE_NAME+1] ;
+char output_name_P[MAX_FILE_NAME+1] ;
+char output_name_Q[MAX_FILE_NAME+1] ;
 
-char output_name_Al_sdf[MAX_FILE_NAME+1] ;
-char output_name_Ze_sdf[MAX_FILE_NAME+1] ;
-char output_name_P_sdf[MAX_FILE_NAME+1] ;
-char output_name_Q_sdf[MAX_FILE_NAME+1] ;
+char output_name_ingoing_null_characteristic[MAX_FILE_NAME+1] ;
+char output_name_outgoing_null_characteristic[MAX_FILE_NAME+1] ;
 
+char output_name_Ricci_scalar[MAX_FILE_NAME+1] ;
+char output_name_Gauss_Bonner_scalar[MAX_FILE_NAME+1] ;
+/*---------------------------------------------------------------------------*/
 bool perim_interior[2] ;
 bool excision_on = false ;
 bool made_files  = false ;
@@ -90,6 +96,12 @@ amr_field* set_fields(void)
 
 	amr_add_field(fields, "P", "hyperbolic", 3) ;
 	amr_add_field(fields, "Q", "hyperbolic", 3) ;
+
+	amr_add_field(fields, "ingoing_null_characteristic",  "NA", 1) ;
+	amr_add_field(fields, "outgoing_null_characteristic", "NA", 1) ;
+
+	amr_add_field(fields, "Ricci_scalar",        "NA", 1) ;
+	amr_add_field(fields, "Gauss_Bonnet_scalar", "NA", 1) ;
 
 	return fields ;
 }
@@ -201,6 +213,9 @@ void wave_evolve(amr_grid* grid)
 			}
 		}
 	}
+/*--------------------------------------------------------------------------*/
+/* system diagnostics */
+/*--------------------------------------------------------------------------*/
 	return ;
 }
 /*===========================================================================*/
@@ -211,16 +226,26 @@ void save_to_file(amr_grid* grid)
 	set_globals(grid) ;
 
 	if (made_files == false) {
-		snprintf(output_name_Al_sdf, MAX_FILE_NAME, "%sAl.sdf", OUTPUT_DIR) ;
-		snprintf(output_name_Ze_sdf, MAX_FILE_NAME, "%sZe.sdf", OUTPUT_DIR) ;
-		snprintf(output_name_P_sdf, MAX_FILE_NAME, "%sP.sdf", OUTPUT_DIR) ;
-		snprintf(output_name_Q_sdf, MAX_FILE_NAME, "%sQ.sdf", OUTPUT_DIR) ;
+		snprintf(output_name_Al, MAX_FILE_NAME, "%sAl.sdf", OUTPUT_DIR) ;
+		snprintf(output_name_Ze, MAX_FILE_NAME, "%sZe.sdf", OUTPUT_DIR) ;
+		snprintf(output_name_P,  MAX_FILE_NAME, "%sP.sdf",  OUTPUT_DIR) ;
+		snprintf(output_name_Q,  MAX_FILE_NAME, "%sQ.sdf",  OUTPUT_DIR) ;
+
+		snprintf(output_name_ingoing_null_characteristic,  MAX_FILE_NAME, "%soutgoing_null_characteristic.sdf", OUTPUT_DIR) ;
+		snprintf(output_name_outgoing_null_characteristic, MAX_FILE_NAME, "%singoing_null_characteristic.sdf",  OUTPUT_DIR) ;
+		snprintf(output_name_Ricci_scalar,        MAX_FILE_NAME, "%sRicci_scalar.sdf",        OUTPUT_DIR) ;
+		snprintf(output_name_Gauss_Bonner_scalar, MAX_FILE_NAME, "%sGauss_Bonner_scalar.sdf", OUTPUT_DIR) ;
 	}
 	made_files = true ;
-	gft_out_bbox(output_name_Al_sdf, time, &Nx, 1, bbox, Al_n) ;
-	gft_out_bbox(output_name_Ze_sdf, time, &Nx, 1, bbox, Ze_n) ;
-	gft_out_bbox(output_name_P_sdf, time, &Nx, 1, bbox, P_n) ;
-	gft_out_bbox(output_name_Q_sdf, time, &Nx, 1, bbox, Q_n) ;
+	gft_out_bbox(output_name_Al, time, &Nx, 1, bbox, Al_n) ;
+	gft_out_bbox(output_name_Ze, time, &Nx, 1, bbox, Ze_n) ;
+	gft_out_bbox(output_name_P,  time, &Nx, 1, bbox,  P_n) ;
+	gft_out_bbox(output_name_Q,  time, &Nx, 1, bbox,  Q_n) ;
+
+	gft_out_bbox(output_name_ingoing_null_characteristic,  time, &Nx, 1, bbox, Al_n) ;
+	gft_out_bbox(output_name_outgoing_null_characteristic, time, &Nx, 1, bbox, Ze_n) ;
+	gft_out_bbox(output_name_Ricci_scalar,        time, &Nx, 1, bbox,  P_n) ;
+	gft_out_bbox(output_name_Gauss_Bonner_scalar, time, &Nx, 1, bbox,  Q_n) ;
 	
 	return ;
 }
