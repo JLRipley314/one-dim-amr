@@ -39,10 +39,8 @@ extern double AVG_CrankNicolson_2ndOrder(double v1, double v2) ;
 /*==========================================================================*/
 extern double D1_stereographic_center_2ndOrder(double x, double s_L, double vp1, double vm1, double dx) ;
 
-extern double D2_stereographic_center_2ndOrder(double x, double s_L, double vp1, double v0 , double vm1, double dx) ;
-
 extern double D1_stereographic_forward_2ndOrder(double x, double s_L, double vp2, double vp1, double v0,  double dx) ;
 
 extern double D1_stereographic_backward_2ndOrder(double x, double s_L, double v0 , double vm1, double vm2, double dx) ;
 
-extern double D2_stereographic_center_2ndOrder(double x, double s_L, double v0 , double vm1, double vm2, double dx) ;
+extern double D2_stereographic_center_2ndOrder(double x, double s_L, double vp1 , double v0, double vm1, double dx) ;

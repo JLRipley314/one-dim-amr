@@ -43,7 +43,10 @@ int 	Al_n_index, Al_nm1_index, Al_nm2_index,
 	Ze_n_index, Ze_nm1_index, Ze_nm2_index,
 
 	P_n_index, P_nm1_index, P_nm2_index,
-	Q_n_index, Q_nm1_index, Q_nm2_index
+	Q_n_index, Q_nm1_index, Q_nm2_index,
+
+	ingoing_null_characteristic_index, outgoing_null_characteristic_index,
+	Ricci_scalar_index, Gauss_Bonnet_scalar_index
 ;
 int perim_coords[2] ;
 /*---------------------------------------------------------------------------*/
@@ -67,7 +70,7 @@ bool made_files  = false ;
 void set_run_data(void)
 {
 	Nx = pow(2,8)+1 ;
-	Nt = pow(2,9)+1 ;
+	Nt = pow(2,8)+1 ;
 	t_step_save = 2 ;
 
 	perim_interior[0] = false ;
@@ -123,10 +126,21 @@ void find_field_indices(amr_field* fields)
 	Q_nm1_index = Q_n_index + 1 ;
 	Q_nm2_index = Q_n_index + 2 ;
 
+	ingoing_null_characteristic_index  = amr_find_field_index(fields, "ingoing_null_characteristic")  ;
+	outgoing_null_characteristic_index = amr_find_field_index(fields, "outgoing_null_characteristic") ;
+
+	Ricci_scalar_index = amr_find_field_index(fields, "Ricci_scalar")  ;
+	Gauss_Bonnet_scalar_index = amr_find_field_index(fields, "Gauss_Bonnet_scalar") ;
+
 	assert(Al_n_index >= 0) ;
 	assert(Ze_n_index >= 0) ;
 	assert(P_n_index >= 0) ;
 	assert(Q_n_index >= 0) ;
+
+	assert(ingoing_null_characteristic_index >= 0) ;
+	assert(outgoing_null_characteristic_index >= 0) ;
+	assert(Ricci_scalar_index >= 0) ;
+	assert(Gauss_Bonnet_scalar_index >= 0) ;
 
 	return ;
 }
@@ -149,6 +163,12 @@ void set_globals(amr_grid* grid)
 	Ze_n   = grid->grid_funcs[Ze_n_index  ] ;
 	Ze_nm1 = grid->grid_funcs[Ze_nm1_index] ;
 	Ze_nm2 = grid->grid_funcs[Ze_nm2_index] ;
+
+	ingoing_null_characteristic  = grid->grid_funcs[ingoing_null_characteristic_index] ;
+	outgoing_null_characteristic = grid->grid_funcs[outgoing_null_characteristic_index] ;
+
+	Ricci_scalar = grid->grid_funcs[Ricci_scalar_index] ;
+	Gauss_Bonnet_scalar = grid->grid_funcs[Gauss_Bonnet_scalar_index] ;
 
 	Nx = grid->Nx ;
 
@@ -213,6 +233,17 @@ void wave_evolve(amr_grid* grid)
 			}
 		}
 	}
+	comput_checks_diagnostics_general(
+		Nx, excised_jC, 
+		stereographic_L,
+		dt, dx,
+		Al_n, Al_nm1, Al_nm2,
+		Ze_n, Ze_nm1, Ze_nm2,
+		ingoing_null_characteristic,
+		outgoing_null_characteristic,
+		Ricci_scalar,
+		Gauss_Bonnet_scalar)
+	;
 /*--------------------------------------------------------------------------*/
 /* system diagnostics */
 /*--------------------------------------------------------------------------*/
