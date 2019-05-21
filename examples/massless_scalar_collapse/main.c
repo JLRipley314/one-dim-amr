@@ -8,9 +8,9 @@
 
 #include "amr_evolve.h"
 #include "amr_grid_hierarchy.h"
-#include "general_checks_diagnostics.h"
+#include "checks_diagnostics_general.h"
 
-#include "evolution_routines.h"
+#include "evolution_routines_GR.h"
 
 #define MAX_FILE_NAME 1024
 #define OUTPUT_DIR "/home/jripley/one-dim-amr/examples/massless_scalar_collapse/output/"
@@ -97,11 +97,11 @@ amr_field* set_fields(void)
 	amr_add_field(fields, "P", "hyperbolic", 3) ;
 	amr_add_field(fields, "Q", "hyperbolic", 3) ;
 
-	amr_add_field(fields, "ingoing_null_characteristic",  "NA", 1) ;
-	amr_add_field(fields, "outgoing_null_characteristic", "NA", 1) ;
+	amr_add_field(fields, "ingoing_null_characteristic",  "diagnostic", 1) ;
+	amr_add_field(fields, "outgoing_null_characteristic", "diagnostic", 1) ;
 
-	amr_add_field(fields, "Ricci_scalar",        "NA", 1) ;
-	amr_add_field(fields, "Gauss_Bonnet_scalar", "NA", 1) ;
+	amr_add_field(fields, "Ricci_scalar",        "diagnostic", 1) ;
+	amr_add_field(fields, "Gauss_Bonnet_scalar", "diagnostic", 1) ;
 
 	return fields ;
 }
@@ -242,10 +242,10 @@ void save_to_file(amr_grid* grid)
 	gft_out_bbox(output_name_P,  time, &Nx, 1, bbox,  P_n) ;
 	gft_out_bbox(output_name_Q,  time, &Nx, 1, bbox,  Q_n) ;
 
-	gft_out_bbox(output_name_ingoing_null_characteristic,  time, &Nx, 1, bbox, Al_n) ;
-	gft_out_bbox(output_name_outgoing_null_characteristic, time, &Nx, 1, bbox, Ze_n) ;
-	gft_out_bbox(output_name_Ricci_scalar,        time, &Nx, 1, bbox,  P_n) ;
-	gft_out_bbox(output_name_Gauss_Bonner_scalar, time, &Nx, 1, bbox,  Q_n) ;
+	gft_out_bbox(output_name_ingoing_null_characteristic,  time, &Nx, 1, bbox, ingoing_null_characteristic) ;
+	gft_out_bbox(output_name_outgoing_null_characteristic, time, &Nx, 1, bbox, outgoing_null_characteristic) ;
+	gft_out_bbox(output_name_Ricci_scalar,        time, &Nx, 1, bbox,  Ricci_scalar) ;
+	gft_out_bbox(output_name_Gauss_Bonner_scalar, time, &Nx, 1, bbox,  Gauss_Bonnet_scalar) ;
 	
 	return ;
 }

@@ -24,7 +24,8 @@
 
 #define HYPERBOLIC "hyperbolic"
 #define ELLIPTIC "elliptic"
-#define ODE "ODE"
+#define ODE "ode"
+#define DIAGNOSTIC "diagnostic"
 
 #include <stdbool.h>
 

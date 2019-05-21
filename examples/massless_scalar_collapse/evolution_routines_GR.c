@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdbool.h>
-#include "evolution_routines.h"
+#include "evolution_routines_GR.h"
+#include "stereographic_routines.h"
 
 #define ERR_TOLERANCE ((double)1e-10)
 #define MACHINE_EPSILON ((double)1e-14)
@@ -15,32 +16,7 @@
 /*==========================================================================*/
 
 /*==========================================================================*/
-inline double D1_CrankNicolson_2ndOrder(
-	double f_np1, double f_n, double dt)
-{
-	return (f_np1-f_n)/dt ;
-}
-inline double D1_center_2ndOrder(
-	double f_np1, double f_nm1, double dx)
-{
-	return (f_np1-f_nm1)/(2*dx) ;
-}
-inline double D1_forward_2ndOrder(
-	double f_np2, double f_np1, double f_n, double dx)
-{
-	return ((-0.5*f_np2)+(2*f_np1)+(-1.5*f_n))/dx ;
-}
-/*==========================================================================*/
-inline double stereographic_r(double s_L, double x_j)
-{
-        return pow(1. - (x_j/s_L), -1) * x_j ;
-}
-inline double stereographic_dr(double s_L, double x_j, double dx)
-{
-        return pow(1. - (x_j/s_L), -2) * dx ;
-}
-/*==========================================================================*/
-inline double compute_weighted_infty_norm(double weight, double val_1, double val_2)
+inline double weighted_infty_norm(double weight, double val_1, double val_2)
 {
         return (fabs(val_2)>fabs(val_1)) ? fabs(weight*val_2) : fabs(weight*val_1) ;
 }
@@ -159,7 +135,7 @@ static double compute_iteration_GR_Al(
                         printf("jC:%d\tres_Al:%.e\tjac_Al:%.e\n", jC, res_Al, jac_Al) ;
                         exit(EXIT_FAILURE) ;
                 }
-                res_infty_norm = compute_weighted_infty_norm(1-x_j1h/s_L, res_Al, res_infty_norm) ;
+                res_infty_norm = weighted_infty_norm(1-x_j1h/s_L, res_Al, res_infty_norm) ;
         }
 
         return res_infty_norm ;
@@ -249,7 +225,7 @@ static double compute_iteration_GR_Ze(
                         printf("jC:%d\tZe:%.6e\tres_Ze_sqrd:%.e\tjac_Ze_sqrd:%.e\n", jC, Ze[jC+1], res_Ze_sqrd, jac_Ze_sqrd) ;
                         exit(EXIT_FAILURE) ;
                 }
-                res_infty_norm = compute_weighted_infty_norm(1-x_j1h/s_L, res_Ze_sqrd, res_infty_norm) ;
+                res_infty_norm = weighted_infty_norm(1-x_j1h/s_L, res_Ze_sqrd, res_infty_norm) ;
         }
 	if (size==Nx-1) Ze[Nx-1] = 0 ;
 
@@ -436,8 +412,8 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 		Q_n[jC] -= res_Q / jac_Q ;
 		P_n[jC] -= res_P / jac_P ;
 
-		res_infty_norm = compute_weighted_infty_norm(1-x_j/s_L, res_Q, res_infty_norm) ;
-		res_infty_norm = compute_weighted_infty_norm(1-x_j/s_L, res_P, res_infty_norm) ;
+		res_infty_norm = weighted_infty_norm(1-x_j/s_L, res_Q, res_infty_norm) ;
+		res_infty_norm = weighted_infty_norm(1-x_j/s_L, res_P, res_infty_norm) ;
 	}
 /*--------------------------------------------------------------------------*/
 /* lower */
@@ -512,8 +488,8 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 		Q_n[exc_jC] -= res_Q / jac_Q ;
 		P_n[exc_jC] -= res_P / jac_P ;
 
-		res_infty_norm = compute_weighted_infty_norm(1-x_j/s_L, res_Q, res_infty_norm) ;
-		res_infty_norm = compute_weighted_infty_norm(1-x_j/s_L, res_P, res_infty_norm) ;
+		res_infty_norm = weighted_infty_norm(1-x_j/s_L, res_Q, res_infty_norm) ;
+		res_infty_norm = weighted_infty_norm(1-x_j/s_L, res_P, res_infty_norm) ;
 	}
 /*--------------------------------------------------------------------------*/
 /* dirichlet outer boundary conditions if outermost level;
