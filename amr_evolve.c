@@ -266,7 +266,7 @@ static void amr_evolve_grid(
 		}
 	}
 /*--------------------------------------------------------------------------*/
-/* resolve the coarser pde outside the finer pde */
+/* resolve the coarser grid exterior to the finer grid after injection */
 /*--------------------------------------------------------------------------*/
 	bool temp_excision_on = false ;
 	int temp_excised_jC = 0 ;
@@ -309,7 +309,7 @@ void amr_main(
 	void (*evolve_pde)(amr_grid*),
 	void (*save_to_file)(amr_grid*))
 {
-	add_self_similar_initial_grids(gh, 2) ;
+	add_self_similar_initial_grids(gh, 4) ;
 	set_initial_data(gh, initial_data) ;
 	shift_grids_one_time_level(gh) ;
 	shift_grids_one_time_level(gh) ;

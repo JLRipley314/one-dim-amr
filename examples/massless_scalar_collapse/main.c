@@ -74,7 +74,7 @@ bool made_files  = false ;
 void set_run_data(void)
 {
 	Nx = pow(2,8)+1 ;
-	Nt = pow(2,8)+1 ;
+	Nt = pow(2,10)+1 ;
 	t_step_save = 1 ;
 
 	perim_interior[0] = false ;
@@ -225,12 +225,13 @@ void rescale_Al(amr_grid* grid)
 {
 	double rescale_param = 1 ;
 	if (grid->parent==NULL) {
-		rescale_param = grid->child->grid_funcs[Al_n_index][(grid->child->Nx)-1] ;
+		rescale_param = grid->grid_funcs[Al_n_index][Nx-1] ;
 		for (amr_grid* iter=grid; iter!=NULL; iter=iter->child) {
-			for (int iC=0; iC<(grid->Nx); iC++) {
+			for (int iC=0; iC<(iter->Nx); iC++) {
 				iter->grid_funcs[Al_n_index][iC] /= rescale_param ;
 			}
 		}
+		printf("rescale_param %f\tAl %f\n",rescale_param,grid->grid_funcs[Al_n_index][Nx-1]) ;
 	}
 }
 /*===========================================================================*/
@@ -272,7 +273,7 @@ void save_to_file(amr_grid* grid)
 {
 	set_globals(grid) ;
 
-//	rescale_Al(grid) ;
+	rescale_Al(grid) ;
 	if (made_files == false) {
 		snprintf(output_name_Al, MAX_FILE_NAME, "%sAl.sdf", OUTPUT_DIR) ;
 		snprintf(output_name_Ze, MAX_FILE_NAME, "%sZe.sdf", OUTPUT_DIR) ;
