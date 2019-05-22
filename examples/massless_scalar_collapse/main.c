@@ -226,18 +226,16 @@ void initial_data(amr_grid* grid)
 	return ;
 }
 /*--------------------------------------------------------------------------*/
-/* rescale Al on all levels so value at spatial infinity is unity */
+/* rescale Al on all levels so value at spatial infinity is unity.
+ * level is the finest grid the spans the entire computational domain */
 /*--------------------------------------------------------------------------*/
 void rescale_Al(amr_grid* grid)
 {
 	double rescale_param = 1 ;
-	int level = amr_find_grid_level(grid) ;
+	int level = amr_determine_grid_level(grid) ;
 	if (level==1) {
-		level=0 ;
-//	if (grid->parent==NULL) {
 		rescale_param = grid->grid_funcs[Al_n_index][Nx-1] ;
 		for (amr_grid* iter=(grid->parent); iter!=NULL; iter=iter->child) {
-			printf("level %d\n", level) ; level +=1 ;
 			for (int iC=0; iC<(iter->Nx); iC++) {
 				iter->grid_funcs[Al_n_index][iC] /= rescale_param ;
 			}

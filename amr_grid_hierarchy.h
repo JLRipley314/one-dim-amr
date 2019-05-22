@@ -14,7 +14,7 @@
 /*============================================================================*/
 
 
-#define AMR_MAX_LEVELS 6 /* maximum number of grid levels */
+#define AMR_MAX_LEVELS 8 /* maximum number of grid levels */
 #define REFINEMENT 2 /* spatial and temporal refinement scale */
 #define REGRID 8 /* regrid every REGRID time steps */
 
@@ -102,9 +102,12 @@ typedef struct amr_grid_hierarchy
 /*============================================================================*/
 /* return 0 then no errors */
 /*============================================================================*/
+int amr_set_to_tail(amr_grid* grid) ;
+int amr_set_to_head(amr_grid* grid) ;
+
 int amr_find_grid(int level, amr_grid_hierarchy* gh, amr_grid* grid) ;
 
-int amr_find_grid_level(amr_grid* grid) ; 
+int amr_determine_grid_level(amr_grid* grid) ; 
 
 int amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent) ;
 
@@ -117,7 +120,7 @@ amr_grid_hierarchy* amr_init_grid_hierarchy(
 	double bbox[2],
 	bool excision_on)
 ;
-int compute_truncation_error(int field_index, amr_grid* parent, amr_grid* grid) ; 
+int amr_compute_truncation_error(int field_index, amr_grid* parent, amr_grid* grid) ; 
 
 void add_self_similar_initial_grids(amr_grid_hierarchy* gh, int num_grids) ;
 

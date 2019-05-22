@@ -569,7 +569,7 @@ void initial_data_Gaussian(
 {
 	double left_point = bbox[0] ;
 
-	double amp = 0.009 ;
+	double amp = 0.001 ;
 	double width = 2 ;
 	double r_0 = 5 ;
 	double x = 0 ;

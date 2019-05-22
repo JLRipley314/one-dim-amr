@@ -76,13 +76,25 @@ int amr_add_field(amr_field* fields, char* name, char* pde_type, int time_levels
 	return 0 ;
 }
 /*============================================================================*/
-int amr_find_grid_level(amr_grid* grid) 
+int amr_determine_grid_level(amr_grid* grid) 
 {
 	int level=0 ;
 	for (amr_grid* iter=grid; iter->parent!=NULL; iter=iter->parent) {
 		level+= 1 ;
 	}
 	return level ;
+}
+/*============================================================================*/
+int amr_set_to_head(amr_grid* grid) 
+{
+	while (grid->parent!=NULL) grid=grid->parent ;
+	return 0 ;
+}
+/*============================================================================*/
+int amr_set_to_tail(amr_grid* grid) 
+{
+	while (grid->child!=NULL) grid=grid->child ;
+	return 0 ;
 }
 /*============================================================================*/
 int amr_find_field_index(amr_field* fields, char* name) 
@@ -277,7 +289,7 @@ amr_grid_hierarchy* amr_init_grid_hierarchy(
 	return gh ;
 }
 /*============================================================================*/
-int compute_truncation_error(int field_index, amr_grid* parent, amr_grid* grid) 
+int amr_compute_truncation_error(int field_index, amr_grid* parent, amr_grid* grid) 
 {
 	int lower_jC = grid->perim_coords[0] ;
 
@@ -306,6 +318,20 @@ int compute_truncation_error(int field_index, amr_grid* parent, amr_grid* grid)
 
 	field=NULL ;
 	parent_field=NULL ;
+	return 0 ;
+}
+/*============================================================================*/
+int regrid_finer_levels(amr_grid* grid)
+{
+	amr_grid* tail = grid ;
+	amr_set_to_tail(tail) ;
+
+	int field_index = 0 ;
+
+	for (amr_grid* iter=tail; iter!=grid->parent; iter=iter->parent)  {
+		amr_compute_truncation_error(field_index, iter->parent, iter) ; 	
+//		amr_regrid(iter) ;
+	}	
 	return 0 ;
 }
 /*============================================================================*/
