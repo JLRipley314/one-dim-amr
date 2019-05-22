@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 #include <stdbool.h>
 #include "evolution_routines_GR.h"
@@ -508,6 +509,7 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 } 
 /*===========================================================================*/
 void advance_tStep_massless_scalar(
+	char* run_type,
 	double s_L,
 	int Nx, 
 	double dt, double dx, 
@@ -523,25 +525,27 @@ void advance_tStep_massless_scalar(
 		res = compute_iteration_GR_Crank_Nicolson_PQ(
 			s_L,
 			Nx,
-			dt, dx,
-			excision_on,
-			exc_jC, 
-			bbox,
-			perim_interior,
-			Al_n, Al_nm1, Ze_n, Ze_nm1,
-			 P_n,  P_nm1,  Q_n,  Q_nm1)
-		;
-		solve_Al_Ze(
-			s_L,
-			Nx,
 			dt, 	dx,
 			excision_on,
 			exc_jC,
 			bbox,
 			perim_interior,
-			Al_n, 	Al_nm1,	Ze_n,	Ze_nm1,
-			P_n, 	P_nm1,	Q_n,	Q_nm1)
+			Al_n, 	Al_nm1, Ze_n, Ze_nm1,
+			 P_n, 	 P_nm1,  Q_n,  Q_nm1)
 		;
+		if (strcmp(run_type,"massless_scalar_GR")==0) {
+			solve_Al_Ze(
+				s_L,
+				Nx,
+				dt, 	dx,
+				excision_on,
+				exc_jC,
+				bbox,
+				perim_interior,
+				Al_n, 	Al_nm1,	Ze_n,	Ze_nm1,
+				P_n, 	P_nm1,	Q_n,	Q_nm1)
+			;
+		}
 	} while (res>ERR_TOLERANCE) ;
 
 	Kreiss_Oliger_Filter(Nx, P_n) ;
@@ -553,6 +557,7 @@ void advance_tStep_massless_scalar(
 /* leftgoing Gaussian pulse */
 /*==========================================================================*/
 void initial_data_Gaussian(
+	char* run_type,
 	double s_L,
 	int Nx, 	
 	double dt, double dx,
@@ -564,7 +569,7 @@ void initial_data_Gaussian(
 {
 	double left_point = bbox[0] ;
 
-	double amp = 0.005 ;
+	double amp = 0.009 ;
 	double width = 2 ;
 	double r_0 = 5 ;
 	double x = 0 ;
@@ -586,17 +591,19 @@ void initial_data_Gaussian(
 	Q[Nx-1] = 0 ;
 
 	bool initial_condition_excision_on = false ;
-	solve_Al_Ze(
-		s_L,
-		Nx,
-		dt, 	dx,
-		initial_condition_excision_on,
-		exc_jC,
-		bbox,
-		perim_interior,
-		Al, 	Al,	Ze,	Ze, 
-		P, 	P,	Q,	Q)
-	;
+	if (strcmp(run_type,"massless_scalar_GR")==0) {
+		solve_Al_Ze(
+			s_L,
+			Nx,
+			dt, 	dx,
+			initial_condition_excision_on,
+			exc_jC,
+			bbox,
+			perim_interior,
+			Al, 	Al,	Ze,	Ze, 
+			P, 	P,	Q,	Q)
+		;
+	}
 	return ;
 }
 /*===========================================================================*/

@@ -279,7 +279,7 @@ static void amr_evolve_grid(
 			temp_excision_on = grid->parent->excision_on ;
 			grid->parent->excision_on = false ;
 			grid->parent->excised_jC = grid->perim_coords[1]-1 ;
-		//	evolve_pde(grid->parent) ;
+			evolve_pde(grid->parent) ;
 			grid->parent->excision_on = temp_excision_on ;
 			grid->parent->excised_jC = temp_excised_jC ;
 		}

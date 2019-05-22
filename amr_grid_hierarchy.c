@@ -76,6 +76,15 @@ int amr_add_field(amr_field* fields, char* name, char* pde_type, int time_levels
 	return 0 ;
 }
 /*============================================================================*/
+int find_grid_level(amr_grid* grid) 
+{
+	int level=0 ;
+	for (amr_grid* iter=grid; iter->parent!=NULL; iter=iter->parent) {
+		level+= 1 ;
+	}
+	return level ;
+}
+/*============================================================================*/
 int amr_find_field_index(amr_field* fields, char* name) 
 {
 	for (amr_field* field=fields; field!=NULL; field=field->next) {

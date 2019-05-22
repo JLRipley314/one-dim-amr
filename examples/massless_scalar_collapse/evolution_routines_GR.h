@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 void initial_data_Gaussian(
+	char* run_type,
 	double s_L,
 	int Nx, 	
 	double dt, double dx,
@@ -15,7 +16,8 @@ void initial_data_Gaussian(
 ;
 /* we set Dirichlet boundary conditions for now */
 void advance_tStep_massless_scalar(
-	double stereographic_L,
+	char* run_type,
+	double s_L,
 	int Nx, 
 	double dt, double dx, 
 	bool excision_on,

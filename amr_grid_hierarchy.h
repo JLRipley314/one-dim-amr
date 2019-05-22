@@ -103,6 +103,8 @@ typedef struct amr_grid_hierarchy
 /*============================================================================*/
 int amr_find_grid(int level, amr_grid_hierarchy* gh, amr_grid* grid) ;
 
+int find_grid_level(amr_grid* grid) ; 
+
 int amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent) ;
 
 int amr_destroy_grid(amr_grid* grid) ;
@@ -123,5 +125,6 @@ int amr_add_field(amr_field* field, char* name, char* pde_type, int time_levels)
 amr_field* amr_init_fields(char* name, char* pde_type, int time_levels) ;
 
 int amr_find_field_index(amr_field* fields, char* name) ; 
+
  
 #endif /*_GRID_HIERARCHY_H_*/

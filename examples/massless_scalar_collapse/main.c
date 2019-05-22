@@ -16,6 +16,12 @@
 #define OUTPUT_DIR "/home/jripley/one-dim-amr/examples/massless_scalar_collapse/output/"
 
 /*===========================================================================*/
+/* global variables: set here (will eventually set by reading from
+ * initial data file */
+/*===========================================================================*/
+//char* run_type = "massless_scalar" ;
+char* run_type = "massless_scalar_GR" ;
+/*===========================================================================*/
 /* global variables for evolution-convenient for function calls */
 /*===========================================================================*/
 double *Al_n, *Al_nm1, *Al_nm2 ;
@@ -34,8 +40,6 @@ double stereographic_L ; /* stereographic length: for compactification */
 
 int Nx, Nt, t_step_save ;
 int excised_jC ;
-
-double rescale_Al = 1 ;
 
 int num_fields ;
 
@@ -70,8 +74,8 @@ bool made_files  = false ;
 void set_run_data(void)
 {
 	Nx = pow(2,8)+1 ;
-	Nt = pow(2,9)+1 ;
-	t_step_save = 2 ;
+	Nt = pow(2,8)+1 ;
+	t_step_save = 1 ;
 
 	perim_interior[0] = false ;
 	perim_interior[1] = false ;
@@ -188,13 +192,9 @@ void set_globals(amr_grid* grid)
 
 	excision_on = grid->excision_on ;
 
-	if ((grid->parent)!=NULL) {
-		if ((grid->parent->excised_jC)>perim_coords[0]) {
-			excised_jC = (grid->parent->excised_jC-perim_coords[0]) * REFINEMENT ;
-		} else {
-			excised_jC = 0 ;
-		}
-	} 
+/* need to make sure excised_jC for each subgrid is at the same physical point as exc_jC of the parent grid */
+	excised_jC = grid->excised_jC ;
+
 	return ;
 }
 /*===========================================================================*/
@@ -206,6 +206,7 @@ void initial_data(amr_grid* grid)
 
 
 	initial_data_Gaussian(
+		run_type,
 		stereographic_L,
 		Nx, 	
 		dt, dx,
@@ -217,6 +218,21 @@ void initial_data(amr_grid* grid)
 	;
 	return ;
 }
+/*--------------------------------------------------------------------------*/
+/* rescale Al on all levels so value at spatial infinity is unity */
+/*--------------------------------------------------------------------------*/
+void rescale_Al(amr_grid* grid)
+{
+	double rescale_param = 1 ;
+	if (grid->parent==NULL) {
+		rescale_param = grid->child->grid_funcs[Al_n_index][(grid->child->Nx)-1] ;
+		for (amr_grid* iter=grid; iter!=NULL; iter=iter->child) {
+			for (int iC=0; iC<(grid->Nx); iC++) {
+				iter->grid_funcs[Al_n_index][iC] /= rescale_param ;
+			}
+		}
+	}
+}
 /*===========================================================================*/
 /* computes one time step (to tolerance) of wave equation */
 /*===========================================================================*/
@@ -224,6 +240,7 @@ void evolve_pde(amr_grid* grid)
 {
 	set_globals(grid) ;
 	advance_tStep_massless_scalar(
+		run_type,
 		stereographic_L,
 		Nx, dt, dx, 
 		excision_on,
@@ -232,14 +249,9 @@ void evolve_pde(amr_grid* grid)
 		Al_n, Al_nm1, Ze_n, Ze_nm1,
 		 P_n,  P_nm1,  Q_n,  Q_nm1
 	) ;	
-	if (grid->parent==NULL) {
-		rescale_Al = grid->grid_funcs[Al_n_index][Nx-1] ;
-		for (amr_grid* iter=grid; iter!=NULL; iter=iter->child) {
-			for (int iC=0; iC<(grid->Nx); iC++) {
-				grid->grid_funcs[Al_n_index][iC] /= rescale_Al ;
-			}
-		}
-	}
+/*--------------------------------------------------------------------------*/
+	rescale_Al(grid) ;
+/*--------------------------------------------------------------------------*/
 	compute_checks_diagnostics_general(
 		Nx, excised_jC, 
 		stereographic_L,
@@ -251,9 +263,6 @@ void evolve_pde(amr_grid* grid)
 		Ricci_scalar,
 		Gauss_Bonnet_scalar)
 	;
-/*--------------------------------------------------------------------------*/
-/* system diagnostics */
-/*--------------------------------------------------------------------------*/
 	return ;
 }
 /*===========================================================================*/
@@ -263,6 +272,7 @@ void save_to_file(amr_grid* grid)
 {
 	set_globals(grid) ;
 
+//	rescale_Al(grid) ;
 	if (made_files == false) {
 		snprintf(output_name_Al, MAX_FILE_NAME, "%sAl.sdf", OUTPUT_DIR) ;
 		snprintf(output_name_Ze, MAX_FILE_NAME, "%sZe.sdf", OUTPUT_DIR) ;
