@@ -76,7 +76,7 @@ int amr_add_field(amr_field* fields, char* name, char* pde_type, int time_levels
 	return 0 ;
 }
 /*============================================================================*/
-int find_grid_level(amr_grid* grid) 
+int amr_find_grid_level(amr_grid* grid) 
 {
 	int level=0 ;
 	for (amr_grid* iter=grid; iter->parent!=NULL; iter=iter->parent) {
@@ -275,6 +275,38 @@ amr_grid_hierarchy* amr_init_grid_hierarchy(
 	amr_add_finer_grid(0, Nx-1, base_grid) ;
 	
 	return gh ;
+}
+/*============================================================================*/
+int compute_truncation_error(int field_index, amr_grid* parent, amr_grid* grid) 
+{
+	int lower_jC = grid->perim_coords[0] ;
+
+	int trunc_lower_jC = 0 ;
+	int trunc_upper_jC = 0 ;
+
+	double trunc_err = 0 ;
+
+	double* field = grid->grid_funcs[field_index] ;
+	double* parent_field = parent->grid_funcs[field_index] ;
+
+	for (int jC=0; jC<(grid->Nx); jC++) {
+		if (jC%REFINEMENT==0) { 
+			trunc_err = fabs(field[jC]-parent_field[lower_jC+(jC/REFINEMENT)]) ;
+		}
+		if (trunc_err>TRUNC_ERR_TOLERANCE) {
+			if (trunc_lower_jC==0) {
+				trunc_lower_jC = jC ;
+			} else {
+				trunc_upper_jC = jC ;
+			}
+		}
+	}
+	grid->new_child_coords[0] = trunc_lower_jC ;
+	grid->new_child_coords[1] = trunc_upper_jC ;
+
+	field=NULL ;
+	parent_field=NULL ;
+	return 0 ;
 }
 /*============================================================================*/
 void add_self_similar_initial_grids(

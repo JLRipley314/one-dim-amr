@@ -29,6 +29,7 @@ double *Ze_n, *Ze_nm1, *Ze_nm2 ;
 double  *P_n,  *P_nm1,  *P_nm2 ;
 double  *Q_n,  *Q_nm1,  *Q_nm2 ;
 
+double* mass_aspect ;
 double *ingoing_null_characteristic, *outgoing_null_characteristic ;
 double *Ricci_scalar, *Gauss_Bonnet_scalar ;
 /*---------------------------------------------------------------------------*/
@@ -49,6 +50,7 @@ int 	Al_n_index, Al_nm1_index, Al_nm2_index,
 	P_n_index, P_nm1_index, P_nm2_index,
 	Q_n_index, Q_nm1_index, Q_nm2_index,
 
+	mass_aspect_index,
 	ingoing_null_characteristic_index, outgoing_null_characteristic_index,
 	Ricci_scalar_index, Gauss_Bonnet_scalar_index
 ;
@@ -104,6 +106,8 @@ amr_field* set_fields(void)
 	amr_add_field(fields, "P", "hyperbolic", 3) ;
 	amr_add_field(fields, "Q", "hyperbolic", 3) ;
 
+	amr_add_field(fields, "mass_aspect",  "diagnostic", 1) ;
+
 	amr_add_field(fields, "ingoing_null_characteristic",  "diagnostic", 1) ;
 	amr_add_field(fields, "outgoing_null_characteristic", "diagnostic", 1) ;
 
@@ -129,6 +133,8 @@ void find_field_indices(amr_field* fields)
 	Q_n_index   = amr_find_field_index(fields, "Q") ;
 	Q_nm1_index = Q_n_index + 1 ;
 	Q_nm2_index = Q_n_index + 2 ;
+
+	mass_aspect_index  = amr_find_field_index(fields, "mass_aspect")  ;
 
 	ingoing_null_characteristic_index  = amr_find_field_index(fields, "ingoing_null_characteristic")  ;
 	outgoing_null_characteristic_index = amr_find_field_index(fields, "outgoing_null_characteristic") ;
@@ -168,6 +174,8 @@ void set_globals(amr_grid* grid)
 	Ze_nm1 = grid->grid_funcs[Ze_nm1_index] ;
 	Ze_nm2 = grid->grid_funcs[Ze_nm2_index] ;
 
+	mass_aspect = grid->grid_funcs[mass_aspect_index] ;
+
 	ingoing_null_characteristic  = grid->grid_funcs[ingoing_null_characteristic_index] ;
 	outgoing_null_characteristic = grid->grid_funcs[outgoing_null_characteristic_index] ;
 
@@ -204,7 +212,6 @@ void initial_data(amr_grid* grid)
 {
 	set_globals(grid) ;
 
-
 	initial_data_Gaussian(
 		run_type,
 		stereographic_L,
@@ -224,9 +231,13 @@ void initial_data(amr_grid* grid)
 void rescale_Al(amr_grid* grid)
 {
 	double rescale_param = 1 ;
-	if (grid->parent==NULL) {
+	int level = amr_find_grid_level(grid) ;
+	if (level==1) {
+		level=0 ;
+//	if (grid->parent==NULL) {
 		rescale_param = grid->grid_funcs[Al_n_index][Nx-1] ;
-		for (amr_grid* iter=grid; iter!=NULL; iter=iter->child) {
+		for (amr_grid* iter=(grid->parent); iter!=NULL; iter=iter->child) {
+			printf("level %d\n", level) ; level +=1 ;
 			for (int iC=0; iC<(iter->Nx); iC++) {
 				iter->grid_funcs[Al_n_index][iC] /= rescale_param ;
 			}
@@ -259,6 +270,7 @@ void evolve_pde(amr_grid* grid)
 		dt, dx,
 		Al_n, Al_nm1, Al_nm2,
 		Ze_n, Ze_nm1, Ze_nm2,
+		mass_aspect,
 		ingoing_null_characteristic,
 		outgoing_null_characteristic,
 		Ricci_scalar,
@@ -273,7 +285,6 @@ void save_to_file(amr_grid* grid)
 {
 	set_globals(grid) ;
 
-	rescale_Al(grid) ;
 	if (made_files == false) {
 		snprintf(output_name_Al, MAX_FILE_NAME, "%sAl.sdf", OUTPUT_DIR) ;
 		snprintf(output_name_Ze, MAX_FILE_NAME, "%sZe.sdf", OUTPUT_DIR) ;

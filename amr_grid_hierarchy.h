@@ -64,6 +64,7 @@ typedef struct amr_grid
 
 	double bbox[2] ; /* physical coordinates bounding the grid */
 
+	int new_child_coords[2] ; /* from truncation error estimate */
 	int perim_coords[2] ; /* coordinates with respect to parent grid */
 	
 	int num_grid_funcs;	/* total number of grid functions */
@@ -103,7 +104,7 @@ typedef struct amr_grid_hierarchy
 /*============================================================================*/
 int amr_find_grid(int level, amr_grid_hierarchy* gh, amr_grid* grid) ;
 
-int find_grid_level(amr_grid* grid) ; 
+int amr_find_grid_level(amr_grid* grid) ; 
 
 int amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent) ;
 
@@ -116,6 +117,8 @@ amr_grid_hierarchy* amr_init_grid_hierarchy(
 	double bbox[2],
 	bool excision_on)
 ;
+int compute_truncation_error(int field_index, amr_grid* parent, amr_grid* grid) ; 
+
 void add_self_similar_initial_grids(amr_grid_hierarchy* gh, int num_grids) ;
 
 int amr_destroy_grid_hierarchy(amr_grid_hierarchy* gh) ;

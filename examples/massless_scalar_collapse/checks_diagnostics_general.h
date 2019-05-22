@@ -7,6 +7,7 @@ void compute_checks_diagnostics_general(
 	double dt, double dx,
 	double* Al_n, double* Al_nm1, double* Al_nm2,
 	double* Ze_n, double* Ze_nm1, double* Ze_nm2,
+	double* mass_aspect,
 	double* ingoing_null_characteristic,
 	double* outgoing_null_characteristic,
 	double* Ricci_scalar,

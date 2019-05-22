@@ -8,6 +8,21 @@
 /*==========================================================================*/
 /* general checks and diagnostics */
 /*==========================================================================*/
+static int compute_mass_aspect(
+	int Nx,
+	double s_L, double dx,
+	double* Ze,
+	double* mass_aspect)
+{
+	double r_j ;
+	for (int jC=0; jC<Nx; jC++) {
+		r_j = stereographic_r(s_L, dx*jC) ;
+		mass_aspect[jC] = (r_j/2) * (1. - pow(Ze[jC],2)) ;
+	}
+	return 0 ;
+} 
+/*==========================================================================*/
+/*==========================================================================*/
 int compute_ingoing_outgoing_null_characteristics(
 	int Nx, double* Al, double* Ze,
 	double* ingoing_null_characteristic,
@@ -167,6 +182,7 @@ void compute_checks_diagnostics_general(
 	double dt, double dx,
 	double* Al_n, double* Al_nm1, double* Al_nm2,
 	double* Ze_n, double* Ze_nm1, double* Ze_nm2,
+	double* mass_aspect,
 	double* ingoing_null_characteristic,
 	double* outgoing_null_characteristic,
 	double* Ricci_scalar,
@@ -175,6 +191,12 @@ void compute_checks_diagnostics_general(
 	int buffer_size = 10 ; /* TO DO: set buffer size to some percentage of ADM mass */
 	compute_excision_point(
 		Nx, exc_jC, buffer_size, outgoing_null_characteristic)
+	;
+	compute_mass_aspect(
+		Nx,
+		s_L, dx,
+		Ze_n,
+		mass_aspect)
 	;
 	compute_ingoing_outgoing_null_characteristics(
 		Nx, Al_n, Ze_n,
