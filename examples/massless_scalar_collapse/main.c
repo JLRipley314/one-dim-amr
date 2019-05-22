@@ -232,6 +232,14 @@ void evolve_pde(amr_grid* grid)
 		Al_n, Al_nm1, Ze_n, Ze_nm1,
 		 P_n,  P_nm1,  Q_n,  Q_nm1
 	) ;	
+	if (grid->parent==NULL) {
+		rescale_Al = grid->grid_funcs[Al_n_index][Nx-1] ;
+		for (amr_grid* iter=grid; iter!=NULL; iter=iter->child) {
+			for (int iC=0; iC<(grid->Nx); iC++) {
+				grid->grid_funcs[Al_n_index][iC] /= rescale_Al ;
+			}
+		}
+	}
 	compute_checks_diagnostics_general(
 		Nx, excised_jC, 
 		stereographic_L,
