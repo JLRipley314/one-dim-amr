@@ -33,6 +33,10 @@ double* mass_aspect ;
 double *ingoing_null_characteristic, *outgoing_null_characteristic ;
 double *Ricci_scalar, *Gauss_Bonnet_scalar ;
 /*---------------------------------------------------------------------------*/
+/* run data */
+/*---------------------------------------------------------------------------*/
+char* theory ;
+
 double cfl_num ;
 double bbox[2] ;
 double dt, dx ;
@@ -41,7 +45,13 @@ double stereographic_L ; /* stereographic length: for compactification */
 
 int Nx, Nt, t_step_save ;
 int excised_jC ;
+/*---------------------------------------------------------------------------*/
+/* initial data */
+/*---------------------------------------------------------------------------*/
+char* id_type ;
 
+double amp, width, center ;
+/*---------------------------------------------------------------------------*/
 int num_fields ;
 
 int 	Al_n_index, Al_nm1_index, Al_nm2_index,
@@ -70,29 +80,6 @@ char output_name_Gauss_Bonner_scalar[MAX_NAME_LEN+1] ;
 bool perim_interior[2] ;
 bool excision_on = true ;
 bool made_files  = false ;
-/*===========================================================================*/
-/* call after variables have been defined */
-/*===========================================================================*/
-void set_run_data(void)
-{
-	Nx = pow(2,8)+1 ;
-	Nt = pow(2,10)+1 ;
-	t_step_save = 1 ;
-
-	perim_interior[0] = false ;
-	perim_interior[1] = false ;
-
-	cfl_num = 0.2 ;
-
-	bbox[0] =   0 ;
-	bbox[1] =  50 ;
-	stereographic_L = bbox[1] ;
-
-	dx = (bbox[1] - bbox[0]) / (Nx-1) ;
-	dt = cfl_num * dx ;
-
-	return ;
-}
 /*==========================================================================*/
 /*number of time steps for evolution fields: 3 */
 /*==========================================================================*/
@@ -313,19 +300,16 @@ void save_to_file(amr_grid* grid)
 
 int main(int argc, char* argv[])
 {
-	set_run_data() ;
+	get_run_data(
+		&theory,
+		&Nx, &Nt, &t_step_save,
+		&cfl_num, 
+		&bbox[0], &bbox[1],
+		&stereographic_L,
+		&dt, &dx) 
+	; 
+	get_initial_data(&id_type, &amp, &width, &center) ; 
 
-	run_data* rd = init_run_data() ; 
-	initial_data* id = init_initial_data() ; 
-
-	printf("run_data->theory %s\n", rd->theory) ;
-	printf("run_data->Nx %d\n", rd->Nx) ;
-	printf("initial_data->type %s\n", id->type) ;
-	printf("initial_data->amp %f\n", id->amp) ;
-
-	free_run_data(rd) ;
-	free_initial_data(id) ;
-	exit(EXIT_SUCCESS) ;
 
 	amr_field* fields = set_fields() ; 
 	find_field_indices(fields) ; 
@@ -345,9 +329,13 @@ int main(int argc, char* argv[])
 		save_to_file)
 	;
 	amr_destroy_grid_hierarchy(gh) ;
-
-	free(rd) ;
-	free(id) ;
+/*--------------------------------------------------------------------------*/
+/* theory and id_type are malloc'ed in get_run_data and get_initial_data,
+ * respectively. */ 
+/*--------------------------------------------------------------------------*/
+	free(theory) ;
+	free(id_type) ;
+/*--------------------------------------------------------------------------*/
 
 	return EXIT_SUCCESS ;
 }

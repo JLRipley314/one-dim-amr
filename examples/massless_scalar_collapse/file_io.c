@@ -48,10 +48,14 @@ static void check_if_file_exists(FILE* file, char* file_name)
 	return ;
 }
 /*==========================================================================*/
-run_data* init_run_data(void) 
+void get_run_data(
+	char** theory,
+	int* Nx, int* Nt, int* t_step_save,
+	double* cfl_num, 
+	double* bbox_0, double* bbox_1,
+	double* stereographic_L,
+	double* dt, double* dx) 
 {
-	run_data* rd = malloc(sizeof(run_data)) ;
-
 	char run_data_name[MAX_NAME_LEN+1] ;
 	snprintf(run_data_name, MAX_NAME_LEN, "%srun_data.txt", HOME_DIR) ;
 	FILE* run_data_file = fopen(run_data_name, "r") ;
@@ -68,32 +72,32 @@ run_data* init_run_data(void)
 		char* line_val = line ;
                 token = strsep(&line_val, delimeter) ;
 
-		get_string_val(line_val, token, "theory", delimeter, &(rd->theory)) ;
+		get_string_val(line_val, token, "theory", delimeter, theory) ;
 
-		get_int_val(line_val, token, "Nx", delimeter, &(rd->Nx)) ;
-		get_int_val(line_val, token, "Nt", delimeter, &(rd->Nt)) ;
-		get_int_val(line_val, token, "t_step_save", delimeter, &(rd->t_step_save)) ;
+		get_int_val(line_val, token, "Nx", delimeter, Nx) ;
+		get_int_val(line_val, token, "Nt", delimeter, Nt) ;
+		get_int_val(line_val, token, "t_step_save", delimeter, t_step_save) ;
 
-		get_double_val(line_val, token, "bbox[0]", delimeter, &(rd->bbox[0])) ;
-		get_double_val(line_val, token, "bbox[1]", delimeter, &(rd->bbox[1])) ;
+		get_double_val(line_val, token, "bbox[0]", delimeter, bbox_0) ;
+		get_double_val(line_val, token, "bbox[1]", delimeter, bbox_1) ;
 
-		get_double_val(line_val, token, "cfl_num", delimeter, &(rd->cfl_num)) ;
-		get_double_val(line_val, token, "dx", delimeter, &(rd->dx)) ;
-		get_double_val(line_val, token, "dt", delimeter, &(rd->dt)) ;
+		get_double_val(line_val, token, "cfl_num", delimeter, cfl_num) ;
+		get_double_val(line_val, token, "dx", delimeter, dx) ;
+		get_double_val(line_val, token, "dt", delimeter, dt) ;
 
-		get_double_val(line_val, token, "stereographic_L", delimeter, &(rd->stereographic_L)) ;
+		get_double_val(line_val, token, "stereographic_L", delimeter, stereographic_L) ;
 
 	}
 	free(line) ;
 	fclose(run_data_file) ;
 
-	return rd ;
+	return ;
 }
 /*==========================================================================*/
-initial_data* init_initial_data(void) 
+void get_initial_data(
+	char** type,
+	double* amp, double* width, double* center) 
 {
-	initial_data* id = malloc(sizeof(initial_data)) ;
-
 	char initial_data_name[MAX_NAME_LEN+1] ;
 	snprintf(initial_data_name, MAX_NAME_LEN, "%sinitial_data.txt", HOME_DIR) ;
 	FILE* initial_data_file = fopen(initial_data_name, "r") ;
@@ -110,31 +114,15 @@ initial_data* init_initial_data(void)
 		char* line_val = line ;
                 token = strsep(&line_val, delimeter) ;
 
-		get_string_val(line_val, token, "type", delimeter, &(id->type)) ;
+		get_string_val(line_val, token, "type", delimeter, type) ;
 
-		get_double_val(line_val, token, "amp", delimeter, &(id->amp)) ;
-		get_double_val(line_val, token, "width", delimeter, &(id->width)) ;
-		get_double_val(line_val, token, "center", delimeter, &(id->center)) ;
+		get_double_val(line_val, token, "amp", delimeter, amp) ;
+		get_double_val(line_val, token, "width", delimeter, width) ;
+		get_double_val(line_val, token, "center", delimeter, center) ;
 
 	}
 	free(line) ;
 	fclose(initial_data_file) ;
 
-	return id ;
-}
-/*==========================================================================*/
-void free_run_data(run_data* rd)
-{
-	free(rd->theory) ;
-	rd->theory = NULL ;
-	free(rd) ;
-	rd=NULL ;
-}
-/*==========================================================================*/
-void free_initial_data(initial_data* id)
-{
-	free(id->type) ;
-	id->type=NULL ;
-	free(id) ;
-	id=NULL ;
+	return ;
 }
