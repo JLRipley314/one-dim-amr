@@ -9,15 +9,19 @@ LDFLAGS = -L/home/jripley/one-dim-amr
 OBJECTS = main.o \
 	evolution_routines_GR.o \
 	checks_diagnostics_general.o \
+	file_io.o \
 	stereographic_routines.o
 
-DEPS_MAIN = evolution_routines_GR.h
+DEPS_MAIN = evolution_routines_GR.h \
+	file_io.h
 
 DEPS_EVOLUTION_ROUTINES_GR = evolution_routines_GR.h \
 	stereographic_routines.h
 
 DEPS_CHECKS_DIAGNOSTICS = checks_diagnostics_general.h \
 	stereographic_routines.h
+
+DEPS_FILE_IO = file_io.h
 
 DEPS_STEREOGRAPHIC = stereographic_routines.h 
 
@@ -35,6 +39,9 @@ checks_diagnostics_general.o: checks_diagnostics_general.c $(DEPS_CHECKS_DIAGNOS
 
 stereographic_routines.o: stereographic_routines.c $(DEPS_STEREOGRAPHIC)
 	$(CC) -c stereographic_routines.c $(LIBS) $(LDFLAGS) $(CFLAGS)
+
+file_io.o: file_io.c $(DEPS_FILE_IO)
+	$(CC) -c file_io.c $(LIBS) $(LDFLAGS) $(CFLAGS)
 
 clean_o:
 	rm *.o

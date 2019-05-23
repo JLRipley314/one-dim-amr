@@ -9,10 +9,10 @@
 #include "amr_evolve.h"
 #include "amr_grid_hierarchy.h"
 #include "checks_diagnostics_general.h"
-
 #include "evolution_routines_GR.h"
+#include "file_io.h"
 
-#define MAX_FILE_NAME 1024
+
 #define OUTPUT_DIR "/home/jripley/one-dim-amr/examples/massless_scalar_collapse/output/"
 
 /*===========================================================================*/
@@ -56,16 +56,16 @@ int 	Al_n_index, Al_nm1_index, Al_nm2_index,
 ;
 int perim_coords[2] ;
 /*---------------------------------------------------------------------------*/
-char output_name_Al[MAX_FILE_NAME+1] ;
-char output_name_Ze[MAX_FILE_NAME+1] ;
-char output_name_P[MAX_FILE_NAME+1] ;
-char output_name_Q[MAX_FILE_NAME+1] ;
+char output_name_Al[MAX_NAME_LEN+1] ;
+char output_name_Ze[MAX_NAME_LEN+1] ;
+char output_name_P[MAX_NAME_LEN+1] ;
+char output_name_Q[MAX_NAME_LEN+1] ;
 
-char output_name_ingoing_null_characteristic[MAX_FILE_NAME+1] ;
-char output_name_outgoing_null_characteristic[MAX_FILE_NAME+1] ;
+char output_name_ingoing_null_characteristic[MAX_NAME_LEN+1] ;
+char output_name_outgoing_null_characteristic[MAX_NAME_LEN+1] ;
 
-char output_name_Ricci_scalar[MAX_FILE_NAME+1] ;
-char output_name_Gauss_Bonner_scalar[MAX_FILE_NAME+1] ;
+char output_name_Ricci_scalar[MAX_NAME_LEN+1] ;
+char output_name_Gauss_Bonner_scalar[MAX_NAME_LEN+1] ;
 /*---------------------------------------------------------------------------*/
 bool perim_interior[2] ;
 bool excision_on = true ;
@@ -208,7 +208,7 @@ void set_globals(amr_grid* grid)
 /*===========================================================================*/
 /* computes one time step (to tolerance) of wave equation */
 /*===========================================================================*/
-void initial_data(amr_grid* grid)
+void set_initial_data(amr_grid* grid)
 {
 	set_globals(grid) ;
 
@@ -284,15 +284,15 @@ void save_to_file(amr_grid* grid)
 	set_globals(grid) ;
 
 	if (made_files == false) {
-		snprintf(output_name_Al, MAX_FILE_NAME, "%sAl.sdf", OUTPUT_DIR) ;
-		snprintf(output_name_Ze, MAX_FILE_NAME, "%sZe.sdf", OUTPUT_DIR) ;
-		snprintf(output_name_P,  MAX_FILE_NAME, "%sP.sdf",  OUTPUT_DIR) ;
-		snprintf(output_name_Q,  MAX_FILE_NAME, "%sQ.sdf",  OUTPUT_DIR) ;
+		snprintf(output_name_Al, MAX_NAME_LEN, "%sAl.sdf", OUTPUT_DIR) ;
+		snprintf(output_name_Ze, MAX_NAME_LEN, "%sZe.sdf", OUTPUT_DIR) ;
+		snprintf(output_name_P,  MAX_NAME_LEN, "%sP.sdf",  OUTPUT_DIR) ;
+		snprintf(output_name_Q,  MAX_NAME_LEN, "%sQ.sdf",  OUTPUT_DIR) ;
 
-		snprintf(output_name_ingoing_null_characteristic,  MAX_FILE_NAME, "%soutgoing_null_characteristic.sdf", OUTPUT_DIR) ;
-		snprintf(output_name_outgoing_null_characteristic, MAX_FILE_NAME, "%singoing_null_characteristic.sdf",  OUTPUT_DIR) ;
-		snprintf(output_name_Ricci_scalar,        MAX_FILE_NAME, "%sRicci_scalar.sdf",        OUTPUT_DIR) ;
-		snprintf(output_name_Gauss_Bonner_scalar, MAX_FILE_NAME, "%sGauss_Bonner_scalar.sdf", OUTPUT_DIR) ;
+		snprintf(output_name_ingoing_null_characteristic,  MAX_NAME_LEN, "%soutgoing_null_characteristic.sdf", OUTPUT_DIR) ;
+		snprintf(output_name_outgoing_null_characteristic, MAX_NAME_LEN, "%singoing_null_characteristic.sdf",  OUTPUT_DIR) ;
+		snprintf(output_name_Ricci_scalar,        MAX_NAME_LEN, "%sRicci_scalar.sdf",        OUTPUT_DIR) ;
+		snprintf(output_name_Gauss_Bonner_scalar, MAX_NAME_LEN, "%sGauss_Bonner_scalar.sdf", OUTPUT_DIR) ;
 	}
 	made_files = true ;
 	gft_out_bbox(output_name_Al, time, &Nx, 1, bbox, Al_n) ;
@@ -315,6 +315,15 @@ int main(int argc, char* argv[])
 {
 	set_run_data() ;
 
+	run_data* rd = init_run_data() ; 
+	initial_data* id = init_initial_data() ; 
+
+	printf("run_data->Nx %d\n", rd->Nx) ;
+
+	free(rd) ;
+	free(id) ;
+	exit(EXIT_SUCCESS) ;
+
 	amr_field* fields = set_fields() ; 
 	find_field_indices(fields) ; 
 
@@ -328,11 +337,14 @@ int main(int argc, char* argv[])
 	;
 	amr_main(
 		gh, 
-		initial_data,
+		set_initial_data,
 		evolve_pde,
 		save_to_file)
 	;
 	amr_destroy_grid_hierarchy(gh) ;
+
+	free(rd) ;
+	free(id) ;
 
 	return EXIT_SUCCESS ;
 }

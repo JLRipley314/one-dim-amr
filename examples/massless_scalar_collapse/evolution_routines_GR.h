@@ -27,9 +27,5 @@ void advance_tStep_massless_scalar(
 	double* Al_n, double* Al_nm1, double* Ze_n, double* Ze_nm1,
 	double*  P_n, double*  P_nm1, double*  Q_n, double*  Q_nm1)
 ;
-void save_to_txt_file(
-	int Nx,
-	FILE* output,
-	double* field)
-;
+
 #endif

@@ -569,7 +569,7 @@ void initial_data_Gaussian(
 {
 	double left_point = bbox[0] ;
 
-	double amp = 0.02 ;
+	double amp = 0.005 ;
 	double width = 2 ;
 	double r_0 = 5 ;
 	double x = 0 ;
@@ -604,17 +604,5 @@ void initial_data_Gaussian(
 			P, 	P,	Q,	Q)
 		;
 	}
-	return ;
-}
-/*===========================================================================*/
-void save_to_txt_file(
-	int Nx,
-	FILE* output_file,
-	double* field)
-{
-	for (int iC=0; iC<Nx; iC++) {
-		fprintf(output_file, "%.10f\t", field[iC]) ;
-	}
-	fprintf(output_file, "\n") ;
 	return ;
 }
