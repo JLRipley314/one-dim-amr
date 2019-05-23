@@ -31,7 +31,9 @@ static void get_double_val(char* line_val, char* token, char* comparison, char* 
 static void get_string_val(char* line_val, char* token, char* comparison, char* delimeter, char** val)
 {
 	if ((token != NULL) && (strcmp(token,comparison)==0)) {
-		*val = strsep(&line_val, "\n") ;
+		char* inter_val = strsep(&line_val, "\n") ;
+		*val = malloc(strlen(inter_val)+1) ;
+		strcpy(*val,inter_val) ;
 		printf("%s %s\n", comparison, *val) ;
 	}
 	return ;
@@ -61,7 +63,7 @@ run_data* init_run_data(void)
         ssize_t read = 0 ; 
 
 	char* delimeter = ":" ;
-
+	
         while ((read = getline(&line, &len, run_data_file)) > 0) {
 		char* line_val = line ;
                 token = strsep(&line_val, delimeter) ;
@@ -119,4 +121,20 @@ initial_data* init_initial_data(void)
 	fclose(initial_data_file) ;
 
 	return id ;
+}
+/*==========================================================================*/
+void free_run_data(run_data* rd)
+{
+	free(rd->theory) ;
+	rd->theory = NULL ;
+	free(rd) ;
+	rd=NULL ;
+}
+/*==========================================================================*/
+void free_initial_data(initial_data* id)
+{
+	free(id->type) ;
+	id->type=NULL ;
+	free(id) ;
+	id=NULL ;
 }

@@ -318,10 +318,13 @@ int main(int argc, char* argv[])
 	run_data* rd = init_run_data() ; 
 	initial_data* id = init_initial_data() ; 
 
+	printf("run_data->theory %s\n", rd->theory) ;
 	printf("run_data->Nx %d\n", rd->Nx) ;
+	printf("initial_data->type %s\n", id->type) ;
+	printf("initial_data->amp %f\n", id->amp) ;
 
-	free(rd) ;
-	free(id) ;
+	free_run_data(rd) ;
+	free_initial_data(id) ;
 	exit(EXIT_SUCCESS) ;
 
 	amr_field* fields = set_fields() ; 
