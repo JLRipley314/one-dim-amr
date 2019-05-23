@@ -24,8 +24,14 @@ char* run_type = "massless_scalar_GR" ;
 /*===========================================================================*/
 /* global variables for evolution-convenient for function calls */
 /*===========================================================================*/
-double *Al_n, *Al_nm1, *Al_nm2 ;
-double *Ze_n, *Ze_nm1, *Ze_nm2 ;
+/*---------------------------------------------------------------------------*/
+/* ODEs: extr: for extrapolation (saved when levels merge) */
+/*---------------------------------------------------------------------------*/
+double *Al_n, *Al_nm1, *Al_nm2, *Al_extr_m1, *Al_extr_m2, *Al_extr_m3 ;
+double *Ze_n, *Ze_nm1, *Ze_nm2, *Ze_extr_m1, *Ze_extr_m2, *Ze_extr_m3 ;
+/*---------------------------------------------------------------------------*/
+/* Hyperbolic variables */
+/*---------------------------------------------------------------------------*/
 double  *P_n,  *P_nm1,  *P_nm2 ;
 double  *Q_n,  *Q_nm1,  *Q_nm2 ;
 
@@ -76,10 +82,12 @@ char output_name_outgoing_null_characteristic[MAX_NAME_LEN+1] ;
 
 char output_name_Ricci_scalar[MAX_NAME_LEN+1] ;
 char output_name_Gauss_Bonner_scalar[MAX_NAME_LEN+1] ;
+
+char output_name_mass_aspect[MAX_NAME_LEN+1] ;
 /*---------------------------------------------------------------------------*/
 bool perim_interior[2] ;
 bool excision_on = true ;
-bool made_files  = false ;
+bool made_output_files  = false ;
 /*==========================================================================*/
 /*number of time steps for evolution fields: 3 */
 /*==========================================================================*/
@@ -270,22 +278,26 @@ void save_to_file(amr_grid* grid)
 {
 	set_globals(grid) ;
 
-	if (made_files == false) {
+	if (made_output_files == false) {
 		snprintf(output_name_Al, MAX_NAME_LEN, "%sAl.sdf", OUTPUT_DIR) ;
 		snprintf(output_name_Ze, MAX_NAME_LEN, "%sZe.sdf", OUTPUT_DIR) ;
 		snprintf(output_name_P,  MAX_NAME_LEN, "%sP.sdf",  OUTPUT_DIR) ;
 		snprintf(output_name_Q,  MAX_NAME_LEN, "%sQ.sdf",  OUTPUT_DIR) ;
+
+		snprintf(output_name_mass_aspect, MAX_NAME_LEN, "%smass_aspect.sdf", OUTPUT_DIR) ;
 
 		snprintf(output_name_ingoing_null_characteristic,  MAX_NAME_LEN, "%soutgoing_null_characteristic.sdf", OUTPUT_DIR) ;
 		snprintf(output_name_outgoing_null_characteristic, MAX_NAME_LEN, "%singoing_null_characteristic.sdf",  OUTPUT_DIR) ;
 		snprintf(output_name_Ricci_scalar,        MAX_NAME_LEN, "%sRicci_scalar.sdf",        OUTPUT_DIR) ;
 		snprintf(output_name_Gauss_Bonner_scalar, MAX_NAME_LEN, "%sGauss_Bonner_scalar.sdf", OUTPUT_DIR) ;
 	}
-	made_files = true ;
+	made_output_files = true ;
 	gft_out_bbox(output_name_Al, time, &Nx, 1, bbox, Al_n) ;
 	gft_out_bbox(output_name_Ze, time, &Nx, 1, bbox, Ze_n) ;
 	gft_out_bbox(output_name_P,  time, &Nx, 1, bbox,  P_n) ;
 	gft_out_bbox(output_name_Q,  time, &Nx, 1, bbox,  Q_n) ;
+
+	gft_out_bbox(output_name_mass_aspect,  time, &Nx, 1, bbox, mass_aspect) ;
 
 	gft_out_bbox(output_name_ingoing_null_characteristic,  time, &Nx, 1, bbox, ingoing_null_characteristic) ;
 	gft_out_bbox(output_name_outgoing_null_characteristic, time, &Nx, 1, bbox, outgoing_null_characteristic) ;

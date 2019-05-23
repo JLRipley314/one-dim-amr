@@ -266,7 +266,7 @@ static void amr_evolve_grid(
 		}
 	}
 /*--------------------------------------------------------------------------*/
-/* resolve the coarser grid exterior to the finer grid after injection */
+/* inject, then solve the ODEs on this time level */
 /*--------------------------------------------------------------------------*/
 	bool temp_excision_on = false ;
 	int temp_excised_jC = 0 ;
@@ -277,7 +277,9 @@ static void amr_evolve_grid(
 		if (grid->parent->parent!=NULL) { 
 			temp_excised_jC  = grid->parent->excised_jC ;
 			temp_excision_on = grid->parent->excision_on ;
-			grid->parent->excision_on = false ;
+			if (grid->perim_coords[1] > grid->parent->excised_jC) {
+				grid->parent->excision_on = false ;
+			} 
 			grid->parent->excised_jC = grid->perim_coords[1]-1 ;
 			evolve_pde(grid->parent) ;
 			grid->parent->excision_on = temp_excision_on ;

@@ -17,13 +17,14 @@ static int compute_mass_aspect(
 	double r_j ;
 	for (int jC=0; jC<Nx; jC++) {
 		r_j = stereographic_r(s_L, dx*jC) ;
-		mass_aspect[jC] = (r_j/2) * (1. - pow(Ze[jC],2)) ;
+		mass_aspect[jC] = (r_j/2) * pow(Ze[jC],2) ;
 	}
+	mass_aspect[Nx-1] = mass_aspect[Nx-2] ;
 	return 0 ;
 } 
 /*==========================================================================*/
 /*==========================================================================*/
-int compute_ingoing_outgoing_null_characteristics(
+static int compute_ingoing_outgoing_null_characteristics(
 	int Nx, double* Al, double* Ze,
 	double* ingoing_null_characteristic,
 	double* outgoing_null_characteristic)
@@ -35,7 +36,7 @@ int compute_ingoing_outgoing_null_characteristics(
 	return 0 ;
 } 
 /*==========================================================================*/
-int compute_excision_point(
+static int compute_excision_point(
 	int Nx, int exc_jC, int buffer_size, double* outgoing_null_characteristic)
 {
 	int inner_trapped = 0 ;
@@ -59,7 +60,7 @@ int compute_excision_point(
 	return 0 ;
 }
 /*==========================================================================*/
-int compute_Ricci_scalar(
+static int compute_Ricci_scalar(
 	int Nx, int exc_jC, 
 	double s_L,
 	double dt, double dx,
@@ -118,7 +119,7 @@ int compute_Ricci_scalar(
 	return 0 ;
 }
 /*==========================================================================*/
-int compute_Gauss_Bonnet_scalar(
+static int compute_Gauss_Bonnet_scalar(
 	int Nx, int exc_jC, 
 	double s_L,
 	double dt, double dx,
