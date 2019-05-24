@@ -1,7 +1,7 @@
-#ifndef _CHECKS_DIAGNOSTICS_GENERAL_H_
-#define _CHECKS_DIAGNOSTICS_GENERAL_H_
+#ifndef _DIAGNOSTICS_GENERAL_H_
+#define _DIAGNOSTICS_GENERAL_H_
 
-void compute_checks_diagnostics_general(
+void compute_diagnostics_general(
 	int Nx, int exc_jC, 
 	double s_L,
 	double dt, double dx,
@@ -14,4 +14,4 @@ void compute_checks_diagnostics_general(
 	double* Gauss_Bonnet_scalar)
 ;
 
-#endif /* _CHECKS_DIAGNOSTICS_GENERAL_H_ */
+#endif /* _DIAGNOSTICS_GENERAL_H_ */

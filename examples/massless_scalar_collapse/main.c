@@ -8,7 +8,8 @@
 
 #include "amr_evolve.h"
 #include "amr_grid_hierarchy.h"
-#include "checks_diagnostics_general.h"
+#include "diagnostics_general.h"
+#include "diagnostics_GR.h"
 #include "evolution_routines_GR.h"
 #include "file_io.h"
 
@@ -19,8 +20,6 @@
 /* global variables: set here (will eventually set by reading from
  * initial data file */
 /*===========================================================================*/
-//char* run_type = "massless_scalar" ;
-char* run_type = "massless_scalar_GR" ;
 /*===========================================================================*/
 /* global variables for evolution-convenient for function calls */
 /*===========================================================================*/
@@ -34,10 +33,13 @@ double *Ze_n, *Ze_nm1, *Ze_nm2, *Ze_extr_m1, *Ze_extr_m2, *Ze_extr_m3 ;
 /*---------------------------------------------------------------------------*/
 double  *P_n,  *P_nm1,  *P_nm2 ;
 double  *Q_n,  *Q_nm1,  *Q_nm2 ;
-
-double* mass_aspect ;
+/*---------------------------------------------------------------------------*/
+/* diagnostics */
+/*---------------------------------------------------------------------------*/
+double *mass_aspect ;
 double *ingoing_null_characteristic, *outgoing_null_characteristic ;
 double *Ricci_scalar, *Gauss_Bonnet_scalar ;
+double *eom_TR, *eom_ThTh, *eom_scalar ;
 /*---------------------------------------------------------------------------*/
 /* run data */
 /*---------------------------------------------------------------------------*/
@@ -68,7 +70,8 @@ int 	Al_n_index, Al_nm1_index, Al_nm2_index,
 
 	mass_aspect_index,
 	ingoing_null_characteristic_index, outgoing_null_characteristic_index,
-	Ricci_scalar_index, Gauss_Bonnet_scalar_index
+	Ricci_scalar_index, Gauss_Bonnet_scalar_index,
+	eom_TR_index, eom_ThTh_index, eom_scalar_index
 ;
 int perim_coords[2] ;
 /*---------------------------------------------------------------------------*/
@@ -84,6 +87,10 @@ char output_name_Ricci_scalar[MAX_NAME_LEN+1] ;
 char output_name_Gauss_Bonner_scalar[MAX_NAME_LEN+1] ;
 
 char output_name_mass_aspect[MAX_NAME_LEN+1] ;
+
+char output_name_eom_TR[MAX_NAME_LEN+1] ;
+char output_name_eom_ThTh[MAX_NAME_LEN+1] ;
+char output_name_eom_scalar[MAX_NAME_LEN+1] ;
 /*---------------------------------------------------------------------------*/
 bool perim_interior[2] ;
 bool excision_on = true ;
@@ -108,6 +115,10 @@ amr_field* set_fields(void)
 
 	amr_add_field(fields, "Ricci_scalar",        "diagnostic", 1) ;
 	amr_add_field(fields, "Gauss_Bonnet_scalar", "diagnostic", 1) ;
+
+	amr_add_field(fields, "eom_TR",     "diagnostic", 1) ;
+	amr_add_field(fields, "eom_ThTh",   "diagnostic", 1) ;
+	amr_add_field(fields, "eom_scalar", "diagnostic", 1) ;
 
 	return fields ;
 }
@@ -137,15 +148,9 @@ void find_field_indices(amr_field* fields)
 	Ricci_scalar_index = amr_find_field_index(fields, "Ricci_scalar")  ;
 	Gauss_Bonnet_scalar_index = amr_find_field_index(fields, "Gauss_Bonnet_scalar") ;
 
-	assert(Al_n_index >= 0) ;
-	assert(Ze_n_index >= 0) ;
-	assert(P_n_index >= 0) ;
-	assert(Q_n_index >= 0) ;
-
-	assert(ingoing_null_characteristic_index >= 0) ;
-	assert(outgoing_null_characteristic_index >= 0) ;
-	assert(Ricci_scalar_index >= 0) ;
-	assert(Gauss_Bonnet_scalar_index >= 0) ;
+	eom_TR_index = amr_find_field_index(fields, "eom_TR") ;
+	eom_ThTh_index = amr_find_field_index(fields, "eom_ThTh") ;
+	eom_scalar_index = amr_find_field_index(fields, "eom_scalar") ;
 
 	return ;
 }
@@ -177,6 +182,10 @@ void set_globals(amr_grid* grid)
 	Ricci_scalar = grid->grid_funcs[Ricci_scalar_index] ;
 	Gauss_Bonnet_scalar = grid->grid_funcs[Gauss_Bonnet_scalar_index] ;
 
+	eom_TR = grid->grid_funcs[eom_TR_index] ;
+	eom_ThTh = grid->grid_funcs[eom_ThTh_index] ;
+	eom_scalar = grid->grid_funcs[eom_scalar_index] ;
+
 	Nx = grid->Nx ;
 
 	dt = grid->dt ;
@@ -207,17 +216,29 @@ void set_initial_data(amr_grid* grid)
 {
 	set_globals(grid) ;
 
-	initial_data_Gaussian(
-		run_type,
-		stereographic_L,
-		Nx, 	
-		dt, dx,
-		excised_jC,
-		bbox,
-		perim_interior,
-		Al_n, Ze_n, 
-		P_n,   Q_n)
-	;
+	if (strcmp(theory,"massless_scalar") == 0) {
+		initial_data_Gaussian(
+			stereographic_L,
+			Nx, 	
+			dt, dx,
+			excised_jC,
+			bbox,
+			perim_interior,
+			Al_n, Ze_n, 
+			P_n,   Q_n)
+		;
+	} else if (strcmp(theory,"massless_scalar_GR") == 0) {	
+		initial_data_Gaussian_GR(
+			stereographic_L,
+			Nx, 	
+			dt, dx,
+			excised_jC,
+			bbox,
+			perim_interior,
+			Al_n, Ze_n, 
+			P_n,   Q_n)
+		;
+	}
 	return ;
 }
 /*--------------------------------------------------------------------------*/
@@ -235,7 +256,6 @@ void rescale_Al(amr_grid* grid)
 				iter->grid_funcs[Al_n_index][iC] /= rescale_param ;
 			}
 		}
-		printf("rescale_param %f\tAl %f\n",rescale_param,grid->grid_funcs[Al_n_index][Nx-1]) ;
 	}
 }
 /*===========================================================================*/
@@ -244,20 +264,51 @@ void rescale_Al(amr_grid* grid)
 void evolve_pde(amr_grid* grid)
 {
 	set_globals(grid) ;
-	advance_tStep_massless_scalar(
-		run_type,
-		stereographic_L,
-		Nx, dt, dx, 
-		excision_on,
-		excised_jC,
-		bbox, perim_interior,
-		Al_n, Al_nm1, Ze_n, Ze_nm1,
-		 P_n,  P_nm1,  Q_n,  Q_nm1
-	) ;	
-/*--------------------------------------------------------------------------*/
+	if (strcmp(theory,"massless_scalar") == 0) {
+		advance_tStep_massless_scalar(
+			stereographic_L,
+			Nx, dt, dx, 
+			excision_on,
+			excised_jC,
+			bbox, perim_interior,
+			Al_n, Al_nm1, Ze_n, Ze_nm1,
+			 P_n,  P_nm1,  Q_n,  Q_nm1
+		) ;	
+	} else if (strcmp(theory,"massless_scalar_GR") == 0) {	
+		advance_tStep_massless_scalar_GR(
+			stereographic_L,
+			Nx, dt, dx, 
+			excision_on,
+			excised_jC,
+			bbox, perim_interior,
+			Al_n, Al_nm1, Ze_n, Ze_nm1,
+			 P_n,  P_nm1,  Q_n,  Q_nm1
+		) ;	
+	}
 	rescale_Al(grid) ;
+	return ;
+}
+/*===========================================================================*/
+/* independent residuals, curvature scalars, etc */
+/*===========================================================================*/
+void compute_diagnostics(amr_grid* grid)
+{
+	set_globals(grid) ;
 /*--------------------------------------------------------------------------*/
-	compute_checks_diagnostics_general(
+	compute_diagnostics_massless_scalar_GR(
+		Nx, excised_jC, 
+		stereographic_L,
+		dt, dx,
+		Al_n, Al_nm1, Al_nm2,
+		Ze_n, Ze_nm1, Ze_nm2,
+		P_n, P_nm1, P_nm2,
+		Q_n, Q_nm1, Q_nm2,
+		eom_TR,
+		eom_ThTh,
+		eom_scalar)
+	;
+/*--------------------------------------------------------------------------*/
+	compute_diagnostics_general(
 		Nx, excised_jC, 
 		stereographic_L,
 		dt, dx,
@@ -290,6 +341,10 @@ void save_to_file(amr_grid* grid)
 		snprintf(output_name_outgoing_null_characteristic, MAX_NAME_LEN, "%singoing_null_characteristic.sdf",  OUTPUT_DIR) ;
 		snprintf(output_name_Ricci_scalar,        MAX_NAME_LEN, "%sRicci_scalar.sdf",        OUTPUT_DIR) ;
 		snprintf(output_name_Gauss_Bonner_scalar, MAX_NAME_LEN, "%sGauss_Bonner_scalar.sdf", OUTPUT_DIR) ;
+
+		snprintf(output_name_eom_TR, MAX_NAME_LEN, "%seom_TR.sdf", OUTPUT_DIR) ;
+		snprintf(output_name_eom_ThTh, MAX_NAME_LEN, "%seom_ThTh.sdf", OUTPUT_DIR) ;
+		snprintf(output_name_eom_scalar, MAX_NAME_LEN, "%seom_scalar.sdf", OUTPUT_DIR) ;
 	}
 	made_output_files = true ;
 	gft_out_bbox(output_name_Al, time, &Nx, 1, bbox, Al_n) ;
@@ -303,6 +358,10 @@ void save_to_file(amr_grid* grid)
 	gft_out_bbox(output_name_outgoing_null_characteristic, time, &Nx, 1, bbox, outgoing_null_characteristic) ;
 	gft_out_bbox(output_name_Ricci_scalar,        time, &Nx, 1, bbox,  Ricci_scalar) ;
 	gft_out_bbox(output_name_Gauss_Bonner_scalar, time, &Nx, 1, bbox,  Gauss_Bonnet_scalar) ;
+
+	gft_out_bbox(output_name_eom_TR, time, &Nx, 1, bbox, eom_TR) ;
+	gft_out_bbox(output_name_eom_ThTh, time, &Nx, 1, bbox, eom_ThTh) ;
+	gft_out_bbox(output_name_eom_scalar, time, &Nx, 1, bbox, eom_scalar) ;
 	
 	return ;
 }
@@ -322,7 +381,6 @@ int main(int argc, char* argv[])
 	; 
 	get_initial_data(&id_type, &amp, &width, &center) ; 
 
-
 	amr_field* fields = set_fields() ; 
 	find_field_indices(fields) ; 
 
@@ -338,6 +396,7 @@ int main(int argc, char* argv[])
 		gh, 
 		set_initial_data,
 		evolve_pde,
+		compute_diagnostics,
 		save_to_file)
 	;
 	amr_destroy_grid_hierarchy(gh) ;

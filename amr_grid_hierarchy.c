@@ -190,7 +190,7 @@ int amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent)
 	new_grid->bbox[1] = parent->bbox[0] + (right_coord*parent->dx) ;
 	
 	new_grid->num_grid_funcs  = parent->num_grid_funcs ;
-	new_grid->grid_funcs = allocate_double_2DArray(new_grid->num_grid_funcs, new_grid->Nx, 1.) ;
+	new_grid->grid_funcs = allocate_double_2DArray(new_grid->num_grid_funcs, new_grid->Nx, 0.) ;
 
 	new_grid->excision_on = parent->excision_on ;
 
@@ -249,7 +249,7 @@ amr_grid_hierarchy* amr_init_grid_hierarchy(
 	assert(base_grid != NULL) ;	
 	base_grid->level = 0 ;
 
-	base_grid->grid_funcs = allocate_double_2DArray(num_grid_funcs, Nx, 1.) ; 	
+	base_grid->grid_funcs = allocate_double_2DArray(num_grid_funcs, Nx, 0.) ; 	
 	base_grid->num_grid_funcs  = num_grid_funcs ;
 	
 	base_grid->Nx = Nx ;

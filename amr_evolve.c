@@ -246,11 +246,16 @@ static void amr_evolve_grid(
 	void (*evolve_pde)(amr_grid*))
 {
 	for (int tC=0; tC<num_t_steps; tC++) {
+		/* 
+			TO DO: extrapolat ODE to time step 
+		*/
 		shift_fields_one_time_level(fields, grid) ;
 		grid->tC   += 1 ;
 		grid->time += grid->dt ;
 		if (grid->tC%REGRID == 0) {
-			/* regrid all finer levels */
+			/* 
+				TO DO: regrid all finer levels 
+			*/
 		}
 		if (grid->parent != NULL) {
 			set_interior_hyperbolic_boundary(fields, grid->parent, grid) ;
@@ -263,6 +268,13 @@ static void amr_evolve_grid(
 				REFINEMENT,
 				evolve_pde)
 			;
+			/* 
+				TO DO: now solve the ODE at this level, exterior to finer level 
+			*/
+		} else {
+			/* 
+				TO DO: now solve the ODE entirely at finest level 
+			*/
 		}
 	}
 /*--------------------------------------------------------------------------*/
@@ -309,6 +321,7 @@ void amr_main(
 	amr_grid_hierarchy* gh, 
 	void (*initial_data)(amr_grid*),
 	void (*evolve_pde)(amr_grid*),
+	void (*compute_diagnostics)(amr_grid*),
 	void (*save_to_file)(amr_grid*))
 {
 	add_self_similar_initial_grids(gh, 4) ;
@@ -327,6 +340,7 @@ void amr_main(
 		;
 		if (tC%(gh->t_step_save)==0) {
 			for (amr_grid* grid=gh->grid; grid != NULL; grid=grid->child) {
+				compute_diagnostics(grid) ;
 				save_to_file(grid) ;
 			}
 		}

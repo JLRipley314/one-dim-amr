@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdbool.h>
-#include "checks_diagnostics_general.h"
+
+#include "diagnostics_general.h"
 #include "stereographic_routines.h"
 
 /*==========================================================================*/
@@ -22,7 +23,6 @@ static int compute_mass_aspect(
 	mass_aspect[Nx-1] = mass_aspect[Nx-2] ;
 	return 0 ;
 } 
-/*==========================================================================*/
 /*==========================================================================*/
 static int compute_ingoing_outgoing_null_characteristics(
 	int Nx, double* Al, double* Ze,
@@ -177,7 +177,7 @@ static int compute_Gauss_Bonnet_scalar(
 	return 0 ;
 }
 /*==========================================================================*/
-void compute_checks_diagnostics_general(
+void compute_diagnostics_general(
 	int Nx, int exc_jC, 
 	double s_L,
 	double dt, double dx,

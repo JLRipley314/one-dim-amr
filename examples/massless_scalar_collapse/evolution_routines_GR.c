@@ -509,7 +509,6 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 } 
 /*===========================================================================*/
 void advance_tStep_massless_scalar(
-	char* run_type,
 	double s_L,
 	int Nx, 
 	double dt, double dx, 
@@ -533,19 +532,49 @@ void advance_tStep_massless_scalar(
 			Al_n, 	Al_nm1, Ze_n, Ze_nm1,
 			 P_n, 	 P_nm1,  Q_n,  Q_nm1)
 		;
-		if (strcmp(run_type,"massless_scalar_GR")==0) {
-			solve_Al_Ze(
-				s_L,
-				Nx,
-				dt, 	dx,
-				excision_on,
-				exc_jC,
-				bbox,
-				perim_interior,
-				Al_n, 	Al_nm1,	Ze_n,	Ze_nm1,
-				P_n, 	P_nm1,	Q_n,	Q_nm1)
-			;
-		}
+	} while (res>ERR_TOLERANCE) ;
+
+	Kreiss_Oliger_Filter(Nx, P_n) ;
+	Kreiss_Oliger_Filter(Nx, Q_n) ;
+
+	return ;
+}	
+/*===========================================================================*/
+void advance_tStep_massless_scalar_GR(
+	double s_L,
+	int Nx, 
+	double dt, double dx, 
+	bool excision_on,
+	int exc_jC,
+	double bbox[2], 
+	bool perim_interior[2],
+	double* Al_n, double* Al_nm1, double* Ze_n, double* Ze_nm1,
+	double*  P_n, double*  P_nm1, double*  Q_n, double*  Q_nm1)
+{ 
+	double res = 0 ;
+	do {
+		res = compute_iteration_GR_Crank_Nicolson_PQ(
+			s_L,
+			Nx,
+			dt, 	dx,
+			excision_on,
+			exc_jC,
+			bbox,
+			perim_interior,
+			Al_n, 	Al_nm1, Ze_n, Ze_nm1,
+			 P_n, 	 P_nm1,  Q_n,  Q_nm1)
+		;
+		solve_Al_Ze(
+			s_L,
+			Nx,
+			dt, 	dx,
+			excision_on,
+			exc_jC,
+			bbox,
+			perim_interior,
+			Al_n, 	Al_nm1,	Ze_n,	Ze_nm1,
+			P_n, 	P_nm1,	Q_n,	Q_nm1)
+		;
 	} while (res>ERR_TOLERANCE) ;
 
 	Kreiss_Oliger_Filter(Nx, P_n) ;
@@ -557,7 +586,43 @@ void advance_tStep_massless_scalar(
 /* leftgoing Gaussian pulse */
 /*==========================================================================*/
 void initial_data_Gaussian(
-	char* run_type,
+	double s_L,
+	int Nx, 	
+	double dt, double dx,
+	int exc_jC,
+	double bbox[2],
+	bool perim_interior[2],
+	double* Al, double* Ze, 
+	double*  P, double*  Q)
+{
+	double left_point = bbox[0] ;
+
+	double amp = 0.005 ;
+	double width = 2 ;
+	double r_0 = 5 ;
+	double x = 0 ;
+	double r = 0 ;
+
+	set_array_val(Nx, 1.0, Al) ;
+	set_array_val(Nx, 0.0, Ze) ;
+
+	for (int iC=0; iC<Nx-1; iC++) {
+		x = (iC * dx) + left_point ;
+		r = stereographic_r(s_L, x) ;
+		Q[iC] = amp * exp(-pow((r-r_0)/width,2)) * (
+			(-(r-r_0)/pow(width,2)) * pow(r,2) 
+		+	2*r
+		) ;
+		P[iC] = Q[iC] ;
+	}
+	P[Nx-1] = 0 ;
+	Q[Nx-1] = 0 ;
+	return ;
+}
+/*==========================================================================*/
+/* same as initial_data_Gaussian, but now solve constraints as well */
+/*==========================================================================*/
+void initial_data_Gaussian_GR(
 	double s_L,
 	int Nx, 	
 	double dt, double dx,
@@ -591,18 +656,16 @@ void initial_data_Gaussian(
 	Q[Nx-1] = 0 ;
 
 	bool initial_condition_excision_on = false ;
-	if (strcmp(run_type,"massless_scalar_GR")==0) {
-		solve_Al_Ze(
-			s_L,
-			Nx,
-			dt, 	dx,
-			initial_condition_excision_on,
-			exc_jC,
-			bbox,
-			perim_interior,
-			Al, 	Al,	Ze,	Ze, 
-			P, 	P,	Q,	Q)
-		;
-	}
+	solve_Al_Ze(
+		s_L,
+		Nx,
+		dt, 	dx,
+		initial_condition_excision_on,
+		exc_jC,
+		bbox,
+		perim_interior,
+		Al, 	Al,	Ze,	Ze, 
+		P, 	P,	Q,	Q)
+	;
 	return ;
 }
