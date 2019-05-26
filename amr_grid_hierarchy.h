@@ -72,7 +72,7 @@ typedef struct amr_grid
 	int time_levels;	/* total number of grid functions */
 	double** grid_funcs ;	/* pointer to array of pointer to grid function data */
 
-	bool perim_interior[2] ;
+	bool perim_interior[2] ; /* true: then grid boundaries not physical boundaries; else false */
 } amr_grid
 ;
 /*============================================================================*/

@@ -256,7 +256,7 @@ void amr_linear_extrapapolate_field(amr_field* field, amr_grid* grid)
 	return ;
 }
 /*==========================================================================*/
-void amr_extrapapolate_ode_fields(amr_field* fields, amr_grid* grid) 
+void amr_extrapolate_ode_fields(amr_field* fields, amr_grid* grid) 
 {
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		if (strcmp(field->pde_type,"ode") == 0) {
@@ -266,15 +266,29 @@ void amr_extrapapolate_ode_fields(amr_field* fields, amr_grid* grid)
 	return ;
 }
 /*==========================================================================*/
+/* use value of coarser grid at finer grid point lower boundary to  set initial condition */
+/*==========================================================================*/
 void set_ode_initial_condition(amr_field* fields, amr_grid* grid) 
 {
+	int index = 0 ;
+	int perim_coord = grid->perim_coords[0] ;
+
+	for (amr_field* field=fields; field!=NULL; field=field->next) {
+		if (strcmp(field->pde_type,"ode") == 0) {
+			index = field->index ;
+			grid->grid_funcs[index][0] = grid->parent->grid_funcs[index][perim_coord] ;
+		}
+	}
 	return ; 
 }
 /*==========================================================================*/
-void amr_solve_ode_fields(amr_field* fields, amr_grid* grid, void (*solve_ode)(amr_grid*)) 
+void amr_solve_ode_fields(
+	amr_field* fields, amr_grid* grid, void (*solve_ode)(amr_grid*)) 
 {
 	for (amr_grid* iter=grid; iter!=NULL; iter=iter->child) {
-		set_ode_initial_condition(fields, iter) ;
+		if (grid->perim_interior[0]==false) {
+			set_ode_initial_condition(fields, iter) ;
+		}
 		solve_ode(iter) ;
 	}
 	return ;
@@ -346,7 +360,7 @@ static void amr_evolve_grid(
 		if (grid->parent != NULL) {
 			amr_set_interior_hyperbolic_boundary(fields, grid->parent, grid) ;
 		}
-		amr_extrapapolate_ode_fields(fields, grid) ;
+		amr_extrapolate_ode_fields(fields, grid) ;
 		evolve_hyperbolic_pde(grid) ;
 		if (grid->child != NULL) {
 			amr_evolve_grid(
