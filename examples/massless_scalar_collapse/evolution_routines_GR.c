@@ -53,6 +53,14 @@ void Kreiss_Oliger_Filter(
 		;
 	}
 /* for outer excision boundary */
+	epsilon_ko = 1.0 ;
+	field[1] += (epsilon_ko/16.) * (
+			field[4] 
+		+ 	(-4.*field[3]) 
+		+ 	(6.*field[2]) 
+		+ 	(-4.*field[1]) 
+		+ 	field[0] 
+		) ;
 	field[Nx-2] += (epsilon_ko/16.) * (
 			field[Nx-1] 
 		+ 	(-4.*field[Nx-2]) 
@@ -416,7 +424,7 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 			dr)
 		;
 		jac_P = (1./dt) ;
-	/****/
+	/* one iteration */
 		Q_n[jC] -= res_Q / jac_Q ;
 		P_n[jC] -= res_P / jac_P ;
 
@@ -531,49 +539,6 @@ void advance_tStep_massless_scalar(
 			perim_interior,
 			Al_n, 	Al_nm1, Ze_n, Ze_nm1,
 			 P_n, 	 P_nm1,  Q_n,  Q_nm1)
-		;
-	} while (res>ERR_TOLERANCE) ;
-
-	Kreiss_Oliger_Filter(Nx, P_n) ;
-	Kreiss_Oliger_Filter(Nx, Q_n) ;
-
-	return ;
-}	
-/*===========================================================================*/
-void advance_tStep_massless_scalar_GR(
-	double s_L,
-	int Nx, 
-	double dt, double dx, 
-	bool excision_on,
-	int exc_jC,
-	double bbox[2], 
-	bool perim_interior[2],
-	double* Al_n, double* Al_nm1, double* Ze_n, double* Ze_nm1,
-	double*  P_n, double*  P_nm1, double*  Q_n, double*  Q_nm1)
-{ 
-	double res = 0 ;
-	do {
-		res = compute_iteration_GR_Crank_Nicolson_PQ(
-			s_L,
-			Nx,
-			dt, 	dx,
-			excision_on,
-			exc_jC,
-			bbox,
-			perim_interior,
-			Al_n, 	Al_nm1, Ze_n, Ze_nm1,
-			 P_n, 	 P_nm1,  Q_n,  Q_nm1)
-		;
-		solve_Al_Ze(
-			s_L,
-			Nx,
-			dt, 	dx,
-			excision_on,
-			exc_jC,
-			bbox,
-			perim_interior,
-			Al_n, 	Al_nm1,	Ze_n,	Ze_nm1,
-			P_n, 	P_nm1,	Q_n,	Q_nm1)
 		;
 	} while (res>ERR_TOLERANCE) ;
 

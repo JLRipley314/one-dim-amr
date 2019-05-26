@@ -39,13 +39,14 @@ void free_double_2DArray(double** array)
 /*============================================================================*/
 /* head of the list of fields */
 /*============================================================================*/
-amr_field* amr_init_fields(char* name, char* pde_type, int time_levels)
+amr_field* amr_init_fields(char* name, char* pde_type, int time_levels, int extrap_levels)
 {
 	amr_field* field = malloc(sizeof(amr_field)) ;
 
 	field->name = name ;
 	field->pde_type = pde_type ;
 	field->time_levels = time_levels ;
+	field->extrap_levels = extrap_levels ;
 	field->index = 0 ;
 	field->prev = NULL ;
 	field->next = NULL ;
@@ -54,7 +55,7 @@ amr_field* amr_init_fields(char* name, char* pde_type, int time_levels)
 /*============================================================================*/
 /* add new field to end of fields list */
 /*============================================================================*/
-int amr_add_field(amr_field* fields, char* name, char* pde_type, int time_levels)
+int amr_add_field(amr_field* fields, char* name, char* pde_type, int time_levels, int extrap_levels)
 {
 	amr_field* current = fields ;
 
@@ -66,7 +67,8 @@ int amr_add_field(amr_field* fields, char* name, char* pde_type, int time_levels
 	current->next->name = name ;
 	current->next->pde_type = pde_type ;
 	current->next->time_levels = time_levels ;
-	current->next->index = (current->index + current->time_levels) ;
+	current->next->extrap_levels = extrap_levels ;
+	current->next->index = (current->index + current->time_levels + current->extrap_levels) ;
 
 	current->next->prev = current ;
 	current->next->next = NULL ;
@@ -130,7 +132,7 @@ int amr_find_grid(int level, amr_grid_hierarchy* gh, amr_grid* grid)
 		printf("ERROR(find_grid): level>AMR_MAX_LEVELS-1\n") ;
 		return -1 ;
 	} 
-	grid = gh->grid ;
+	grid = gh->grids ;
 	while (grid->level != level) {
 		grid = grid->child ;
 		if (grid == NULL) {
@@ -145,7 +147,7 @@ int amr_find_grid(int level, amr_grid_hierarchy* gh, amr_grid* grid)
 /*============================================================================*/
 int amr_find_finest_grid(amr_grid_hierarchy* gh, amr_grid* grid) 
 {
-	grid = gh->grid ;
+	grid = gh->grids ;
 	while (grid->child != NULL) {
 		grid = grid->child ;
 	}
@@ -242,7 +244,7 @@ amr_grid_hierarchy* amr_init_grid_hierarchy(
 
 	int num_grid_funcs = 0 ;
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
-		num_grid_funcs += field->time_levels ;
+		num_grid_funcs += field->time_levels + field->extrap_levels ;
 	} 
 /*	base (shadow) grid */
 	amr_grid* base_grid = malloc(sizeof(amr_grid)) ;
@@ -254,6 +256,7 @@ amr_grid_hierarchy* amr_init_grid_hierarchy(
 	
 	base_grid->Nx = Nx ;
 	base_grid->excised_jC = 0 ;
+	base_grid->tC = 0 ;
 
 	base_grid->bbox[0] = bbox[0] ;
 	base_grid->bbox[1] = bbox[1] ;
@@ -272,16 +275,16 @@ amr_grid_hierarchy* amr_init_grid_hierarchy(
 
 	base_grid->excision_on = excision_on ;
 	
-	gh->grid = base_grid ;
+	gh->grids = base_grid ;
 
-	printf("bbox[0]\t%f\n", gh->grid->bbox[0]) ;
-	printf("bbox[1]\t%f\n", gh->grid->bbox[1]) ;
-	printf("perim_coords[0]\t%d\n", gh->grid->perim_coords[0]) ;
-	printf("perim_coords[1]\t%d\n", gh->grid->perim_coords[1]) ;
-	printf("Nx\t%d\n", gh->grid->Nx) ;
-	printf("dx\t%f\n", gh->grid->dx) ;
-	printf("dt\t%f\n", gh->grid->dt) ;
-	printf("num_grid_funcs\t%d\n", gh->grid->num_grid_funcs) ;
+	printf("bbox[0]\t%f\n", gh->grids->bbox[0]) ;
+	printf("bbox[1]\t%f\n", gh->grids->bbox[1]) ;
+	printf("perim_coords[0]\t%d\n", gh->grids->perim_coords[0]) ;
+	printf("perim_coords[1]\t%d\n", gh->grids->perim_coords[1]) ;
+	printf("Nx\t%d\n", gh->grids->Nx) ;
+	printf("dx\t%f\n", gh->grids->dx) ;
+	printf("dt\t%f\n", gh->grids->dt) ;
+	printf("num_grid_funcs\t%d\n", gh->grids->num_grid_funcs) ;
 	fflush(NULL) ;
 /*	level one grid */
 	amr_add_finer_grid(0, Nx-1, base_grid) ;
@@ -338,8 +341,8 @@ int regrid_finer_levels(amr_grid* grid)
 void add_self_similar_initial_grids(
 	amr_grid_hierarchy* gh, int num_grids) 
 {
-	amr_grid* grid = gh->grid->child ;
-	int Nx = gh->grid->Nx ;
+	amr_grid* grid = gh->grids->child ;
+	int Nx = gh->grids->Nx ;
 
 	for (int iC=0; iC<num_grids; iC++) {
 		amr_add_finer_grid(0, Nx-1, grid) ;
@@ -367,7 +370,7 @@ int amr_destroy_grid(amr_grid* grid)
 /*============================================================================*/
 int amr_destroy_grid_hierarchy(amr_grid_hierarchy* gh) 
 {
-	amr_grid* grid = gh->grid ;
+	amr_grid* grid = gh->grids ;
 	amr_grid* child = NULL ;
 
 	do {

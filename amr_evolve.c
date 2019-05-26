@@ -43,7 +43,7 @@ static void shift_fields_one_time_level(
 /*==========================================================================*/
 static void shift_grids_one_time_level(amr_grid_hierarchy* gh)
 {
-	for (amr_grid* grid=gh->grid; grid!=NULL; grid=grid->child) {
+	for (amr_grid* grid=gh->grids; grid!=NULL; grid=grid->child) {
 		shift_fields_one_time_level(gh->fields, grid) ;
 	}
 }
@@ -221,7 +221,9 @@ static void inject_overlaping_fields(
 	return ;
 }
 /*==========================================================================*/
-void set_interior_hyperbolic_boundary(
+/* using quadratic interpolation in time for boundaries */
+/*==========================================================================*/
+void amr_set_interior_hyperbolic_boundary(
 	amr_field* fields, amr_grid* parent, amr_grid* grid)
 {
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
@@ -229,26 +231,110 @@ void set_interior_hyperbolic_boundary(
 			set_interior_hyperbolic_boundary_quad_interp(
 				field, parent, grid)
 			;
-//			set_interior_hyperbolic_boundary_linear_interp(
-//				field, parent, grid)
-//			;
 		}
 	}
 	return ;
 }
 /*==========================================================================*/
-/* evolves all grids in hierarchy: from coarsest to finest */
+/* ode methods */
+/*==========================================================================*/
+void amr_linear_extrapapolate_field(amr_field* field, amr_grid* grid) 
+{
+	int field_index = field->index ;
+	int extrap_index = (field->index)+(field->time_levels) ;
+	int tC = grid->tC ;
+	double p_0, p_1 ;
+
+	for (int jC=0; jC<(grid->Nx); jC++) {
+		p_0 = grid->grid_funcs[extrap_index][jC] ;
+		p_1 = (
+			(grid->grid_funcs[extrap_index][jC])-(grid->grid_funcs[extrap_index+1][jC])
+		) / REFINEMENT ;
+
+		grid->grid_funcs[field_index][jC] = p_0 + p_1*(tC%REFINEMENT) ;
+	}	
+	return ;
+}
+/*==========================================================================*/
+void amr_extrapapolate_ode_fields(amr_field* fields, amr_grid* grid) 
+{
+	for (amr_field* field=fields; field!=NULL; field=field->next) {
+		if (strcmp(field->pde_type,"ode") == 0) {
+			amr_linear_extrapapolate_field(field,grid) ;
+		}
+	}
+	return ;
+}
+/*==========================================================================*/
+void set_ode_initial_condition(amr_field* fields, amr_grid* grid) 
+{
+	return ; 
+}
+/*==========================================================================*/
+void amr_solve_ode_fields(amr_field* fields, amr_grid* grid, void (*solve_ode)(amr_grid*)) 
+{
+	for (amr_grid* iter=grid; iter!=NULL; iter=iter->child) {
+		set_ode_initial_condition(fields, iter) ;
+		solve_ode(iter) ;
+	}
+	return ;
+}
+/*==========================================================================*/
+/* set extrap level whenever finer grids and this grid in sync */
+/*==========================================================================*/
+void amr_set_extrap_levels(amr_field* field, amr_grid* grid) 
+{
+	int field_index = field->index ;
+	int extrap_levels = field->extrap_levels ;
+	int extrap_index = (field->index) + (field->time_levels) ;
+	for (int jC=0; jC<(grid->Nx); jC++) {
+		for (int iC=extrap_index+extrap_levels-1; iC>extrap_index; iC--) {
+			grid->grid_funcs[iC][jC] = grid->grid_funcs[iC-1][jC] ;
+		}
+		grid->grid_funcs[extrap_index][jC] = grid->grid_funcs[field_index][jC] ;
+	}	
+	return ;
+}
+/*==========================================================================*/
+void amr_set_ode_extrap_levels(amr_field* fields, amr_grid* grid) 
+{
+	for (amr_field* field=fields; field!=NULL; field=field->next) {
+		if (strcmp(field->pde_type,"ode") == 0) {
+			amr_set_extrap_levels(field, grid) ;
+		}	
+	}
+	return ;
+}
+/*==========================================================================*/
+/* do twice as there are two extrapolation levels */
+/*==========================================================================*/
+void amr_set_all_grid_ode_extrap_levels(amr_grid_hierarchy* gh) 
+{
+	amr_field* fields = gh->fields ;
+	for (amr_grid* grid=gh->grids; grid!=NULL; grid=grid->child) {
+		for (int iC=0; iC<2; iC++) {
+			amr_set_ode_extrap_levels(fields, grid) ;
+			amr_set_ode_extrap_levels(fields, grid) ;
+		}
+	}
+	return ;
+}
+/*==========================================================================*/
+/* evolves all grids in hierarchy: from coarsest to finest.
+ * We solve the ODE fields as outlined in gr-qc/0508110: we extrapapolate
+ * from previous solutions, then resolve the ODE over the whole hierarchy
+ * when all levels align. The previous ODE level used for extrapapoaltion
+ * is then reset to make it agree with linear extrapapolation with resolved
+ * ODE values. */
 /*==========================================================================*/
 static void amr_evolve_grid(
 	amr_field* fields,
 	amr_grid* grid,
 	int num_t_steps,
-	void (*evolve_pde)(amr_grid*))
+	void (*evolve_hyperbolic_pde)(amr_grid*),
+	void (*solve_ode)(amr_grid*))
 {
 	for (int tC=0; tC<num_t_steps; tC++) {
-		/* 
-			TO DO: extrapolat ODE to time step 
-		*/
 		shift_fields_one_time_level(fields, grid) ;
 		grid->tC   += 1 ;
 		grid->time += grid->dt ;
@@ -258,45 +344,27 @@ static void amr_evolve_grid(
 			*/
 		}
 		if (grid->parent != NULL) {
-			set_interior_hyperbolic_boundary(fields, grid->parent, grid) ;
+			amr_set_interior_hyperbolic_boundary(fields, grid->parent, grid) ;
 		}
-		evolve_pde(grid) ;
+		amr_extrapapolate_ode_fields(fields, grid) ;
+		evolve_hyperbolic_pde(grid) ;
 		if (grid->child != NULL) {
 			amr_evolve_grid(
 				fields,
 				grid->child,
 				REFINEMENT,
-				evolve_pde)
+				evolve_hyperbolic_pde,
+				solve_ode)
 			;
-			/* 
-				TO DO: now solve the ODE at this level, exterior to finer level 
-			*/
-		} else {
-			/* 
-				TO DO: now solve the ODE entirely at finest level 
-			*/
-		}
+		} 	
+		amr_solve_ode_fields(fields, grid, solve_ode) ;
 	}
-/*--------------------------------------------------------------------------*/
-/* inject, then solve the ODEs on this time level */
-/*--------------------------------------------------------------------------*/
-	bool temp_excision_on = false ;
-	int temp_excised_jC = 0 ;
+	amr_set_ode_extrap_levels(fields, grid) ;
 	if (grid->parent != NULL) {
-		/* TO DO: compute truncation error */
+		/* 
+			TO DO: compute truncation error 
+		*/
 		inject_overlaping_fields(fields, grid->parent, grid) ;	
-
-		if (grid->parent->parent!=NULL) { 
-			temp_excised_jC  = grid->parent->excised_jC ;
-			temp_excision_on = grid->parent->excision_on ;
-			if (grid->perim_coords[1] > grid->parent->excised_jC) {
-				grid->parent->excision_on = false ;
-			} 
-			grid->parent->excised_jC = grid->perim_coords[1]-1 ;
-			evolve_pde(grid->parent) ;
-			grid->parent->excision_on = temp_excision_on ;
-			grid->parent->excised_jC = temp_excised_jC ;
-		}
 	}
 	return ;
 }
@@ -307,11 +375,14 @@ static void set_initial_data(
 	amr_grid_hierarchy* gh,
 	void (*initial_data)(amr_grid*))
 {
-	amr_grid* grid = gh->grid ;
+	amr_grid* grid = gh->grids ;
 	while (grid != NULL) {
 		initial_data(grid) ;
 		grid = grid->child ;
 	}
+	shift_grids_one_time_level(gh) ;
+	shift_grids_one_time_level(gh) ;
+	amr_set_all_grid_ode_extrap_levels(gh) ; 
 	return ;
 }
 /*==========================================================================*/
@@ -320,26 +391,26 @@ static void set_initial_data(
 void amr_main(
 	amr_grid_hierarchy* gh, 
 	void (*initial_data)(amr_grid*),
-	void (*evolve_pde)(amr_grid*),
+	void (*evolve_hyperbolic_pde)(amr_grid*),
+	void (*solve_ode)(amr_grid*),
 	void (*compute_diagnostics)(amr_grid*),
 	void (*save_to_file)(amr_grid*))
 {
-	add_self_similar_initial_grids(gh, 4) ;
+	add_self_similar_initial_grids(gh, 2) ;
 	set_initial_data(gh, initial_data) ;
-	shift_grids_one_time_level(gh) ;
-	shift_grids_one_time_level(gh) ;
-	for (amr_grid* grid=gh->grid; grid != NULL; grid=grid->child) {
+	for (amr_grid* grid=gh->grids; grid != NULL; grid=grid->child) {
 		save_to_file(grid) ;
 	}
 	for (int tC=1; tC<(gh->Nt); tC++) {
 		amr_evolve_grid(
 			gh->fields, 
-			gh->grid,
+			gh->grids,
 			1,
-			evolve_pde) 
+			evolve_hyperbolic_pde,
+			solve_ode) 
 		;
 		if (tC%(gh->t_step_save)==0) {
-			for (amr_grid* grid=gh->grid; grid != NULL; grid=grid->child) {
+			for (amr_grid* grid=gh->grids; grid != NULL; grid=grid->child) {
 				compute_diagnostics(grid) ;
 				save_to_file(grid) ;
 			}

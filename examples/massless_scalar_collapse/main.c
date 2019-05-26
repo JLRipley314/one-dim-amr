@@ -26,8 +26,8 @@
 /*---------------------------------------------------------------------------*/
 /* ODEs: extr: for extrapolation (saved when levels merge) */
 /*---------------------------------------------------------------------------*/
-double *Al_n, *Al_nm1, *Al_nm2, *Al_extr_m1, *Al_extr_m2, *Al_extr_m3 ;
-double *Ze_n, *Ze_nm1, *Ze_nm2, *Ze_extr_m1, *Ze_extr_m2, *Ze_extr_m3 ;
+double *Al_n, *Al_nm1, *Al_nm2, *Al_extr_m1, *Al_extr_m2 ;
+double *Ze_n, *Ze_nm1, *Ze_nm2, *Ze_extr_m1, *Ze_extr_m2 ;
 /*---------------------------------------------------------------------------*/
 /* Hyperbolic variables */
 /*---------------------------------------------------------------------------*/
@@ -62,8 +62,8 @@ double amp, width, center ;
 /*---------------------------------------------------------------------------*/
 int num_fields ;
 
-int 	Al_n_index, Al_nm1_index, Al_nm2_index,
-	Ze_n_index, Ze_nm1_index, Ze_nm2_index,
+int 	Al_n_index, Al_nm1_index, Al_nm2_index, Al_extr_m1_index, Al_extr_m2_index,
+	Ze_n_index, Ze_nm1_index, Ze_nm2_index, Ze_extr_m1_index, Ze_extr_m2_index,
 
 	P_n_index, P_nm1_index, P_nm2_index,
 	Q_n_index, Q_nm1_index, Q_nm2_index,
@@ -96,29 +96,33 @@ bool perim_interior[2] ;
 bool excision_on = true ;
 bool made_output_files  = false ;
 /*==========================================================================*/
-/*number of time steps for evolution fields: 3 */
+/*number of time steps for evolution fields: 3.
+ * Two extrapolation levels for linear extrapolation of ode variables */
 /*==========================================================================*/
 amr_field* set_fields(void) 
 {
+	int time_levels = 3 ;
+	int ode_extrap_levels = 2 ;
+
 	amr_field* fields 
-	= amr_init_fields("Al", "ode", 3) ;
+	= amr_init_fields("Al", "ode", time_levels, ode_extrap_levels) ;
 	
-	amr_add_field(fields, "Ze", "ode", 3) ;
+	amr_add_field(fields, "Ze", "ode", time_levels, ode_extrap_levels) ;
 
-	amr_add_field(fields, "P", "hyperbolic", 3) ;
-	amr_add_field(fields, "Q", "hyperbolic", 3) ;
+	amr_add_field(fields, "P", "hyperbolic", time_levels, 0) ;
+	amr_add_field(fields, "Q", "hyperbolic", time_levels, 0) ;
 
-	amr_add_field(fields, "mass_aspect",  "diagnostic", 1) ;
+	amr_add_field(fields, "mass_aspect",  "diagnostic", time_levels, 0) ;
 
-	amr_add_field(fields, "ingoing_null_characteristic",  "diagnostic", 1) ;
-	amr_add_field(fields, "outgoing_null_characteristic", "diagnostic", 1) ;
+	amr_add_field(fields, "ingoing_null_characteristic",  "diagnostic", 1, 0) ;
+	amr_add_field(fields, "outgoing_null_characteristic", "diagnostic", 1, 0) ;
 
-	amr_add_field(fields, "Ricci_scalar",        "diagnostic", 1) ;
-	amr_add_field(fields, "Gauss_Bonnet_scalar", "diagnostic", 1) ;
+	amr_add_field(fields, "Ricci_scalar",        "diagnostic", 1, 0) ;
+	amr_add_field(fields, "Gauss_Bonnet_scalar", "diagnostic", 1, 0) ;
 
-	amr_add_field(fields, "eom_TR",     "diagnostic", 1) ;
-	amr_add_field(fields, "eom_ThTh",   "diagnostic", 1) ;
-	amr_add_field(fields, "eom_scalar", "diagnostic", 1) ;
+	amr_add_field(fields, "eom_TR",     "diagnostic", 1, 0) ;
+	amr_add_field(fields, "eom_ThTh",   "diagnostic", 1, 0) ;
+	amr_add_field(fields, "eom_scalar", "diagnostic", 1, 0) ;
 
 	return fields ;
 }
@@ -127,14 +131,18 @@ void find_field_indices(amr_field* fields)
 	Al_n_index   = amr_find_field_index(fields, "Al") ;
 	Al_nm1_index = Al_n_index + 1 ;
 	Al_nm2_index = Al_n_index + 2 ;
+	Al_extr_m1_index = Al_n_index + 3 ;
+	Al_extr_m2_index = Al_n_index + 4 ;
 
 	Ze_n_index   = amr_find_field_index(fields, "Ze") ;
 	Ze_nm1_index = Ze_n_index + 1 ;
 	Ze_nm2_index = Ze_n_index + 2 ;
+	Ze_extr_m1_index = Ze_n_index + 3 ;
+	Ze_extr_m2_index = Ze_n_index + 4 ;
 
 	P_n_index   = amr_find_field_index(fields, "P") ;
 	P_nm1_index = P_n_index + 1 ;
-	P_nm2_index = P_n_index + 2 ;
+	P_nm2_index = P_n_index + 2 ;	
 
 	Q_n_index   = amr_find_field_index(fields, "Q") ;
 	Q_nm1_index = Q_n_index + 1 ;
@@ -151,6 +159,11 @@ void find_field_indices(amr_field* fields)
 	eom_TR_index = amr_find_field_index(fields, "eom_TR") ;
 	eom_ThTh_index = amr_find_field_index(fields, "eom_ThTh") ;
 	eom_scalar_index = amr_find_field_index(fields, "eom_scalar") ;
+
+	assert(Ze_n_index == Al_extr_m2_index+1) ;
+	assert(P_n_index == Ze_extr_m2_index+1) ;
+	assert(Q_n_index == P_nm2_index+1) ;
+	assert(mass_aspect_index == Q_nm2_index+1) ;
 
 	return ;
 }
@@ -259,33 +272,27 @@ void rescale_Al(amr_grid* grid)
 	}
 }
 /*===========================================================================*/
+/*===========================================================================*/
+void solve_ode(amr_grid* grid)
+{
+	rescale_Al(grid) ;
+	return ;
+}
+/*===========================================================================*/
 /* computes one time step (to tolerance) of wave equation */
 /*===========================================================================*/
-void evolve_pde(amr_grid* grid)
+void evolve_hyperbolic_pde(amr_grid* grid)
 {
 	set_globals(grid) ;
-	if (strcmp(theory,"massless_scalar") == 0) {
-		advance_tStep_massless_scalar(
-			stereographic_L,
-			Nx, dt, dx, 
-			excision_on,
-			excised_jC,
-			bbox, perim_interior,
-			Al_n, Al_nm1, Ze_n, Ze_nm1,
-			 P_n,  P_nm1,  Q_n,  Q_nm1
-		) ;	
-	} else if (strcmp(theory,"massless_scalar_GR") == 0) {	
-		advance_tStep_massless_scalar_GR(
-			stereographic_L,
-			Nx, dt, dx, 
-			excision_on,
-			excised_jC,
-			bbox, perim_interior,
-			Al_n, Al_nm1, Ze_n, Ze_nm1,
-			 P_n,  P_nm1,  Q_n,  Q_nm1
-		) ;	
-	}
-	rescale_Al(grid) ;
+	advance_tStep_massless_scalar(
+		stereographic_L,
+		Nx, dt, dx, 
+		excision_on,
+		excised_jC,
+		bbox, perim_interior,
+		Al_n, Al_nm1, Ze_n, Ze_nm1,
+		 P_n,  P_nm1,  Q_n,  Q_nm1
+	) ;	
 	return ;
 }
 /*===========================================================================*/
@@ -395,7 +402,8 @@ int main(int argc, char* argv[])
 	amr_main(
 		gh, 
 		set_initial_data,
-		evolve_pde,
+		evolve_hyperbolic_pde,
+		solve_ode,
 		compute_diagnostics,
 		save_to_file)
 	;

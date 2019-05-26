@@ -40,6 +40,7 @@ typedef struct amr_field
 	char *name;    
 	int index;           /* index of 0th time level */
 	int time_levels; /* number of time-levels (in AMR hierarchy), from 1 .. num_time_level */
+	int extrap_levels; /* for extrapolation (for ode/elliptic equations) */
 	char* pde_type;      /* either hyperbolic or elliptic */
 } amr_field 
 ;
@@ -92,7 +93,7 @@ typedef struct amr_grid_hierarchy
 /* 	big difference from Frans' code:  we do not have a ``context'' for different
 	instances of grid hieracrhies as our application is simpler (1+1D, no parallel)
 */
-	struct amr_grid* grid ;
+	struct amr_grid* grids ;
 
 	bool excision_on ;
 /*	user defined function to mask excised regions */
@@ -126,9 +127,9 @@ void add_self_similar_initial_grids(amr_grid_hierarchy* gh, int num_grids) ;
 
 int amr_destroy_grid_hierarchy(amr_grid_hierarchy* gh) ;
 
-int amr_add_field(amr_field* field, char* name, char* pde_type, int time_levels) ;
+int amr_add_field(amr_field* field, char* name, char* pde_type, int time_levels, int extrap_levels) ;
 
-amr_field* amr_init_fields(char* name, char* pde_type, int time_levels) ;
+amr_field* amr_init_fields(char* name, char* pde_type, int time_levels, int extrap_levels) ;
 
 int amr_find_field_index(amr_field* fields, char* name) ; 
 
