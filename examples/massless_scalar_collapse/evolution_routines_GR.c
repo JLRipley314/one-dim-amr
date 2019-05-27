@@ -291,7 +291,7 @@ static double compute_iteration_GR_excision_boundary_condition_Ze(
         return fabs(res_Ze) ;
 }
 /*==========================================================================*/
-static void solve_Al_Ze(
+void solve_Al_Ze(
 	double s_L,
 	int Nx,
 	double dt, 	double dx,

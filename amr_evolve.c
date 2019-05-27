@@ -276,6 +276,7 @@ void set_ode_initial_condition(amr_field* fields, amr_grid* grid)
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		if (strcmp(field->pde_type,"ode") == 0) {
 			index = field->index ;
+			printf("%s\t%d\t%d\n", field->name, index, perim_coord) ;
 			grid->grid_funcs[index][0] = grid->parent->grid_funcs[index][perim_coord] ;
 		}
 	}
@@ -286,7 +287,7 @@ void amr_solve_ode_fields(
 	amr_field* fields, amr_grid* grid, void (*solve_ode)(amr_grid*)) 
 {
 	for (amr_grid* iter=grid; iter!=NULL; iter=iter->child) {
-		if (grid->perim_interior[0]==false) {
+		if (grid->perim_interior[0]==true) {
 			set_ode_initial_condition(fields, iter) ;
 		}
 		solve_ode(iter) ;

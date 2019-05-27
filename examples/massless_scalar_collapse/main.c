@@ -254,10 +254,10 @@ void set_initial_data(amr_grid* grid)
 	}
 	return ;
 }
-/*--------------------------------------------------------------------------*/
+/*===========================================================================*/
 /* rescale Al on all levels so value at spatial infinity is unity.
  * level is the finest grid the spans the entire computational domain */
-/*--------------------------------------------------------------------------*/
+/*===========================================================================*/
 void rescale_Al(amr_grid* grid)
 {
 	double rescale_param = 1 ;
@@ -275,6 +275,18 @@ void rescale_Al(amr_grid* grid)
 /*===========================================================================*/
 void solve_ode(amr_grid* grid)
 {
+	set_globals(grid) ;
+	advance_tStep_massless_scalar(
+		stereographic_L,
+		Nx, 
+		dt, dx, 
+		excision_on,
+		excised_jC,
+		bbox, 
+		perim_interior,
+		Al_n, Al_nm1, Ze_n, Ze_nm1,
+		 P_n,  P_nm1,  Q_n,  Q_nm1)
+	;
 	rescale_Al(grid) ;
 	return ;
 }
