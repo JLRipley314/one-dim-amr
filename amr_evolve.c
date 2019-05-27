@@ -116,8 +116,8 @@ static void inject_overlaping_fields(
 	amr_field* fields, amr_grid* parent, amr_grid* grid)
 {
 	int index = 0 ;
-	for (amr_field* iter=fields; iter!=NULL; iter=iter->next) {
-		index = iter->index ;
+	for (amr_field* field=fields; field!=NULL; field=field->next) {
+		index = field->index ;
 		inject_grid_func(
 			grid->Nx, 
 			grid->perim_coords[0], 
@@ -173,7 +173,7 @@ static void inject_overlaping_fields(
    to second order (quadratic order) 
    We need at least three time levels for this to work */
 /*==========================================================================*/
-/*static*/ void set_interior_hyperbolic_boundary_quad_interp(
+static void set_interior_hyperbolic_boundary_quad_interp(
 	amr_field* field, 
 	amr_grid* parent,
 	amr_grid* grid)
@@ -303,12 +303,15 @@ void amr_solve_ode_fields(
 void amr_solve_ode_initial_data(
 	amr_grid_hierarchy* gh, void (*solve_ode)(amr_grid*)) 
 {
-	amr_grid* iter = gh->grids ;
-	amr_set_to_tail(iter) ;
+	amr_grid* grid = gh->grids ;
+	amr_set_to_tail(&grid) ;
 	do {
-		amr_solve_ode_fields(gh->fields, iter, solve_ode) ;
-		iter = iter->parent ;
-	} while (iter!=NULL) ;	
+		amr_solve_ode_fields(gh->fields, grid, solve_ode) ;
+		if (grid->parent!=NULL) {
+			inject_overlaping_fields(gh->fields, grid->parent, grid) ;
+		}
+		grid = grid->parent ;
+	} while (grid!=NULL) ;	
 
 	return ;
 }
@@ -448,7 +451,7 @@ void amr_main(
 	void (*compute_diagnostics)(amr_grid*),
 	void (*save_to_file)(amr_grid*))
 {
-	add_self_similar_initial_grids(gh, 2) ;
+	add_self_similar_initial_grids(gh, 4) ;
 
 	set_free_initial_data(gh, free_initial_data) ;
 	amr_solve_ode_initial_data(gh, solve_ode) ; 

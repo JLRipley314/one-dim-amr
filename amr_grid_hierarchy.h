@@ -103,8 +103,8 @@ typedef struct amr_grid_hierarchy
 /*============================================================================*/
 /* return 0 then no errors */
 /*============================================================================*/
-int amr_set_to_tail(amr_grid* grid) ;
-int amr_set_to_head(amr_grid* grid) ;
+int amr_set_to_tail(amr_grid** grid) ; 
+int amr_set_to_head(amr_grid** grid) ;
 
 int amr_find_grid(int level, amr_grid_hierarchy* gh, amr_grid* grid) ;
 

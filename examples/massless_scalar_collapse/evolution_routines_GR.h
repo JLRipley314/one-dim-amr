@@ -7,19 +7,8 @@ void initial_data_Gaussian(
 	double s_L,
 	int Nx, 	
 	double dt, double dx,
-	int exc_jC,
 	double bbox[2],
-	bool perim_interior[2],
-	double* Al, double* Ze, 
-	double*  P, double*  Q)
-;
-void initial_data_Gaussian_GR(
-	double s_L,
-	int Nx, 	
-	double dt, double dx,
-	int exc_jC,
-	double bbox[2],
-	bool perim_interior[2],
+	double amp, double width, double center,
 	double* Al, double* Ze, 
 	double*  P, double*  Q)
 ;

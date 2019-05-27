@@ -546,33 +546,35 @@ void initial_data_Gaussian(
 	double s_L,
 	int Nx, 	
 	double dt, double dx,
-	int exc_jC,
 	double bbox[2],
-	bool perim_interior[2],
+	double amp, double width, double center,
 	double* Al, double* Ze, 
 	double*  P, double*  Q)
 {
 	double left_point = bbox[0] ;
 
-	double amp = 0.005 ;
-	double width = 2 ;
-	double r_0 = 5 ;
 	double x = 0 ;
 	double r = 0 ;
 
 	set_array_val(Nx, 1.0, Al) ;
 	set_array_val(Nx, 0.0, Ze) ;
 
-	for (int iC=0; iC<Nx-1; iC++) {
-		x = (iC * dx) + left_point ;
+	int end_jC = (fabs(bbox[1]-s_L)<ERR_TOLERANCE) ? Nx-1 : Nx ;
+
+	printf("bbox[1]\t%f\ts_L\t%f\tcondition\t%d\tNx\t%d\tend_jC\t%d\n", bbox[1], s_L, (fabs(bbox[1]-s_L)<ERR_TOLERANCE), Nx, end_jC) ;
+
+	for (int jC=0; jC<end_jC; jC++) {
+		x = (jC * dx) + left_point ;
 		r = stereographic_r(s_L, x) ;
-		Q[iC] = amp * exp(-pow((r-r_0)/width,2)) * (
-			(-(r-r_0)/pow(width,2)) * pow(r,2) 
+		Q[jC] = amp * exp(-pow((r-center)/width,2)) * (
+			(-(r-center)/pow(width,2)) * pow(r,2) 
 		+	2*r
 		) ;
-		P[iC] = Q[iC] ;
+		P[jC] = Q[jC] ;
 	}
-	P[Nx-1] = 0 ;
-	Q[Nx-1] = 0 ;
+	if (end_jC == Nx-1) {
+		P[Nx-1] = 0 ;
+		Q[Nx-1] = 0 ;
+	}
 	return ;
 }

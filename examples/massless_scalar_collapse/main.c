@@ -233,11 +233,10 @@ void set_free_initial_data(amr_grid* grid)
 		stereographic_L,
 		Nx, 	
 		dt, dx,
-		excised_jC,
 		bbox,
-		perim_interior,
+		amp, width, center,
 		Al_n, Ze_n, 
-		P_n,   Q_n)
+		P_n, Q_n)
 	;
 	return ;
 }
