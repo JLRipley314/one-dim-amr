@@ -216,9 +216,7 @@ void set_globals(amr_grid* grid)
 	perim_coords[1] = grid->perim_coords[1] ;
 
 	excision_on = grid->excision_on ;
-
-/* need to make sure excised_jC for each subgrid is at the same physical point as exc_jC of the parent grid */
-	excised_jC = grid->excised_jC ;
+	excised_jC  = grid->excised_jC ;
 
 	return ;
 }
@@ -320,18 +318,25 @@ void compute_diagnostics(amr_grid* grid)
 		eom_scalar)
 	;
 /*--------------------------------------------------------------------------*/
+/* ''_general: includes setting excised_jC */ 
+/*--------------------------------------------------------------------------*/
 	compute_diagnostics_general(
-		Nx, excised_jC, 
+		Nx, 
 		stereographic_L,
 		dt, dx,
 		Al_n, Al_nm1, Al_nm2,
 		Ze_n, Ze_nm1, Ze_nm2,
+		&excised_jC,
 		mass_aspect,
 		ingoing_null_characteristic,
 		outgoing_null_characteristic,
 		Ricci_scalar,
 		Gauss_Bonnet_scalar)
 	;
+	if (grid->parent==NULL) { 
+		grid->excised_jC = excised_jC ;
+		printf("MA\t%f\texc_jC\t%d\n", mass_aspect[Nx-1], excised_jC) ;
+	}
 	return ;
 }
 /*===========================================================================*/
@@ -349,8 +354,8 @@ void save_to_file(amr_grid* grid)
 
 		snprintf(output_name_mass_aspect, MAX_NAME_LEN, "%smass_aspect.sdf", OUTPUT_DIR) ;
 
-		snprintf(output_name_ingoing_null_characteristic,  MAX_NAME_LEN, "%soutgoing_null_characteristic.sdf", OUTPUT_DIR) ;
-		snprintf(output_name_outgoing_null_characteristic, MAX_NAME_LEN, "%singoing_null_characteristic.sdf",  OUTPUT_DIR) ;
+		snprintf(output_name_ingoing_null_characteristic,  MAX_NAME_LEN, "%singgoing_null_characteristic.sdf", OUTPUT_DIR) ;
+		snprintf(output_name_outgoing_null_characteristic, MAX_NAME_LEN, "%soutgoing_null_characteristic.sdf",  OUTPUT_DIR) ;
 		snprintf(output_name_Ricci_scalar,        MAX_NAME_LEN, "%sRicci_scalar.sdf",        OUTPUT_DIR) ;
 		snprintf(output_name_Gauss_Bonner_scalar, MAX_NAME_LEN, "%sGauss_Bonner_scalar.sdf", OUTPUT_DIR) ;
 

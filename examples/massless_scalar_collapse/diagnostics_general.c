@@ -42,22 +42,18 @@ static int compute_excision_point(
 	int inner_trapped = 0 ;
 	int outer_trapped = 0 ;
 	for (int jC=exc_jC; jC<Nx; jC++) {
-		if ((outgoing_null_characteristic[jC] < 0)
-		&&  (inner_trapped = 0)
-		) {
-			inner_trapped = jC ;
-		} 
-		if ((outgoing_null_characteristic[jC] < 0)
-		&&  (inner_trapped > 0)
-		) {
-			outer_trapped = jC ;
-		} 
+		if (outgoing_null_characteristic[jC] < 0) {
+			if (inner_trapped == 0) {
+				inner_trapped = jC ;
+			} else { 
+				outer_trapped = jC ;
+			} 
+		}
 	}
-	if (inner_trapped>0 && outer_trapped>0) printf("inner trapped %d\touter trapped %d\n", inner_trapped, outer_trapped) ;
 	if ((outer_trapped-inner_trapped) > buffer_size) {
 		return outer_trapped-buffer_size ;
 	}
-	return 0 ;
+	return exc_jC ;
 }
 /*==========================================================================*/
 static int compute_Ricci_scalar(
@@ -178,21 +174,18 @@ static int compute_Gauss_Bonnet_scalar(
 }
 /*==========================================================================*/
 void compute_diagnostics_general(
-	int Nx, int exc_jC, 
+	int Nx, 
 	double s_L,
 	double dt, double dx,
 	double* Al_n, double* Al_nm1, double* Al_nm2,
 	double* Ze_n, double* Ze_nm1, double* Ze_nm2,
+	int* exc_jC, 	
 	double* mass_aspect,
 	double* ingoing_null_characteristic,
 	double* outgoing_null_characteristic,
 	double* Ricci_scalar,
 	double* Gauss_Bonnet_scalar)
 {
-	int buffer_size = 10 ; /* TO DO: set buffer size to some percentage of ADM mass */
-	compute_excision_point(
-		Nx, exc_jC, buffer_size, outgoing_null_characteristic)
-	;
 	compute_mass_aspect(
 		Nx,
 		s_L, dx,
@@ -205,7 +198,7 @@ void compute_diagnostics_general(
 		outgoing_null_characteristic)
 	;
 	compute_Ricci_scalar(
-		Nx, exc_jC, 
+		Nx, *exc_jC, 
 		s_L,
 		dt, dx,
 		Al_n, Al_nm1, Al_nm2,
@@ -213,12 +206,15 @@ void compute_diagnostics_general(
 		Ricci_scalar)
 	;
 	compute_Gauss_Bonnet_scalar(
-		Nx, exc_jC, 
+		Nx, *exc_jC, 
 		s_L,
 		dt, dx,
 		Al_n, Al_nm1, Al_nm2,
 		Ze_n, Ze_nm1, Ze_nm2,
 		Gauss_Bonnet_scalar)
+	;
+	int buffer_size = (mass_aspect[Nx-5]/10)/dx ; 
+	*exc_jC = compute_excision_point(Nx, *exc_jC, buffer_size, outgoing_null_characteristic)
 	;
 	return ;
 }
