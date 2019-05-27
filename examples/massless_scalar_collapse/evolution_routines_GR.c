@@ -78,9 +78,8 @@ static double compute_iteration_GR_Al(
 	double s_L,
 	int Nx,
 	double dt, 	double dx,
-	int exc_jC,
+	int start_jC,
 	double bbox[2],
-	bool perim_interior[2],
 	double* Al, 	double* Ze, 
 	double*  P, 	double*  Q)
 {
@@ -100,7 +99,7 @@ static double compute_iteration_GR_Al(
         double jac_Al = 1 ;
         double res_infty_norm = 0 ; /* returning this */
  /* scalar field functions */
-        for (int jC=exc_jC; jC<Nx-1; jC++) {
+        for (int jC=start_jC; jC<Nx-1; jC++) {
                 x_j1h = ((jC+1) + jC) * dx / 2 ;
 
                 r_j1h = stereographic_r(s_L, x_j1h) ;
@@ -154,9 +153,8 @@ static double compute_iteration_GR_Ze(
 	double s_L,
 	int Nx,
 	double dt, 	double dx,
-	int exc_jC,
+	int start_jC,
 	double bbox[2],
-	bool perim_interior[2],
 	double* Al, 	double* Ze, 
 	double*  P, 	double*  Q)
 {
@@ -184,7 +182,7 @@ static double compute_iteration_GR_Ze(
 
         double res_infty_norm = 0 ; /* returning this */
 
-        for (int jC=exc_jC; jC<size-1; jC++) {
+        for (int jC=start_jC; jC<size-1; jC++) {
                 x_j1h = ((jC+1) + jC) * dx / 2 ; 
 
                 x_jp1 = (jC+1) * dx ;
@@ -247,7 +245,6 @@ static double compute_iteration_GR_excision_boundary_condition_Ze(
 	double dt, 	double dx,
 	int exc_jC,
 	double bbox[2],
-	bool perim_interior[2],
 	double* Al_n,  double* Al_nm1, double* Ze_n, double* Ze_nm1,
 	double* P_n,   double* P_nm1,  double* Q_n,  double* Q_nm1)
 {
@@ -297,35 +294,37 @@ void solve_Al_Ze(
 	double dt, 	double dx,
 	bool excision_on,
 	int exc_jC,
+	int child_perim_coords[2],
 	double bbox[2],
-	bool perim_interior[2],
 	double* Al_n, 	double* Al_nm1, double* Ze_n, double* Ze_nm1,
 	double*  P_n, 	double*  P_nm1, double*  Q_n, double*  Q_nm1)
 {
 	double res = 0 ;
+	int start_jC = 0 ;
 	do {
 		res = 0 ;
 		if ((excision_on == true)
 		&&  (exc_jC>0)
+		&&  (exc_jC>child_perim_coords[1])
 		) {
+			start_jC = exc_jC ;
 			res += compute_iteration_GR_excision_boundary_condition_Ze(
 				s_L,
 				Nx,
 				dt, 	dx,
-				exc_jC,
+				start_jC,
 				bbox,
-				perim_interior,
 				Al_n,  Al_nm1, Ze_n, Ze_nm1,
 				 P_n,   P_nm1,  Q_n,  Q_nm1)
 			;
 		}
+		if (child_perim_coords[1]>0) start_jC = child_perim_coords[1] ;
 		res += compute_iteration_GR_Ze(
 			s_L,
 			Nx,
 			dt, 	dx,
-			exc_jC,
+			start_jC,
 			bbox,
-			perim_interior,
 			Al_n, 	Ze_n, 
 			P_n, 	Q_n)
 		;
@@ -333,9 +332,8 @@ void solve_Al_Ze(
 			s_L,
 			Nx,
 			dt, 	dx,
-			exc_jC,
+			start_jC,
 			bbox,
-			perim_interior,
 			Al_n, 	Ze_n, 
 			P_n, 	Q_n)
 		;
@@ -369,17 +367,11 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 	if (fabs(bbox[1]-s_L)<MACHINE_EPSILON) size = Nx-1 ;
 	else size = Nx ;
 	double res_infty_norm = 0 ; /* returning this */
-	int start = exc_jC + 1 ;
-	if ((excision_on == false) 
-	&&  (exc_jC > 1) 
-	) {
-		start = exc_jC - 1 ;
-	}
 /*--------------------------------------------------------------------------*/
 /* interior: we go to Nx-2 as we do not want to actually include the point
    at infinity in our computational domain */
 /*--------------------------------------------------------------------------*/
-	for (int jC=start;jC<size-1;jC++) {
+	for (int jC=exc_jC+1;jC<size-1;jC++) {
 		x_j   = lower_x + (dx * (jC)  ) ;
 		x_jp1 = lower_x + (dx * (jC+1)) ;
 		x_jm1 = lower_x + (dx * (jC-1)) ;
@@ -582,55 +574,5 @@ void initial_data_Gaussian(
 	}
 	P[Nx-1] = 0 ;
 	Q[Nx-1] = 0 ;
-	return ;
-}
-/*==========================================================================*/
-/* same as initial_data_Gaussian, but now solve constraints as well */
-/*==========================================================================*/
-void initial_data_Gaussian_GR(
-	double s_L,
-	int Nx, 	
-	double dt, double dx,
-	int exc_jC,
-	double bbox[2],
-	bool perim_interior[2],
-	double* Al, double* Ze, 
-	double*  P, double*  Q)
-{
-	double left_point = bbox[0] ;
-
-	double amp = 0.005 ;
-	double width = 2 ;
-	double r_0 = 5 ;
-	double x = 0 ;
-	double r = 0 ;
-
-	set_array_val(Nx, 1.0, Al) ;
-	set_array_val(Nx, 0.0, Ze) ;
-
-	for (int iC=0; iC<Nx-1; iC++) {
-		x = (iC * dx) + left_point ;
-		r = stereographic_r(s_L, x) ;
-		Q[iC] = amp * exp(-pow((r-r_0)/width,2)) * (
-			(-(r-r_0)/pow(width,2)) * pow(r,2) 
-		+	2*r
-		) ;
-		P[iC] = Q[iC] ;
-	}
-	P[Nx-1] = 0 ;
-	Q[Nx-1] = 0 ;
-
-	bool initial_condition_excision_on = false ;
-	solve_Al_Ze(
-		s_L,
-		Nx,
-		dt, 	dx,
-		initial_condition_excision_on,
-		exc_jC,
-		bbox,
-		perim_interior,
-		Al, 	Al,	Ze,	Ze, 
-		P, 	P,	Q,	Q)
-	;
 	return ;
 }

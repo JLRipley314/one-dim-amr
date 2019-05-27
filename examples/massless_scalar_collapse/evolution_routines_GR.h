@@ -41,8 +41,8 @@ void solve_Al_Ze(
 	double dt, 	double dx,
 	bool excision_on,
 	int exc_jC,
+	int child_perim_coords[2],
 	double bbox[2],
-	bool perim_interior[2],
 	double* Al_n, 	double* Al_nm1, double* Ze_n, double* Ze_nm1,
 	double*  P_n, 	double*  P_nm1, double*  Q_n, double*  Q_nm1)
 ;

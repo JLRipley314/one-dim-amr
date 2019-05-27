@@ -78,28 +78,21 @@ int amr_add_field(amr_field* fields, char* name, char* pde_type, int time_levels
 	return 0 ;
 }
 /*============================================================================*/
-int amr_determine_grid_level(amr_grid* grid) 
-{
-	int level=0 ;
-	for (amr_grid* iter=grid; iter->parent!=NULL; iter=iter->parent) {
-		level+= 1 ;
-	}
-	return level ;
-}
-/*============================================================================*/
 int amr_set_to_head(amr_grid* grid) 
 {
+	if (grid==NULL) return -1 ;
 	while (grid->parent!=NULL) grid=grid->parent ;
 	return 0 ;
 }
 /*============================================================================*/
 int amr_set_to_tail(amr_grid* grid) 
 {
+	if (grid==NULL) return -1 ;
 	while (grid->child!=NULL) grid=grid->child ;
 	return 0 ;
 }
 /*============================================================================*/
-int amr_find_field_index(amr_field* fields, char* name) 
+int amr_return_field_index(amr_field* fields, char* name) 
 {
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		if (strcmp(field->name,name) == 0) {
@@ -109,7 +102,7 @@ int amr_find_field_index(amr_field* fields, char* name)
 	return -1 ;
 }
 /*============================================================================*/
-int amr_delete_fields(amr_field** fields)
+static int amr_delete_fields(amr_field** fields)
 {
 	if (*fields==NULL) {
 		return -1 ;

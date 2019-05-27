@@ -266,32 +266,50 @@ void amr_extrapolate_ode_fields(amr_field* fields, amr_grid* grid)
 	return ;
 }
 /*==========================================================================*/
-/* use value of coarser grid at finer grid point lower boundary to  set initial condition */
+/* for now: finer grid sets boundary condition for coarser to be integrated
+ * outwards */
 /*==========================================================================*/
 void set_ode_initial_condition(amr_field* fields, amr_grid* grid) 
 {
 	int index = 0 ;
-	int perim_coord = grid->perim_coords[0] ;
+	int perim_coord = grid->child->perim_coords[1] ;
+	int child_Nx = grid->child->Nx ;
 
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		if (strcmp(field->pde_type,"ode") == 0) {
 			index = field->index ;
-			printf("%s\t%d\t%d\n", field->name, index, perim_coord) ;
-			grid->grid_funcs[index][0] = grid->parent->grid_funcs[index][perim_coord] ;
+			grid->grid_funcs[index][perim_coord] = grid->child->grid_funcs[index][child_Nx-1] ;
 		}
 	}
 	return ; 
 }
 /*==========================================================================*/
+/* solve from leftmost grid to rightmost-for now it's finer to coarser
+ * as all begin from r=0. The coarser level is integrated from the finer
+ * level boundary outwards */
+/*==========================================================================*/
 void amr_solve_ode_fields(
 	amr_field* fields, amr_grid* grid, void (*solve_ode)(amr_grid*)) 
 {
-	for (amr_grid* iter=grid; iter!=NULL; iter=iter->child) {
-		if (grid->perim_interior[0]==true) {
-			set_ode_initial_condition(fields, iter) ;
-		}
-		solve_ode(iter) ;
+	if (grid->child==NULL) {
+		solve_ode(grid) ;
+	} else {
+		set_ode_initial_condition(fields, grid) ;
+		solve_ode(grid) ;
 	}
+	return ;
+}
+/*==========================================================================*/
+void amr_solve_ode_initial_data(
+	amr_grid_hierarchy* gh, void (*solve_ode)(amr_grid*)) 
+{
+	amr_grid* iter = gh->grids ;
+	amr_set_to_tail(iter) ;
+	do {
+		amr_solve_ode_fields(gh->fields, iter, solve_ode) ;
+		iter = iter->parent ;
+	} while (iter!=NULL) ;	
+
 	return ;
 }
 /*==========================================================================*/
@@ -384,15 +402,16 @@ static void amr_evolve_grid(
 	return ;
 }
 /*==========================================================================*/
-/* sets initial data on all pre assigned grid levels */
+/* sets free initial data on all pre assigned grid levels - does NOT
+ * solve the constraints */
 /*==========================================================================*/
-static void set_initial_data(
+static void set_free_initial_data(
 	amr_grid_hierarchy* gh,
-	void (*initial_data)(amr_grid*))
+	void (*free_initial_data)(amr_grid*))
 {
 	amr_grid* grid = gh->grids ;
 	while (grid != NULL) {
-		initial_data(grid) ;
+		free_initial_data(grid) ;
 		grid = grid->child ;
 	}
 	shift_grids_one_time_level(gh) ;
@@ -401,21 +420,41 @@ static void set_initial_data(
 	return ;
 }
 /*==========================================================================*/
+void save_all_grids(
+	amr_grid_hierarchy* gh, void (*save_to_file)(amr_grid*))
+{
+	for (amr_grid* grid=gh->grids; grid != NULL; grid=grid->child) {
+		save_to_file(grid) ;
+	}
+	return ;
+}
+/*==========================================================================*/
+void compute_all_grid_diagnostics(
+	amr_grid_hierarchy* gh, void (*compute_diagnostics)(amr_grid*))
+{
+	for (amr_grid* grid=gh->grids; grid != NULL; grid=grid->child) {
+		compute_diagnostics(grid) ;
+	}
+	return ;
+}
+/*==========================================================================*/
 /* evolves all grids in hierarchy */
 /*==========================================================================*/
 void amr_main(
 	amr_grid_hierarchy* gh, 
-	void (*initial_data)(amr_grid*),
+	void (*free_initial_data)(amr_grid*),
 	void (*evolve_hyperbolic_pde)(amr_grid*),
 	void (*solve_ode)(amr_grid*),
 	void (*compute_diagnostics)(amr_grid*),
 	void (*save_to_file)(amr_grid*))
 {
 	add_self_similar_initial_grids(gh, 2) ;
-	set_initial_data(gh, initial_data) ;
-	for (amr_grid* grid=gh->grids; grid != NULL; grid=grid->child) {
-		save_to_file(grid) ;
-	}
+
+	set_free_initial_data(gh, free_initial_data) ;
+	amr_solve_ode_initial_data(gh, solve_ode) ; 
+
+	save_all_grids(gh, save_to_file) ;
+
 	for (int tC=1; tC<(gh->Nt); tC++) {
 		amr_evolve_grid(
 			gh->fields, 
@@ -425,10 +464,8 @@ void amr_main(
 			solve_ode) 
 		;
 		if (tC%(gh->t_step_save)==0) {
-			for (amr_grid* grid=gh->grids; grid != NULL; grid=grid->child) {
-				compute_diagnostics(grid) ;
-				save_to_file(grid) ;
-			}
+			compute_all_grid_diagnostics(gh, compute_diagnostics) ;
+			save_all_grids(gh, save_to_file) ;
 		}
 	}
 	return ;	

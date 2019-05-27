@@ -128,37 +128,37 @@ amr_field* set_fields(void)
 }
 void find_field_indices(amr_field* fields) 
 {
-	Al_n_index   = amr_find_field_index(fields, "Al") ;
+	Al_n_index   = amr_return_field_index(fields, "Al") ;
 	Al_nm1_index = Al_n_index + 1 ;
 	Al_nm2_index = Al_n_index + 2 ;
 	Al_extr_m1_index = Al_n_index + 3 ;
 	Al_extr_m2_index = Al_n_index + 4 ;
 
-	Ze_n_index   = amr_find_field_index(fields, "Ze") ;
+	Ze_n_index   = amr_return_field_index(fields, "Ze") ;
 	Ze_nm1_index = Ze_n_index + 1 ;
 	Ze_nm2_index = Ze_n_index + 2 ;
 	Ze_extr_m1_index = Ze_n_index + 3 ;
 	Ze_extr_m2_index = Ze_n_index + 4 ;
 
-	P_n_index   = amr_find_field_index(fields, "P") ;
+	P_n_index   = amr_return_field_index(fields, "P") ;
 	P_nm1_index = P_n_index + 1 ;
 	P_nm2_index = P_n_index + 2 ;	
 
-	Q_n_index   = amr_find_field_index(fields, "Q") ;
+	Q_n_index   = amr_return_field_index(fields, "Q") ;
 	Q_nm1_index = Q_n_index + 1 ;
 	Q_nm2_index = Q_n_index + 2 ;
 
-	mass_aspect_index  = amr_find_field_index(fields, "mass_aspect")  ;
+	mass_aspect_index  = amr_return_field_index(fields, "mass_aspect")  ;
 
-	ingoing_null_characteristic_index  = amr_find_field_index(fields, "ingoing_null_characteristic")  ;
-	outgoing_null_characteristic_index = amr_find_field_index(fields, "outgoing_null_characteristic") ;
+	ingoing_null_characteristic_index  = amr_return_field_index(fields, "ingoing_null_characteristic")  ;
+	outgoing_null_characteristic_index = amr_return_field_index(fields, "outgoing_null_characteristic") ;
 
-	Ricci_scalar_index = amr_find_field_index(fields, "Ricci_scalar")  ;
-	Gauss_Bonnet_scalar_index = amr_find_field_index(fields, "Gauss_Bonnet_scalar") ;
+	Ricci_scalar_index = amr_return_field_index(fields, "Ricci_scalar")  ;
+	Gauss_Bonnet_scalar_index = amr_return_field_index(fields, "Gauss_Bonnet_scalar") ;
 
-	eom_TR_index = amr_find_field_index(fields, "eom_TR") ;
-	eom_ThTh_index = amr_find_field_index(fields, "eom_ThTh") ;
-	eom_scalar_index = amr_find_field_index(fields, "eom_scalar") ;
+	eom_TR_index = amr_return_field_index(fields, "eom_TR") ;
+	eom_ThTh_index = amr_return_field_index(fields, "eom_ThTh") ;
+	eom_scalar_index = amr_return_field_index(fields, "eom_scalar") ;
 
 	assert(Ze_n_index == Al_extr_m2_index+1) ;
 	assert(P_n_index == Ze_extr_m2_index+1) ;
@@ -223,35 +223,22 @@ void set_globals(amr_grid* grid)
 	return ;
 }
 /*===========================================================================*/
-/* computes one time step (to tolerance) of wave equation */
+/* free initial data */
 /*===========================================================================*/
-void set_initial_data(amr_grid* grid)
+void set_free_initial_data(amr_grid* grid)
 {
 	set_globals(grid) ;
 
-	if (strcmp(theory,"massless_scalar") == 0) {
-		initial_data_Gaussian(
-			stereographic_L,
-			Nx, 	
-			dt, dx,
-			excised_jC,
-			bbox,
-			perim_interior,
-			Al_n, Ze_n, 
-			P_n,   Q_n)
-		;
-	} else if (strcmp(theory,"massless_scalar_GR") == 0) {	
-		initial_data_Gaussian_GR(
-			stereographic_L,
-			Nx, 	
-			dt, dx,
-			excised_jC,
-			bbox,
-			perim_interior,
-			Al_n, Ze_n, 
-			P_n,   Q_n)
-		;
-	}
+	initial_data_Gaussian(
+		stereographic_L,
+		Nx, 	
+		dt, dx,
+		excised_jC,
+		bbox,
+		perim_interior,
+		Al_n, Ze_n, 
+		P_n,   Q_n)
+	;
 	return ;
 }
 /*===========================================================================*/
@@ -261,7 +248,7 @@ void set_initial_data(amr_grid* grid)
 void rescale_Al(amr_grid* grid)
 {
 	double rescale_param = 1 ;
-	int level = amr_determine_grid_level(grid) ;
+	int level = grid->level ;
 	if (level==1) {
 		rescale_param = grid->grid_funcs[Al_n_index][Nx-1] ;
 		for (amr_grid* iter=(grid->parent); iter!=NULL; iter=iter->child) {
@@ -275,19 +262,26 @@ void rescale_Al(amr_grid* grid)
 /*===========================================================================*/
 void solve_ode(amr_grid* grid)
 {
-	set_globals(grid) ;
-	advance_tStep_massless_scalar(
-		stereographic_L,
-		Nx, 
-		dt, dx, 
-		excision_on,
-		excised_jC,
-		bbox, 
-		perim_interior,
-		Al_n, Al_nm1, Ze_n, Ze_nm1,
-		 P_n,  P_nm1,  Q_n,  Q_nm1)
-	;
-	rescale_Al(grid) ;
+	int child_perim_coords[2] = {-1,-1} ;
+	if (grid->child!=NULL) {
+		child_perim_coords[0] = grid->child->perim_coords[0] ;
+		child_perim_coords[1] = grid->child->perim_coords[1] ;
+	}
+	if (strcmp(theory, "massless_scalar_GR") == 0) {
+		set_globals(grid) ;
+		solve_Al_Ze(
+			stereographic_L,
+			Nx,
+			dt, 	dx,
+			excision_on,
+			excised_jC,
+			child_perim_coords,
+			bbox,
+			Al_n, 	Al_nm1, Ze_n, Ze_nm1,
+			 P_n, 	 P_nm1,  Q_n,  Q_nm1)
+		;
+		rescale_Al(grid) ;
+	}
 	return ;
 }
 /*===========================================================================*/
@@ -413,7 +407,7 @@ int main(int argc, char* argv[])
 	;
 	amr_main(
 		gh, 
-		set_initial_data,
+		set_free_initial_data,
 		evolve_hyperbolic_pde,
 		solve_ode,
 		compute_diagnostics,
