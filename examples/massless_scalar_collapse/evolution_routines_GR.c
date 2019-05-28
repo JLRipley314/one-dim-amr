@@ -299,6 +299,9 @@ void solve_Al_Ze(
 	double* Al_n, 	double* Al_nm1, double* Ze_n, double* Ze_nm1,
 	double*  P_n, 	double*  P_nm1, double*  Q_n, double*  Q_nm1)
 {
+	if (exc_jC==Nx-1) {
+		return ;
+	}
 	double res = 0 ;
 	int start_jC = 0 ;
 	do {
@@ -519,6 +522,9 @@ void advance_tStep_massless_scalar(
 	double* Al_n, double* Al_nm1, double* Ze_n, double* Ze_nm1,
 	double*  P_n, double*  P_nm1, double*  Q_n, double*  Q_nm1)
 { 
+	if (exc_jC==Nx-1) {
+		return ;
+	}
 	double res = 0 ;
 	do {
 		res = compute_iteration_GR_Crank_Nicolson_PQ(
@@ -561,7 +567,7 @@ void initial_data_Gaussian(
 
 	int end_jC = (fabs(bbox[1]-s_L)<ERR_TOLERANCE) ? Nx-1 : Nx ;
 
-	printf("bbox[1]\t%f\ts_L\t%f\tcondition\t%d\tNx\t%d\tend_jC\t%d\n", bbox[1], s_L, (fabs(bbox[1]-s_L)<ERR_TOLERANCE), Nx, end_jC) ;
+	printf("bbox[1]\t%f\ts_L\t%f\twhole grid\t%d\tNx\t%d\tend_jC\t%d\n", bbox[1], s_L, (fabs(bbox[1]-s_L)<ERR_TOLERANCE), Nx, end_jC) ;
 
 	for (int jC=0; jC<end_jC; jC++) {
 		x = (jC * dx) + left_point ;

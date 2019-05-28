@@ -469,7 +469,7 @@ void amr_main(
 	void (*compute_diagnostics)(amr_grid*),
 	void (*save_to_file)(amr_grid*))
 {
-	add_self_similar_initial_grids(gh, 3) ;
+	add_self_similar_initial_grids(gh, 2) ;
 
 	set_free_initial_data(gh, free_initial_data) ;
 	amr_solve_ode_initial_data(gh, solve_ode) ; 
