@@ -7,6 +7,14 @@
 #include "stereographic_routines.h"
 
 /*==========================================================================*/
+static void set_array_val(int Nx, double val, double* array) 
+{
+	for (int iC=0; iC<Nx; iC++) {
+		array[iC] = val ;
+	}
+	return ;
+}
+/*==========================================================================*/
 /* general checks and diagnostics */
 /*==========================================================================*/
 static int compute_mass_aspect(
@@ -213,6 +221,14 @@ void compute_diagnostics_general(
 		Ze_n, Ze_nm1, Ze_nm2,
 		Gauss_Bonnet_scalar)
 	;
+	set_array_val(*exc_jC-2, 0, Al_n) ;
+	set_array_val(*exc_jC-2, 0, Ze_n) ;
+	set_array_val(*exc_jC-2, 0, mass_aspect) ;
+	set_array_val(*exc_jC-2, 0, ingoing_null_characteristic) ;
+	set_array_val(*exc_jC-2, 0, outgoing_null_characteristic) ;
+	set_array_val(*exc_jC-2, 0, Ricci_scalar) ;
+	set_array_val(*exc_jC-2, 0, Gauss_Bonnet_scalar) ;
+
 	int buffer_size = (mass_aspect[Nx-5]/10)/dx ; 
 	*exc_jC = compute_excision_point(Nx, *exc_jC, buffer_size, outgoing_null_characteristic)
 	;

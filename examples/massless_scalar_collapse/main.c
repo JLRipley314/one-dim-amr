@@ -354,7 +354,7 @@ void save_to_file(amr_grid* grid)
 
 		snprintf(output_name_mass_aspect, MAX_NAME_LEN, "%smass_aspect.sdf", OUTPUT_DIR) ;
 
-		snprintf(output_name_ingoing_null_characteristic,  MAX_NAME_LEN, "%singgoing_null_characteristic.sdf", OUTPUT_DIR) ;
+		snprintf(output_name_ingoing_null_characteristic,  MAX_NAME_LEN, "%singoing_null_characteristic.sdf", OUTPUT_DIR) ;
 		snprintf(output_name_outgoing_null_characteristic, MAX_NAME_LEN, "%soutgoing_null_characteristic.sdf",  OUTPUT_DIR) ;
 		snprintf(output_name_Ricci_scalar,        MAX_NAME_LEN, "%sRicci_scalar.sdf",        OUTPUT_DIR) ;
 		snprintf(output_name_Gauss_Bonner_scalar, MAX_NAME_LEN, "%sGauss_Bonner_scalar.sdf", OUTPUT_DIR) ;

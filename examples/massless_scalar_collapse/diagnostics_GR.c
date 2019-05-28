@@ -7,6 +7,13 @@
 #include "diagnostics_GR.h"
 
 /*==========================================================================*/
+static void set_array_val(int Nx, double val, double* array) 
+{
+	for (int iC=0; iC<Nx; iC++) {
+		array[iC] = val ;
+	}
+	return ;
+}
 /*==========================================================================*/
 void compute_SE_LL_components_massless_scalar(
 	int Nx, double dx,
@@ -219,6 +226,12 @@ void compute_diagnostics_massless_scalar_GR(
 		Q_n, 
 		eom_scalar)
 	;
+	set_array_val(exc_jC-2, 0, P_n) ;
+	set_array_val(exc_jC-2, 0, Q_n) ;
+	set_array_val(exc_jC-2, 0, eom_TR) ;
+	set_array_val(exc_jC-2, 0, eom_ThTh) ;
+	set_array_val(exc_jC-2, 0, eom_scalar) ;
+
 	free(SE_LL_TR) ;
 	free(SE_LL_ThTh) ;
 

@@ -324,6 +324,13 @@ void amr_set_extrap_levels(amr_field* field, amr_grid* grid)
 	int extrap_levels = field->extrap_levels ;
 	int extrap_index = (field->index) + (field->time_levels) ;
 	for (int jC=0; jC<(grid->Nx); jC++) {
+	/*	adjust first extrapolation level for linear extrapolation
+	*/
+		grid->grid_funcs[extrap_index][jC] = (
+			grid->grid_funcs[extrap_index+1][jC] + grid->grid_funcs[field_index][jC] 
+		) / 2 ;
+	/*	shift extrapolation levels 
+	*/
 		for (int iC=extrap_index+extrap_levels-1; iC>extrap_index; iC--) {
 			grid->grid_funcs[iC][jC] = grid->grid_funcs[iC-1][jC] ;
 		}
@@ -439,11 +446,14 @@ void compute_all_grid_diagnostics(
 		compute_diagnostics(grid) ;
 		if ((grid->parent!=NULL)
 		&&  (grid->parent->excised_jC > grid->perim_coords[0])
-		&&  (grid->parent->excised_jC < grid->perim_coords[1])
 		) {
-			grid->excised_jC = REFINEMENT * (
-				grid->parent->excised_jC - grid->perim_coords[0]
-			) ;
+			if (grid->parent->excised_jC < grid->perim_coords[1]) {
+				grid->excised_jC = REFINEMENT * (
+					grid->parent->excised_jC - grid->perim_coords[0]
+				) ;
+			} else {
+				grid->excised_jC = grid->Nx-1 ;
+			}
 		}
 	}
 	return ;
@@ -459,7 +469,7 @@ void amr_main(
 	void (*compute_diagnostics)(amr_grid*),
 	void (*save_to_file)(amr_grid*))
 {
-	add_self_similar_initial_grids(gh, 2) ;
+	add_self_similar_initial_grids(gh, 3) ;
 
 	set_free_initial_data(gh, free_initial_data) ;
 	amr_solve_ode_initial_data(gh, solve_ode) ; 
