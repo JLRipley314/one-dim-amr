@@ -113,11 +113,12 @@ static void inject_grid_func(
 }
 /*==========================================================================*/
 static void inject_overlaping_fields(
-	amr_field* fields, amr_grid* parent, amr_grid* grid)
+		amr_field* fields, amr_grid* parent, amr_grid* grid)
 {
 	int index = 0 ;
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		index = field->index ;
+	//	printf("%d %d %s\n",grid->level, parent->level, field->name) ;
 		inject_grid_func(
 			grid->Nx, 
 			grid->perim_coords[0], 
@@ -273,8 +274,10 @@ void set_ode_initial_condition(amr_field* fields, amr_grid* grid)
 {
 	int index = 0 ;
 	int perim_coord = grid->child->perim_coords[1] ;
-	int child_Nx = grid->child->Nx ;
-
+	int child_Nx = 1 ; /* shadow grid matches level 1 at the origin */
+	if (grid->parent!=NULL) { /* i.e. not shadow grid */
+		child_Nx = grid->child->Nx ;
+	}
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		if (strcmp(field->pde_type,"ode") == 0) {
 			index = field->index ;
@@ -297,22 +300,6 @@ void amr_solve_ode_fields(
 		set_ode_initial_condition(fields, grid) ;
 		solve_ode(grid) ;
 	}
-	return ;
-}
-/*==========================================================================*/
-void amr_solve_ode_initial_data(
-	amr_grid_hierarchy* gh, void (*solve_ode)(amr_grid*)) 
-{
-	amr_grid* grid = gh->grids ;
-	amr_set_to_tail(&grid) ;
-	do {
-		amr_solve_ode_fields(gh->fields, grid, solve_ode) ;
-		if (grid->parent!=NULL) {
-			inject_overlaping_fields(gh->fields, grid->parent, grid) ;
-		}
-		grid = grid->parent ;
-	} while (grid!=NULL) ;	
-
 	return ;
 }
 /*==========================================================================*/
@@ -339,7 +326,7 @@ void amr_set_extrap_levels(amr_field* field, amr_grid* grid)
 	return ;
 }
 /*==========================================================================*/
-void amr_set_ode_extrap_levels(amr_field* fields, amr_grid* grid) 
+void amr_set_grid_ode_extrap_levels(amr_field* fields, amr_grid* grid) 
 {
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		if (strcmp(field->pde_type,"ode") == 0) {
@@ -351,15 +338,34 @@ void amr_set_ode_extrap_levels(amr_field* fields, amr_grid* grid)
 /*==========================================================================*/
 /* do twice as there are two extrapolation levels */
 /*==========================================================================*/
-void amr_set_all_grid_ode_extrap_levels(amr_grid_hierarchy* gh) 
+static void amr_set_all_grid_ode_extrap_levels(amr_grid_hierarchy* gh) 
 {
 	amr_field* fields = gh->fields ;
 	for (amr_grid* grid=gh->grids; grid!=NULL; grid=grid->child) {
 		for (int iC=0; iC<2; iC++) {
-			amr_set_ode_extrap_levels(fields, grid) ;
-			amr_set_ode_extrap_levels(fields, grid) ;
+			amr_set_grid_ode_extrap_levels(fields, grid) ;
+			amr_set_grid_ode_extrap_levels(fields, grid) ;
 		}
 	}
+	return ;
+}
+/*==========================================================================*/
+static void amr_solve_ode_initial_data(
+	amr_grid_hierarchy* gh, void (*solve_ode)(amr_grid*)) 
+{
+	amr_grid* grid = gh->grids ;
+	amr_set_to_tail(&grid) ;
+	do {
+		amr_solve_ode_fields(gh->fields, grid, solve_ode) ;
+		if (grid->parent!=NULL) {
+			inject_overlaping_fields(gh->fields, grid->parent, grid) ;
+		}
+		grid = grid->parent ;
+	} while (grid!=NULL) ;	
+	shift_grids_one_time_level(gh) ;
+	shift_grids_one_time_level(gh) ;
+	amr_set_all_grid_ode_extrap_levels(gh) ; 
+
 	return ;
 }
 /*==========================================================================*/
@@ -402,7 +408,7 @@ static void amr_evolve_grid(
 		} 	
 		amr_solve_ode_fields(fields, grid, solve_ode) ;
 	}
-	amr_set_ode_extrap_levels(fields, grid) ;
+	amr_set_grid_ode_extrap_levels(fields, grid) ;
 	if (grid->parent != NULL) {
 		/* 
 			TO DO: compute truncation error 
@@ -430,7 +436,7 @@ static void set_free_initial_data(
 	return ;
 }
 /*==========================================================================*/
-void save_all_grids(
+static void save_all_grids(
 	amr_grid_hierarchy* gh, void (*save_to_file)(amr_grid*))
 {
 	for (amr_grid* grid=gh->grids; grid != NULL; grid=grid->child) {
@@ -439,7 +445,7 @@ void save_all_grids(
 	return ;
 }
 /*==========================================================================*/
-void compute_all_grid_diagnostics(
+static void compute_all_grid_diagnostics(
 	amr_grid_hierarchy* gh, void (*compute_diagnostics)(amr_grid*))
 {
 	for (amr_grid* grid=gh->grids; grid != NULL; grid=grid->child) {
@@ -469,10 +475,14 @@ void amr_main(
 	void (*compute_diagnostics)(amr_grid*),
 	void (*save_to_file)(amr_grid*))
 {
+	int compute_diagnostics_tC = 1;///gh->cfl_num ;
+
 	add_self_similar_initial_grids(gh, 2) ;
 
 	set_free_initial_data(gh, free_initial_data) ;
-	amr_solve_ode_initial_data(gh, solve_ode) ; 
+	amr_solve_ode_initial_data(gh, solve_ode) ; 	
+	inject_overlaping_fields(gh->fields, gh->grids, gh->grids->child) ;
+	compute_all_grid_diagnostics(gh, compute_diagnostics) ;
 
 	save_all_grids(gh, save_to_file) ;
 
@@ -484,8 +494,11 @@ void amr_main(
 			evolve_hyperbolic_pde,
 			solve_ode) 
 		;
-		if (tC%(gh->t_step_save)==0) {
+		inject_overlaping_fields(gh->fields, gh->grids, gh->grids->child) ;
+		if (tC%(compute_diagnostics_tC)==0) {
 			compute_all_grid_diagnostics(gh, compute_diagnostics) ;
+		}
+		if (tC%(gh->t_step_save)==0) {
 			save_all_grids(gh, save_to_file) ;
 		}
 	}

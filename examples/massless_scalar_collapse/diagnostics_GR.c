@@ -226,11 +226,11 @@ void compute_diagnostics_massless_scalar_GR(
 		Q_n, 
 		eom_scalar)
 	;
-	set_array_val(exc_jC-2, 0, P_n) ;
-	set_array_val(exc_jC-2, 0, Q_n) ;
-	set_array_val(exc_jC-2, 0, eom_TR) ;
-	set_array_val(exc_jC-2, 0, eom_ThTh) ;
-	set_array_val(exc_jC-2, 0, eom_scalar) ;
+	set_array_val(exc_jC-1, 0, P_n) ;
+	set_array_val(exc_jC-1, 0, Q_n) ;
+	set_array_val(exc_jC-1, 0, eom_TR) ;
+	set_array_val(exc_jC-1, 0, eom_ThTh) ;
+	set_array_val(exc_jC-1, 0, eom_scalar) ;
 
 	free(SE_LL_TR) ;
 	free(SE_LL_ThTh) ;

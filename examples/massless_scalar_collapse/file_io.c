@@ -50,6 +50,7 @@ static void check_if_file_exists(FILE* file, char* file_name)
 /*==========================================================================*/
 void get_run_data(
 	char** theory,
+	char** output_dir,
 	int* Nx, int* Nt, int* t_step_save,
 	double* cfl_num, 
 	double* bbox_0, double* bbox_1,
@@ -73,6 +74,7 @@ void get_run_data(
                 token = strsep(&line_val, delimeter) ;
 
 		get_string_val(line_val, token, "theory", delimeter, theory) ;
+		get_string_val(line_val, token, "output_dir", delimeter, output_dir) ;
 
 		get_int_val(line_val, token, "Nx", delimeter, Nx) ;
 		get_int_val(line_val, token, "Nt", delimeter, Nt) ;

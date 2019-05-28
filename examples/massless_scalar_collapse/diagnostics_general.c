@@ -221,15 +221,16 @@ void compute_diagnostics_general(
 		Ze_n, Ze_nm1, Ze_nm2,
 		Gauss_Bonnet_scalar)
 	;
-	set_array_val(*exc_jC-2, 0, Al_n) ;
-	set_array_val(*exc_jC-2, 0, Ze_n) ;
-	set_array_val(*exc_jC-2, 0, mass_aspect) ;
-	set_array_val(*exc_jC-2, 0, ingoing_null_characteristic) ;
-	set_array_val(*exc_jC-2, 0, outgoing_null_characteristic) ;
-	set_array_val(*exc_jC-2, 0, Ricci_scalar) ;
-	set_array_val(*exc_jC-2, 0, Gauss_Bonnet_scalar) ;
+	set_array_val(*exc_jC-1, 0, Al_n) ;
+	set_array_val(*exc_jC-1, 0, Ze_n) ;
+	set_array_val(*exc_jC-1, 0, mass_aspect) ;
+	set_array_val(*exc_jC-1, 0, ingoing_null_characteristic) ;
+	set_array_val(*exc_jC-1, 0, outgoing_null_characteristic) ;
+	set_array_val(*exc_jC-1, 0, Ricci_scalar) ;
+	set_array_val(*exc_jC-1, 0, Gauss_Bonnet_scalar) ;
 
-	int buffer_size = (mass_aspect[Nx-5]/10)/dx ; 
+	int buffer_size = (2*mass_aspect[Nx-5]*0.2)/dx ; 
+
 	*exc_jC = compute_excision_point(Nx, *exc_jC, buffer_size, outgoing_null_characteristic)
 	;
 	return ;

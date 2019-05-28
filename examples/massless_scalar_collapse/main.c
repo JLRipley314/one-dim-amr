@@ -5,6 +5,9 @@
 #include <stdbool.h>
 #include <bbhutil.h>
 #include <assert.h>
+/* for checking if output directory exists */
+#include <dirent.h>
+#include <errno.h>
 
 #include "amr_evolve.h"
 #include "amr_grid_hierarchy.h"
@@ -13,8 +16,6 @@
 #include "evolution_routines_GR.h"
 #include "file_io.h"
 
-
-#define OUTPUT_DIR "/home/jripley/one-dim-amr/examples/massless_scalar_collapse/output/"
 
 /*===========================================================================*/
 /* global variables: set here (will eventually set by reading from
@@ -43,7 +44,7 @@ double *eom_TR, *eom_ThTh, *eom_scalar ;
 /*---------------------------------------------------------------------------*/
 /* run data */
 /*---------------------------------------------------------------------------*/
-char* theory ;
+char *theory, *output_dir ;
 
 double cfl_num ;
 double bbox[2] ;
@@ -347,23 +348,40 @@ void save_to_file(amr_grid* grid)
 	set_globals(grid) ;
 
 	if (made_output_files == false) {
-		snprintf(output_name_Al, MAX_NAME_LEN, "%sAl.sdf", OUTPUT_DIR) ;
-		snprintf(output_name_Ze, MAX_NAME_LEN, "%sZe.sdf", OUTPUT_DIR) ;
-		snprintf(output_name_P,  MAX_NAME_LEN, "%sP.sdf",  OUTPUT_DIR) ;
-		snprintf(output_name_Q,  MAX_NAME_LEN, "%sQ.sdf",  OUTPUT_DIR) ;
+	/* 	confirm that output directory exists
+	*/
+		DIR* dir = opendir(output_dir) ;
+		if (dir!=NULL) {
+			closedir(dir) ;
+		} else if (ENOENT==errno) {
+			printf("ERROR(main.c): unable to open %s\n", output_dir) ;
+			printf("directory does not exist?\n") ;
+			exit(EXIT_FAILURE) ;
+		} else {
+			printf("ERROR(main.c): unable to open %s\n", output_dir) ;
+			exit(EXIT_FAILURE) ;
+		}
+	/* 	print output file names
+	*/
+		snprintf(output_name_Al, MAX_NAME_LEN, "%sAl.sdf", output_dir) ;
+		snprintf(output_name_Ze, MAX_NAME_LEN, "%sZe.sdf", output_dir) ;
+		snprintf(output_name_P,  MAX_NAME_LEN, "%sP.sdf",  output_dir) ;
+		snprintf(output_name_Q,  MAX_NAME_LEN, "%sQ.sdf",  output_dir) ;
 
-		snprintf(output_name_mass_aspect, MAX_NAME_LEN, "%smass_aspect.sdf", OUTPUT_DIR) ;
+		snprintf(output_name_mass_aspect, MAX_NAME_LEN, "%smass_aspect.sdf", output_dir) ;
 
-		snprintf(output_name_ingoing_null_characteristic,  MAX_NAME_LEN, "%singoing_null_characteristic.sdf", OUTPUT_DIR) ;
-		snprintf(output_name_outgoing_null_characteristic, MAX_NAME_LEN, "%soutgoing_null_characteristic.sdf",  OUTPUT_DIR) ;
-		snprintf(output_name_Ricci_scalar,        MAX_NAME_LEN, "%sRicci_scalar.sdf",        OUTPUT_DIR) ;
-		snprintf(output_name_Gauss_Bonner_scalar, MAX_NAME_LEN, "%sGauss_Bonner_scalar.sdf", OUTPUT_DIR) ;
+		snprintf(output_name_ingoing_null_characteristic,  MAX_NAME_LEN, "%singoing_null_characteristic.sdf", output_dir) ;
+		snprintf(output_name_outgoing_null_characteristic, MAX_NAME_LEN, "%soutgoing_null_characteristic.sdf",  output_dir) ;
+		snprintf(output_name_Ricci_scalar,        MAX_NAME_LEN, "%sRicci_scalar.sdf",        output_dir) ;
+		snprintf(output_name_Gauss_Bonner_scalar, MAX_NAME_LEN, "%sGauss_Bonner_scalar.sdf", output_dir) ;
 
-		snprintf(output_name_eom_TR, MAX_NAME_LEN, "%seom_TR.sdf", OUTPUT_DIR) ;
-		snprintf(output_name_eom_ThTh, MAX_NAME_LEN, "%seom_ThTh.sdf", OUTPUT_DIR) ;
-		snprintf(output_name_eom_scalar, MAX_NAME_LEN, "%seom_scalar.sdf", OUTPUT_DIR) ;
+		snprintf(output_name_eom_TR, MAX_NAME_LEN, "%seom_TR.sdf", output_dir) ;
+		snprintf(output_name_eom_ThTh, MAX_NAME_LEN, "%seom_ThTh.sdf", output_dir) ;
+		snprintf(output_name_eom_scalar, MAX_NAME_LEN, "%seom_scalar.sdf", output_dir) ;
 	}
 	made_output_files = true ;
+/* 	save to file-see man pages for bbhutil utilities on Choptuik's website 
+*/
 	gft_out_bbox(output_name_Al, time, &Nx, 1, bbox, Al_n) ;
 	gft_out_bbox(output_name_Ze, time, &Nx, 1, bbox, Ze_n) ;
 	gft_out_bbox(output_name_P,  time, &Nx, 1, bbox,  P_n) ;
@@ -390,6 +408,7 @@ int main(int argc, char* argv[])
 {
 	get_run_data(
 		&theory,
+		&output_dir,
 		&Nx, &Nt, &t_step_save,
 		&cfl_num, 
 		&bbox[0], &bbox[1],
