@@ -306,10 +306,10 @@ void solve_Al_Ze(
 	int start_jC = 0 ;
 	do {
 		res = 0 ;
-		if ((excision_on == true)
+		if ((excision_on==true)
 		&&  (exc_jC>0)
 		&&  (exc_jC>child_perim_coords[1])
-		) {
+		) {	
 			start_jC = exc_jC ;
 			res += compute_iteration_GR_excision_boundary_condition_Ze(
 				s_L,
@@ -321,7 +321,11 @@ void solve_Al_Ze(
 				 P_n,   P_nm1,  Q_n,  Q_nm1)
 			;
 		}
-		if (child_perim_coords[1]>0) start_jC = child_perim_coords[1] ;
+		if ((child_perim_coords[1]>0)
+		&&  (child_perim_coords[1]>exc_jC)
+		) {
+			start_jC = child_perim_coords[1] ;
+		}
 		res += compute_iteration_GR_Ze(
 			s_L,
 			Nx,
