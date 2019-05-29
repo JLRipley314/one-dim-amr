@@ -95,6 +95,9 @@ static double compute_iteration_GR_Al(
         double
                 Jr_j1h
         ;
+	int size = 0 ;
+	if (fabs(bbox[1]-s_L)<MACHINE_EPSILON) size = Nx-1 ;
+	else size = Nx ;
         double res_Al = 0 ;
         double jac_Al = 1 ;
         double res_infty_norm = 0 ; /* returning this */
@@ -145,6 +148,7 @@ static double compute_iteration_GR_Al(
                 }
                 res_infty_norm = weighted_infty_norm(1-x_j1h/s_L, res_Al, res_infty_norm) ;
         }
+	if (size==Nx-1) Al[Nx-1] = Al[Nx-2] ;
 
         return res_infty_norm ;
 }

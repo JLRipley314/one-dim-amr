@@ -475,7 +475,7 @@ void amr_main(
 	void (*compute_diagnostics)(amr_grid*),
 	void (*save_to_file)(amr_grid*))
 {
-	int compute_diagnostics_tC = 1;///gh->cfl_num ;
+	int compute_diagnostics_tC = 1/gh->cfl_num ;
 
 	add_self_similar_initial_grids(gh, 2) ;
 
@@ -495,7 +495,9 @@ void amr_main(
 			solve_ode) 
 		;
 		inject_overlaping_fields(gh->fields, gh->grids, gh->grids->child) ;
-		if (tC%(compute_diagnostics_tC)==0) {
+		if ((tC%(compute_diagnostics_tC)==0) 
+		||  (tC%(gh->t_step_save)==0)
+		) {
 			compute_all_grid_diagnostics(gh, compute_diagnostics) ;
 		}
 		if (tC%(gh->t_step_save)==0) {
