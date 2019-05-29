@@ -477,7 +477,7 @@ void amr_main(
 {
 	int compute_diagnostics_tC = 1/gh->cfl_num ;
 
-	add_self_similar_initial_grids(gh, 2) ;
+//	add_self_similar_initial_grids(gh, 2) ;
 
 	set_free_initial_data(gh, free_initial_data) ;
 	amr_solve_ode_initial_data(gh, solve_ode) ; 	

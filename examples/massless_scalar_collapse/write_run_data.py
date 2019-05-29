@@ -9,7 +9,7 @@ import shutil
 #############################################################################
 def write_initial_data(run_data: dict) -> None:
 
-	with open("{}initial_data.txt".format(run_data["home_dir"]), "w") as f:
+	with open("{}/initial_data.txt".format(run_data["home_dir"]), "w") as f:
 		f.write("amp={}\n".format(run_data["amp"]))
 		f.write("width={}\n".format(run_data["width"]))
 		f.write("center={}\n".format(run_data["center"]))
@@ -19,15 +19,15 @@ def write_initial_data(run_data: dict) -> None:
 		f.write("initial_black_hole_mass={}\n".format(run_data["initial_black_hole_mass"]))
 
 	shutil.copyfile(
-		"{}initial_data.txt".format(run_data["home_dir"]),
-		"{}initial_data.txt".format(run_data["output_dir"])
+		"{}/initial_data.txt".format(run_data["home_dir"]),
+		"{}/initial_data.txt".format(run_data["output_dir"])
 	)
 
 	return
 #############################################################################
 def write_run_data(run_data: dict) -> str:
 
-	with open("{}run_data.txt".format(run_data["home_dir"]), "w") as f:
+	with open("{}/run_data.txt".format(run_data["home_dir"]), "w") as f:
 		f.write("output_dir={}\n".format(run_data["output_dir"]))
 		f.write("param_search={}\n".format(run_data["param_search"]))
 		f.write("theory={}\n".format(run_data["theory"]))
@@ -42,8 +42,8 @@ def write_run_data(run_data: dict) -> str:
 		f.write("errlim={}\n".format(run_data["errlim"]))
 
 	shutil.copyfile(
-		"{}run_data.txt".format(run_data["home_dir"]),
-		"{}run_data.txt".format(run_data["output_dir"])
+		"{}/run_data.txt".format(run_data["home_dir"]),
+		"{}/run_data.txt".format(run_data["output_dir"])
 	)
 	
 	return
@@ -52,9 +52,9 @@ def write_slurm_script(run_data: dict) -> None:
 
 	run_data["varName"] = "output"
 
-	outputName = "{}{}".format(run_data["output_dir"],"output.out") 	
+	outputName = "{}/{}".format(run_data["output_dir"],"output.out") 	
 
-	with open("{}run_TEdGB_collapse.slurm".format(run_data["home_dir"]), "w") as f:
+	with open("{}/run_TEdGB_collapse.slurm".format(run_data["home_dir"]), "w") as f:
 		f.write("#!/bin/sh\n")
 		f.write("#SBATCH -N 1\t\t# nodes=1\n")
 		f.write("#SBATCH --ntasks-per-node=1\t\t# ppn=1\n")
@@ -69,7 +69,7 @@ def write_slurm_script(run_data: dict) -> None:
 		f.write("\n./collapse\n\n")
 
 	shutil.copyfile(
-		"{}run_TEdGB_collapse.slurm".format(run_data["home_dir"]),
-		"{}run_TEdGB_collapse.slurm".format(run_data["output_dir"])
+		"{}/run_TEdGB_collapse.slurm".format(run_data["home_dir"]),
+		"{}/run_TEdGB_collapse.slurm".format(run_data["output_dir"])
 	)		
 	return 

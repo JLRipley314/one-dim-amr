@@ -1,4 +1,4 @@
-import time 
+import time, os
 from math import sqrt
 import subprocess, traceback
 
@@ -13,15 +13,16 @@ from make_read_write_files_dirs import (
 ### launch N sims with fixed initial data
 ###############################################################################
 def convergence_test(
-	output_dir:str, sleep_time:float, run_data:dict, sim_number:int
+	sleep_time:float, run_data:dict, sim_number:int
 ) -> None:
 ### subprocess.call: wait uNtil subprocess over to coNtinue
 	Nx  = run_data["Nx"]
 	Nt  = run_data["Nt"]
 	tss = run_data["t_step_save"]
 
-	for iC in range(0,runTimes): 
-		run_data["output_dir"] = make_directory_name_current_time_and_Nx(output_dir, run_data)
+	for iC in range(0,sim_number): 
+		run_data["output_dir"] = make_directory_name_current_time_and_Nx(run_data)
+		print("\n\n",run_data["output_dir"],"\n\n")
 		os.makedirs(run_data["output_dir"])
 
 		write_initial_data(run_data)
@@ -31,7 +32,7 @@ def convergence_test(
 			write_slurm_script(run_data)
 			subprocess.call("sbatch run_TEdGB_collapse.slurm", shell="True")  
 		else:
-			subprocess.call("./sim", shell="True")  
+			subprocess.call("./sim 1>output/ouput_{}.txt &".format(run_data["Nx"]), shell="True")  
 
 		time.sleep(sleep_time)
 

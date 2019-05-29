@@ -86,6 +86,10 @@ void get_run_data(
 
 		get_double_val(line_val, token, "stereographic_L", delimeter, stereographic_L) ;
 	}
+/*	
+	this is for the coarsest grid so the bounding box (bbox)
+	is from r=0 to the stereographic radius (r=infty) 
+*/
 	*bbox_0 = 0 ;
 	*bbox_1 = *stereographic_L ;
 

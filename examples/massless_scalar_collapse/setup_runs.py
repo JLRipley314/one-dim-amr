@@ -4,7 +4,7 @@
 ### also sets up slurm scripts, etc.  
 #############################################################################
 
-import subprocess, sys, os, time 
+import subprocess, sys, time, os
 from write_run_data import (
 	write_initial_data, write_run_data, write_slurm_script
 )
@@ -51,7 +51,7 @@ run_data = {
 ###
 ###	Nx should be of the form 2**n + 1 with n an integer
 ###
-	"Nx"		: 2**9+1,
+	"Nx"		: 2**8+1,
 	"Nt"		: 2**10+1,
 	"t_step_save"	: 2**0,
 	"cfl_num"	: 0.25,  
@@ -61,7 +61,7 @@ run_data = {
 ###
 ###	if initial_data is r2Exp
 ###
-	"amp"		: 0.005,
+	"amp"		: 0.004,
 	"width"		: 10.0,
 	"center"	: 10.0,
 	"direction"	: "ingoing",# "stationary", #
@@ -83,16 +83,13 @@ run_data = {
 ### output directory for the computer we are running on
 ##############################################################################
 if (run_data["computer"]=="jlr_laptop"):
-	home_dir = "/home/jripley/one-dim-amr/examples/massless_scalar_collapse/"
-	output_dir = "/home/jripley/one-dim-amr/examples/massless_scalar_collapse/output/"
+	run_data["base_output_dir"] = "/home/jripley/one-dim-amr/examples/massless_scalar_collapse/output"
 elif (run_data["computer"]=="feynman_cluster"):
-	home_dir = "/home/jripley/EdGB_HorizonPenetrating/"
-	output_dir = "/group/grtheory/EdGB_SSCollapse_output/"
+	run_data["base_output_dir"] = "/group/grtheory/EdGB_SSCollapse_output"
 else:
 	raise SystemError("'computer' value not set") 
 
-run_data["home_dir"] = home_dir
-run_data["output_dir"] = make_directory_name_current_time(output_dir)
+run_data["home_dir"] = os.getcwd()
 ##############################################################################
 ### derived paramters
 ##############################################################################
@@ -109,6 +106,7 @@ run_data = format_run_data(run_data)
 ##############################################################################
 if test_type == "basic_run":
 
+	run_data["output_dir"] = make_directory_name_current_time(run_data)
 	os.makedirs(run_data["output_dir"])
 
 	write_initial_data(run_data)
@@ -118,7 +116,7 @@ if test_type == "basic_run":
 		write_slurm_script(run_data)
 		subprocess.call("sbatch run_TEdGB_collapse.slurm", shell="True")  
 	else:
-		subprocess.call("./sim", shell="True")  
+		subprocess.call("./sim ", shell="True")  
 ##############################################################################
 ### with fixed initial data we run sim with N different resolutions:
 ### Nx, (2*(Nx-1)+1) , etc. 
@@ -128,7 +126,7 @@ if test_type == "basic_run":
 elif (test_type == "convergence_test"): 
 	sim_number = int(input("Launch how many sims with different resolutions? (enter integer) "))
 	sleep_time = 5 
-	convergence_test(output_dir, sleep_time, run_data, sim_number)
+	convergence_test(sleep_time, run_data, sim_number)
 ##############################################################################
 ### specify the param and range to search for edge of black hole formation
 ##############################################################################

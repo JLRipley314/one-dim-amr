@@ -8,23 +8,23 @@ import sys, os, fnmatch, time
 
 ###############################################################################
 ###############################################################################
-def make_directory_name_current_time(output_dir:str) -> str:
+def make_directory_name_current_time(run_data:dict) -> str:
 
 	dir_name = "_".join("_".join(time.asctime().split(" ")).split(":"))
 
-	dir_name_path = "{}{}/".format(output_dir,dir_name)
+	dir_name_path = "{}/{}/".format(run_data["output_dir"],dir_name)
 
 	return dir_name_path
 ###############################################################################
 ###############################################################################
-def make_directory_name_current_time_and_Nx(file_data:dict) -> str:
+def make_directory_name_current_time_and_Nx(run_data:dict) -> str:
 
 	dir_name = "_".join("_".join(time.asctime().split(" ")).split(":"))
 
-	dir_name += "_Nx{}".format(file_data["Nx"])
-	dir_name += "_Nt{}".format(file_data["Nt"])
+	dir_name += "_Nx{}".format(run_data["Nx"])
+	dir_name += "_Nt{}".format(run_data["Nt"])
 
-	dir_name_path = "{}{}/".format(file_data["output_dir"],dir_name)
+	dir_name_path = "{}/{}/".format(run_data["base_output_dir"],dir_name)
 
 	return dir_name_path
 ###############################################################################
