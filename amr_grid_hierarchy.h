@@ -106,9 +106,9 @@ typedef struct amr_grid_hierarchy
 int amr_set_to_tail(amr_grid** grid) ; 
 int amr_set_to_head(amr_grid** grid) ;
 
-int amr_find_grid(int level, amr_grid_hierarchy* gh, amr_grid* grid) ;
+void amr_find_grid(int level, amr_grid_hierarchy* gh, amr_grid* grid) ;
 
-int amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent) ;
+void amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent) ;
 
 int amr_destroy_grid(amr_grid* grid) ;
 

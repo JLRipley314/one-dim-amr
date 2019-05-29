@@ -32,7 +32,7 @@ run_data = {
 
 	"param_search"	: "yes",#"no",#
 
-	"theory"	: "EdGB",#"GR",#"massless_scalar",#"EdGB_decoupled",#
+	"theory"	: "massless_scalar_GR",#"massless_scalar",#"EdGB",#"GR",#"EdGB_decoupled",#
 ###
 ###	coupling for EdGB coupling
 ###
@@ -51,21 +51,20 @@ run_data = {
 ###
 ###	Nx should be of the form 2**n + 1 with n an integer
 ###
-	"Nx"		: 2**11+1,
-	"Nt"		: 2**18+1,
-	"t_step_save"	: 2**5,
-	"courant_n"	: 0.25,  
+	"Nx"		: 2**9+1,
+	"Nt"		: 2**10+1,
+	"t_step_save"	: 2**0,
+	"cfl_num"	: 0.25,  
 	"errlim"	: 1.0e-10, 
 	
-	"initial_data" : "initial_black_hole",#"r2Exp",#"initial_black_hole_with_r2Exp",#"presetPQPhi",# 
+	"initial_data" : "r2Exp",#"initial_black_hole",#"initial_black_hole_with_r2Exp",#"presetPQPhi",# 
 ###
 ###	if initial_data is r2Exp
 ###
-	"r2Exp_amp"		: 0.1,
-	"r2Exp_width"		: 10.0,
-	"r2Exp_r0"		: 10.0,
-	"r2Exp_power"		: 2.0,
-	"r2Exp_direction"	: "ingoing",# "stationary", #
+	"amp"		: 0.005,
+	"width"		: 10.0,
+	"center"	: 10.0,
+	"direction"	: "ingoing",# "stationary", #
 ###
 ###	if initial_data is initial_black_hole
 ###
@@ -98,7 +97,7 @@ run_data["output_dir"] = make_directory_name_current_time(output_dir)
 ### derived paramters
 ##############################################################################
 dx = float(run_data["stereographic_L"]) / (float(run_data["Nx"])-1.0)
-dt = float(float(run_data["courant_n"]) * dx) 
+dt = float(float(run_data["cfl_num"]) * dx) 
 
 run_data["dx"] = dx
 run_data["dt"] = dt

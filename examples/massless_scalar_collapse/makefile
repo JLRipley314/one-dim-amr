@@ -52,5 +52,3 @@ file_io.o: file_io.c $(DEPS_FILE_IO)
 
 clean_o:
 	rm *.o
-clean_output:
-	rm output/*

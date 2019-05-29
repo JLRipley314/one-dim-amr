@@ -72,8 +72,8 @@ int amr_add_field(amr_field* fields, char* name, char* pde_type, int time_levels
 
 	current->next->prev = current ;
 	current->next->next = NULL ;
-	printf("name %s\n",  current->next->name) ;
-	printf("index %d\n", current->next->index) ;
+//	printf("name %s\n",  current->next->name) ;
+//	printf("index %d\n", current->next->index) ;
 
 	return 0 ;
 }
@@ -119,21 +119,21 @@ static int amr_delete_fields(amr_field** fields)
 /*============================================================================*/
 /* finds grid at specified level then sets grid pointer to that grid */
 /*============================================================================*/
-int amr_find_grid(int level, amr_grid_hierarchy* gh, amr_grid* grid) 
+void amr_find_grid(int level, amr_grid_hierarchy* gh, amr_grid* grid) 
 {
 	if (level>AMR_MAX_LEVELS-1) {
-		printf("ERROR(find_grid): level>AMR_MAX_LEVELS-1\n") ;
-		return -1 ;
+		fprintf(stderr,"ERROR(find_grid): level>AMR_MAX_LEVELS-1\n") ;
+		exit(EXIT_FAILURE) ;
 	} 
 	grid = gh->grids ;
 	while (grid->level != level) {
 		grid = grid->child ;
 		if (grid == NULL) {
-			printf("ERROR(find_grid): grid==NULL\n") ;
-			return -1 ;
+			fprintf(stderr,"ERROR(find_grid): grid==NULL\n") ;
+			exit(EXIT_FAILURE) ;
 		}
 	}
-	return 0 ;
+	return ;
 }
 /*============================================================================*/
 /* finds grid at finest level then sets grid pointer to that grid */
@@ -151,16 +151,16 @@ int amr_find_finest_grid(amr_grid_hierarchy* gh, amr_grid* grid)
 /* initializes new grid. all the grid functions ('grid_funcs')
    are initialized to zero */
 /*============================================================================*/
-int amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent)
+void amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent)
 {
 	if (parent->level+1 >= AMR_MAX_LEVELS) {
-		printf("ERROR(amr_add_grid): level>=AMR_MAX_LEVELS\n") ;
-		return -1 ;
+		fprintf(stderr,"ERROR(amr_add_grid): level>=AMR_MAX_LEVELS\n") ;
+		exit(EXIT_FAILURE) ;
 	}
 	amr_grid* new_grid = malloc(sizeof(amr_grid)) ;
 	if (new_grid == NULL) {
-		printf("ERROR(amr_add_grid): new_grid=NULL\n") ;
-		return -1 ;
+		fprintf(stderr,"ERROR(amr_add_grid): new_grid=NULL\n") ;
+		exit(EXIT_FAILURE) ;
 	}
 
 	parent->child = new_grid ;
@@ -215,7 +215,7 @@ int amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent)
 	printf("dt\t%f\n", new_grid->dt) ;
 	printf("num_grid_funcs\t%d\n", new_grid->num_grid_funcs) ;
 
-	return 0 ;
+	return ;
 }
 /*============================================================================*/
 /* set the base/level 0 (shadow) grid and the level one grid */

@@ -4,14 +4,13 @@
 ##############################################################################
 def format_run_data(run_data: dict) -> dict:
 
-	run_data["courant_n"]    = "{:.10e}".format(float(run_data["courant_n"]))
-	run_data["errlim"]       = "{:.10e}".format(float(run_data["errlim"]))
-	run_data["coupling_gbs"] = "{:.10e}".format(float(run_data["coupling_gbs"]))
+	run_data["cfl_num"] = "{:.10e}".format(float(run_data["cfl_num"]))
+	run_data["errlim"] = "{:.10e}".format(float(run_data["errlim"]))
+	run_data["coupling_gbs"]= "{:.10e}".format(float(run_data["coupling_gbs"]))
 
-	run_data["r2Exp_amp"]   = "{:.10e}".format(float(run_data["r2Exp_amp"]))
-	run_data["r2Exp_width"] = "{:.10e}".format( float(run_data["r2Exp_width"]))
-	run_data["r2Exp_r0"]    = "{:.10e}".format( float(run_data["r2Exp_r0"]))
-	run_data["r2Exp_power"] = "{:.10e}".format( float(run_data["r2Exp_power"]))
+	run_data["amp"] = "{:.10e}".format(float(run_data["amp"]))
+	run_data["width"] = "{:.10e}".format( float(run_data["width"]))
+	run_data["center"] = "{:.10e}".format( float(run_data["center"]))
 
 	run_data["initial_black_hole_mass"] = "{:.10e}".format(float(run_data["initial_black_hole_mass"]))
 

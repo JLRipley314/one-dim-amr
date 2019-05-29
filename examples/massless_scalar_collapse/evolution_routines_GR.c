@@ -566,6 +566,7 @@ void initial_data_Gaussian(
 	int Nx, 	
 	double dt, double dx,
 	double bbox[2],
+	char* direction,
 	double amp, double width, double center,
 	double* Al, double* Ze, 
 	double*  P, double*  Q)
@@ -589,7 +590,14 @@ void initial_data_Gaussian(
 			(-(r-center)/pow(width,2)) * pow(r,2) 
 		+	2*r
 		) ;
-		P[jC] = Q[jC] ;
+		if (strcmp(direction,"ingoing")==0) {
+			P[jC] = + Q[jC] ;
+		} else if (strcmp(direction,"outgoing")==0) {
+			P[jC] = - Q[jC] ;
+		} else {
+			fprintf(stderr,"ERROR(initial_data_Gaussian): direction!={{in,out}going}\n") ;
+			exit(EXIT_FAILURE) ;
+		}
 	}
 	if (end_jC == Nx-1) {
 		P[Nx-1] = 0 ;

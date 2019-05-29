@@ -8,6 +8,7 @@ void initial_data_Gaussian(
 	int Nx, 	
 	double dt, double dx,
 	double bbox[2],
+	char* direction,
 	double amp, double width, double center,
 	double* Al, double* Ze, 
 	double*  P, double*  Q)

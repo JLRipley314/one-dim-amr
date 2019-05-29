@@ -21,7 +21,8 @@ void get_run_data(
 ; 
 /*==========================================================================*/
 void get_initial_data(
-	char** type,
+	char** initial_data,
+	char** direction,
 	double* amp, double* width, double* center) 
 ;
 /*==========================================================================*/

@@ -16,7 +16,6 @@
 #include "evolution_routines_GR.h"
 #include "file_io.h"
 
-
 /*===========================================================================*/
 /* global variables: set here (will eventually set by reading from
  * initial data file */
@@ -57,7 +56,7 @@ int excised_jC ;
 /*---------------------------------------------------------------------------*/
 /* initial data */
 /*---------------------------------------------------------------------------*/
-char* id_type ;
+char *initial_data, *direction ;
 
 double amp, width, center ;
 /*---------------------------------------------------------------------------*/
@@ -233,6 +232,7 @@ void set_free_initial_data(amr_grid* grid)
 		Nx, 	
 		dt, dx,
 		bbox,
+		direction,
 		amp, width, center,
 		Al_n, Ze_n, 
 		P_n, Q_n)
@@ -415,7 +415,7 @@ int main(int argc, char* argv[])
 		&stereographic_L,
 		&dt, &dx) 
 	; 
-	get_initial_data(&id_type, &amp, &width, &center) ; 
+	get_initial_data(&initial_data, &direction, &amp, &width, &center) ; 
 
 	amr_field* fields = set_fields() ; 
 	find_field_indices(fields) ; 
@@ -438,11 +438,11 @@ int main(int argc, char* argv[])
 	;
 	amr_destroy_grid_hierarchy(gh) ;
 /*--------------------------------------------------------------------------*/
-/* theory and id_type are malloc'ed in get_run_data and get_initial_data,
+/* theory and initial_data are malloc'ed in get_run_data and get_initial_data,
  * respectively. */ 
 /*--------------------------------------------------------------------------*/
 	free(theory) ;
-	free(id_type) ;
+	free(initial_data) ;
 /*--------------------------------------------------------------------------*/
 
 	return EXIT_SUCCESS ;

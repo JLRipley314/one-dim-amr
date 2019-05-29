@@ -67,7 +67,7 @@ void get_run_data(
         size_t len = 0 ; 
         ssize_t read = 0 ; 
 
-	char* delimeter = ":" ;
+	char* delimeter = "=" ;
 	
         while ((read = getline(&line, &len, run_data_file)) > 0) {
 		char* line_val = line ;
@@ -80,16 +80,15 @@ void get_run_data(
 		get_int_val(line_val, token, "Nt", delimeter, Nt) ;
 		get_int_val(line_val, token, "t_step_save", delimeter, t_step_save) ;
 
-		get_double_val(line_val, token, "bbox[0]", delimeter, bbox_0) ;
-		get_double_val(line_val, token, "bbox[1]", delimeter, bbox_1) ;
-
 		get_double_val(line_val, token, "cfl_num", delimeter, cfl_num) ;
 		get_double_val(line_val, token, "dx", delimeter, dx) ;
 		get_double_val(line_val, token, "dt", delimeter, dt) ;
 
 		get_double_val(line_val, token, "stereographic_L", delimeter, stereographic_L) ;
-
 	}
+	*bbox_0 = 0 ;
+	*bbox_1 = *stereographic_L ;
+
 	free(line) ;
 	fclose(run_data_file) ;
 
@@ -97,7 +96,8 @@ void get_run_data(
 }
 /*==========================================================================*/
 void get_initial_data(
-	char** type,
+	char** initial_data,
+	char** direction,
 	double* amp, double* width, double* center) 
 {
 	char initial_data_name[MAX_NAME_LEN+1] ;
@@ -110,13 +110,14 @@ void get_initial_data(
         size_t len = 0 ; 
         ssize_t read = 0 ; 
 
-	char* delimeter = ":" ;
+	char* delimeter = "=" ;
 
         while ((read = getline(&line, &len, initial_data_file)) > 0) {
 		char* line_val = line ;
                 token = strsep(&line_val, delimeter) ;
 
-		get_string_val(line_val, token, "type", delimeter, type) ;
+		get_string_val(line_val, token, "initial_data", delimeter, initial_data) ;
+		get_string_val(line_val, token, "direction", delimeter, direction) ;
 
 		get_double_val(line_val, token, "amp", delimeter, amp) ;
 		get_double_val(line_val, token, "width", delimeter, width) ;
