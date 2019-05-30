@@ -52,14 +52,14 @@ run_data = {
 ###	Nx should be of the form 2**n + 1 with n an integer
 ###
 	"Nx"		: 2**9+1,
-	"Nt"		: 2**10+1,
+	"Nt"		: 2**11,
 	"t_step_save"	: 2**0,
 	"cfl_num"	: 0.25,  
 	"errlim"	: 1.0e-10, 
 	
-	"initial_data" : "r2Exp",#"initial_black_hole",#"initial_black_hole_with_r2Exp",#"presetPQPhi",# 
+	"initial_data" : "r4Exp",#"initial_black_hole",#"initial_black_hole_with_r4Exp",#"presetPQPhi",# 
 ###
-###	if initial_data is r2Exp
+###	if initial_data is r4Exp
 ###
 	"amp"		: 0.0001,
 	"width"		: 10.0,
@@ -132,6 +132,6 @@ elif (test_type == "convergence_test"):
 ##############################################################################
 elif (test_type) == "critical_param_search":
 
-	param = "r2Exp_amp"	
+	param = "r4Exp_amp"	
 	param_range = [0.1208984375,0.12109375]	
 	critical_param_search(run_data, param, param_range)

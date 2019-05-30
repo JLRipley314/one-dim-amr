@@ -32,7 +32,7 @@ def convergence_test(
 			write_slurm_script(run_data)
 			subprocess.call("sbatch run_TEdGB_collapse.slurm", shell="True")  
 		else:
-			subprocess.call("./sim 1>output/ouput_{}.txt &".format(run_data["Nx"]), shell="True")  
+			subprocess.call("./sim >output/output_{}.txt 2>&1 &".format(run_data["Nx"]), shell="True")  
 
 		time.sleep(sleep_time)
 

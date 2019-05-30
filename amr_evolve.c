@@ -10,7 +10,7 @@
 /*==========================================================================*/
 /* routines for copying time steps to next level */
 /*==========================================================================*/
-static void copy_to_2nd_array(int Nx, double* field_1, double* field_2) 
+static void copy_to_2nd_array(int Nx, double *field_1, double *field_2) 
 {
 	for (int iC=0; iC<Nx; iC++) {
 		field_2[iC] = field_1[iC] ;
@@ -20,17 +20,17 @@ static void copy_to_2nd_array(int Nx, double* field_1, double* field_2)
 /*==========================================================================*/
 /* shifting fields from farthest back in time to most recent in time */
 /*==========================================================================*/
-static void shift_field(int index, int time_levels, amr_grid* grid)
+static void shift_field(int field_index, int time_levels, amr_grid *grid)
 {
 	int Nx = grid->Nx ;
-	for (int iC=index+time_levels-1; iC>index; iC--) {
+	for (int iC=field_index+time_levels-1; iC>field_index; iC--) {
 		copy_to_2nd_array(Nx, grid->grid_funcs[iC-1], grid->grid_funcs[iC]) ;
 	}
 }
 /*==========================================================================*/
 static void shift_fields_one_time_level(
-	amr_field* fields,
-	amr_grid* grid)
+	amr_field *fields,
+	amr_grid *grid)
 {
 	int index, time_levels ;
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
@@ -113,7 +113,7 @@ static void inject_grid_func(
 }
 /*==========================================================================*/
 static void inject_overlaping_fields(
-		amr_field* fields, amr_grid* parent, amr_grid* grid)
+		amr_field *fields, amr_grid *parent, amr_grid *grid)
 {
 	int index = 0 ;
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
@@ -228,7 +228,7 @@ void amr_set_interior_hyperbolic_boundary(
 	amr_field* fields, amr_grid* parent, amr_grid* grid)
 {
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
-		if (strcmp(field->pde_type,HYPERBOLIC) == 0) {
+		if (strcmp(field->pde_type,HYPERBOLIC)==0) {
 			set_interior_hyperbolic_boundary_quad_interp(
 				field, parent, grid)
 			;
@@ -387,12 +387,17 @@ static void amr_evolve_grid(
 		shift_fields_one_time_level(fields, grid) ;
 		grid->tC   += 1 ;
 		grid->time += grid->dt ;
-		if (grid->tC%REGRID == 0) {
+		if ((grid->tC)%REGRID == 0) {
 			/* 
 				TO DO: regrid all finer levels 
 			*/
 		}
-		if (grid->parent != NULL) {
+		/* 	do not interpolate coarse grid + shadow,
+			both which span the entire grid 
+		*/	
+		if (((grid->parent)!=NULL) 
+		&&  ((grid->parent->parent)!=NULL)
+		) {
 			amr_set_interior_hyperbolic_boundary(fields, grid->parent, grid) ;
 		}
 		amr_extrapolate_ode_fields(fields, grid) ;
@@ -409,7 +414,7 @@ static void amr_evolve_grid(
 		amr_solve_ode_fields(fields, grid, solve_ode) ;
 	}
 	amr_set_grid_ode_extrap_levels(fields, grid) ;
-	if (grid->parent != NULL) {
+	if ((grid->parent)!=NULL) {
 		/* 
 			TO DO: compute truncation error 
 		*/
@@ -471,7 +476,7 @@ static void compute_all_grid_diagnostics(
 /* evolves all grids in hierarchy */
 /*==========================================================================*/
 void amr_main(
-	amr_grid_hierarchy* gh, 
+	amr_grid_hierarchy *gh, 
 	void (*free_initial_data)(amr_grid*),
 	void (*evolve_hyperbolic_pde)(amr_grid*),
 	void (*solve_ode)(amr_grid*),
@@ -482,6 +487,9 @@ void amr_main(
 
 //	add_self_similar_initial_grids(gh, 2) ;
 
+/*	initial data: the ode are assumed to set the "constrained" degrees
+	of freedom. 
+*/
 	set_free_initial_data(gh, free_initial_data) ;
 	amr_solve_ode_initial_data(gh, solve_ode) ; 	
 	inject_overlaping_fields(gh->fields, gh->grids, gh->grids->child) ;

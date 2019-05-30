@@ -3,6 +3,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdbool.h>
+#include <assert.h>
 #include "evolution_routines_GR.h"
 #include "stereographic_routines.h"
 
@@ -38,11 +39,11 @@ static void set_array_val(int start, int end, double val, double* array)
 /*==========================================================================*/
 /* see gr-qc/0302072 */
 /*==========================================================================*/
-void Kreiss_Oliger_Filter(
+void Kreiss_Oliger_filter(
 	int Nx,
 	double* field)
 {
-	double epsilon_ko = 0.4 ;
+	double epsilon_ko = 0.8 ;
 	for (int iC=2; iC<Nx-2; iC++) {
 		field[iC] -= (epsilon_ko/16.) * (
 			field[iC+2] 
@@ -55,13 +56,6 @@ void Kreiss_Oliger_Filter(
 	}
 /* for outer excision boundary */
 	epsilon_ko = 1.0 ;
-	field[1] += (epsilon_ko/16.) * (
-			field[4] 
-		+ 	(-4.*field[3]) 
-		+ 	(6.*field[2]) 
-		+ 	(-4.*field[1]) 
-		+ 	field[0] 
-		) ;
 	field[Nx-2] += (epsilon_ko/16.) * (
 			field[Nx-1] 
 		+ 	(-4.*field[Nx-2]) 
@@ -70,6 +64,96 @@ void Kreiss_Oliger_Filter(
 		+ 	field[Nx-5] 
 		) ;
 
+	return ;
+}
+/*==========================================================================*/
+static void Kreiss_Oliger_filter_origin(
+	double *field,
+	char *parity)
+{
+	double epsilon_ko = 0.9 ;
+	if (strcmp(parity,"even")==0) {
+/*		field[1] += (epsilon_ko/64.) * (
+			field[3] 
+		+ 	(-6.*field[3]) 
+		+ 	(15.*field[2]) 
+		+ 	(-20.*field[1]) 
+		+ 	(15.*field[0]) 
+		+ 	(-6.*field[1]) 
+		+	field[2] 
+		)
+		;
+		field[0] += (epsilon_ko/64.) * (
+			field[3] 
+		+ 	(-6.*field[2]) 
+		+ 	(15.*field[1]) 
+		+ 	(-20.*field[0]) 
+		+ 	(15.*field[1]) 
+		+ 	(-6.*field[2]) 
+		+	field[3] 
+		)
+		;
+*/		field[1] -= (epsilon_ko/16.) * (
+			field[3] 
+		+ 	(-4.*field[2]) 
+		+ 	(6.*field[1]) 
+		+ 	(-4.*field[0]) 
+		+ 	field[1] 
+		)
+		;
+		field[0] -= (epsilon_ko/16.) * (
+			field[2] 
+		+ 	(-4.*field[1]) 
+		+ 	(6.*field[0]) 
+		+ 	(-4.*field[1]) 
+		+ 	field[2] 
+		)
+		;
+	} else if (strcmp(parity,"odd")==0) {
+/*		field[1] += (epsilon_ko/64.) * (
+			field[3] 
+		+ 	(-6.*field[3]) 
+		+ 	(15.*field[2]) 
+		+ 	(-20.*field[1]) 
+		+ 	(15.*field[0]) 
+		+ 	(-6.*(-field[1])) 
+		+	(-field[2]) 
+		)
+		;
+		field[0] += (epsilon_ko/64.) * (
+			field[3] 
+		+ 	(-6.*field[2]) 
+		+ 	(15.*field[1]) 
+		+ 	(-20.*field[0]) 
+		+ 	(15.*(-field[1])) 
+		+ 	(-6.*(-field[2])) 
+		+	(-field[3]) 
+		)
+		;
+*/		field[1] -= (epsilon_ko/16.) * (
+			field[3] 
+		+ 	(-4.*field[2]) 
+		+ 	(6.*field[1]) 
+		+ 	(-4.*field[0]) 
+		+ 	(-field[1]) 
+		)
+		;	
+		field[0] -= (epsilon_ko/16.) * (
+			field[2] 
+		+ 	(-4.*field[1]) 
+		+ 	(6.*field[0]) 
+		+ 	(-4.*(-field[1])) 
+		+ 	(-field[2]) 
+		)
+		;
+	} else if (strcmp(parity,"ignore_origin")==0) { 
+		/* do nothing */
+	} else {
+		assert(strcmp(parity,"even")==0
+		||	strcmp(parity,"odd")==0
+		||	strcmp(parity,"ignore_origin")==0
+		) ;
+	}
 	return ;
 }
 /*==========================================================================*/
@@ -97,7 +181,7 @@ static double compute_iteration_GR_Al(
                 Jr_j1h
         ;
 	int size = 0 ;
-	if (fabs(bbox[1]-s_L)<MACHINE_EPSILON) size = Nx-1 ;
+	if (fabs(bbox[1]-s_L)<MACHINE_EPSILON) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
 	else size = Nx ;
         double res_Al = 0 ;
         double jac_Al = 1 ;
@@ -179,7 +263,7 @@ static double compute_iteration_GR_Ze(
                 rho_j1h
         ;
 	int size = 0 ;
-	if (fabs(bbox[1]-s_L)<MACHINE_EPSILON) size = Nx-1 ;
+	if (fabs(bbox[1]-s_L)<MACHINE_EPSILON) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
 	else size = Nx ;
         double res_Ze_sqrd = 0 ; 
         double jac_Ze_sqrd = 1 ; 
@@ -381,7 +465,7 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 	double jac_P = 1 ;
 
 	int size = 0 ;
-	if (fabs(bbox[1]-s_L)<MACHINE_EPSILON) size = Nx-1 ;
+	if (fabs(bbox[1]-s_L)<MACHINE_EPSILON) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
 	else size = Nx ;
 	double res_infty_norm = 0 ; /* returning this */
 /*--------------------------------------------------------------------------*/
@@ -456,6 +540,8 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 		jac_P = - (3./2.) / dr ;
 
 		P_n[0] -= res_P / jac_P ;
+
+		res_infty_norm = weighted_infty_norm(1-x_j/s_L, res_P, res_infty_norm) ;
 	}
 	if ((exc_jC > 0) 
 	&&  (excision_on==true)
@@ -496,20 +582,20 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 			P_nm1[exc_jC], 
 			dt)
 		;
-		res_P -= (1./2.)*D1_forward_2ndOrder(
+		res_P -= (1./2.)*pow(r_j,-2)*D1_forward_2ndOrder(
 			pow(r_jp2,2)*Al_n[exc_jC+2]*(Q_n[exc_jC+2] + Ze_n[exc_jC+2]*P_n[exc_jC+2]),
 			pow(r_jp1,2)*Al_n[exc_jC+1]*(Q_n[exc_jC+1] + Ze_n[exc_jC+1]*P_n[exc_jC+1]),
 			pow(r_j,  2)*Al_n[exc_jC+0]*(Q_n[exc_jC+0] + Ze_n[exc_jC+0]*P_n[exc_jC+0]),
 			dr)
 		;
-		res_P -= (1./2.)*D1_forward_2ndOrder(
+		res_P -= (1./2.)*pow(r_j,-2)*D1_forward_2ndOrder(
 			pow(r_jp2,2)*Al_nm1[exc_jC+2]*(Q_nm1[exc_jC+2] + Ze_nm1[exc_jC+2]*P_nm1[exc_jC+2]),
 			pow(r_jp1,2)*Al_nm1[exc_jC+1]*(Q_nm1[exc_jC+1] + Ze_nm1[exc_jC+1]*P_nm1[exc_jC+1]),
 			pow(r_j  ,2)*Al_nm1[exc_jC+0]*(Q_nm1[exc_jC+0] + Ze_nm1[exc_jC+0]*P_nm1[exc_jC+0]),
 			dr)
 		;
 		jac_P = 1./dt
-		-	(1./2.) * (-3./(2*dr)) * pow(r_j,2) * Al_n[exc_jC] * Ze_n[exc_jC]
+		-	(1./2.) * (-3./(2*dr)) * Al_n[exc_jC] * Ze_n[exc_jC]
 		;
 	/****/
 		Q_n[exc_jC] -= res_Q / jac_Q ;
@@ -554,9 +640,13 @@ void advance_tStep_massless_scalar(
 		;
 	} while (res>ERR_TOLERANCE) ;
 
-	Kreiss_Oliger_Filter(Nx, P_n) ;
-	Kreiss_Oliger_Filter(Nx, Q_n) ;
+	Kreiss_Oliger_filter(Nx, P_n) ;
+	Kreiss_Oliger_filter(Nx, Q_n) ;
 
+	if (fabs(bbox[0])<MACHINE_EPSILON) {
+		Kreiss_Oliger_filter_origin(P_n, "even") ;
+		Kreiss_Oliger_filter_origin(Q_n, "odd") ;
+	}
 	return ;
 }	
 /*==========================================================================*/
@@ -588,8 +678,8 @@ void initial_data_Gaussian(
 		x = (jC * dx) + left_point ;
 		r = stereographic_r(s_L, x) ;
 		Q[jC] = amp * exp(-pow((r-center)/width,2)) * (
-			(-(r-center)/pow(width,2)) * pow(r,2) 
-		+	2*r
+			(-(r-center)/pow(width,2)) * pow(r,4) 
+		+	4*pow(r,3)
 		) ;
 		if (strcmp(direction,"ingoing")==0) {
 			P[jC] = + Q[jC] ;
@@ -599,6 +689,7 @@ void initial_data_Gaussian(
 			fprintf(stderr,"ERROR(initial_data_Gaussian): direction!={{in,out}going}\n") ;
 			exit(EXIT_FAILURE) ;
 		}
+		P[jC]=0;
 	}
 	if (end_jC == Nx-1) {
 		P[Nx-1] = 0 ;

@@ -12,17 +12,6 @@
 /*==========================================================================*/
 /* 2nd order accurate stencils */
 /*==========================================================================*/
-inline double stereographic_r(double s_L, double x)
-{
-        return pow(1. - (x/s_L), -1) * x ;
-}
-inline double stereographic_dr(double s_L, double x, double dx)
-{
-        return pow(1. - (x/s_L), -2) * dx ;
-}
-/*==========================================================================*/
-/* 2nd order accurate stencils */
-/*==========================================================================*/
 inline double D1_center_2ndOrder(double vp1, double vm1, double dx)
 {
         return 
@@ -80,6 +69,17 @@ inline double AVG_CrankNicolson_2ndOrder(double v1, double v2)
 }
 /*==========================================================================*/
 /* stereographic projection: r = x / (1-x/s_L) */
+/*==========================================================================*/
+inline double stereographic_r(double s_L, double x)
+{
+        return pow(1. - (x/s_L), -1) * x ;
+}
+inline double stereographic_dr(double s_L, double x, double dx)
+{
+        return pow(1. - (x/s_L), -2) * dx ;
+}
+/*==========================================================================*/
+/* stereographic derivatives */
 /*==========================================================================*/
 inline double D1_stereographic_center_2ndOrder(double s_L, double x, double vp1, double vm1, double dx)
 {
