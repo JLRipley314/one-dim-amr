@@ -6,10 +6,12 @@
 #include "stereographic_routines.h"
 #include "diagnostics_GR.h"
 
+
 /*==========================================================================*/
-static void set_array_val(int Nx, double val, double* array) 
+static void set_array_val(int start, int end, double val, double* array) 
 {
-	for (int iC=0; iC<Nx; iC++) {
+	if (end<start) return ;
+	for (int iC=start; iC<end; iC++) {
 		array[iC] = val ;
 	}
 	return ;
@@ -60,7 +62,7 @@ static void compute_eom_TR(
 		Al = Al_n[jC] ;
 		Ze = Ze_n[jC] ;
 
-		r_Der_Ze = D1_stereographic_center_2ndOrder(x_j, s_L, Ze_n[jC+1], Ze_n[jC-1], dx) ;
+		r_Der_Ze = D1_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1], Ze_n[jC-1], dx) ;
 
 		t_Der_Ze = D1_backward_2ndOrder(Ze_n[jC], Ze_nm1[jC], Ze_nm2[jC], dt) ;
 
@@ -93,25 +95,25 @@ static void compute_eom_ThTh(
 		Al = Al_n[jC] ;
 		Ze = Ze_n[jC] ;
 
-		r_Der_Al = D1_stereographic_center_2ndOrder(x_j, s_L, Al_n[jC+1], Al_n[jC-1], dx) ; 
-		r_Der_Ze = D1_stereographic_center_2ndOrder(x_j, s_L, Ze_n[jC+1], Ze_n[jC-1], dx) ;
+		r_Der_Al = D1_stereographic_center_2ndOrder(s_L, x_j, Al_n[jC+1], Al_n[jC-1], dx) ; 
+		r_Der_Ze = D1_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1], Ze_n[jC-1], dx) ;
 
-		rr_Der_Al = D2_stereographic_center_2ndOrder(x_j, s_L, Al_n[jC+1], Al_n[jC], Al_n[jC-1], dx) ;
-		rr_Der_Ze = D2_stereographic_center_2ndOrder(x_j, s_L, Ze_n[jC+1], Ze_n[jC], Ze_n[jC-1], dx) ;
+		rr_Der_Al = D2_stereographic_center_2ndOrder(s_L, x_j, Al_n[jC+1], Al_n[jC], Al_n[jC-1], dx) ;
+		rr_Der_Ze = D2_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1], Ze_n[jC], Ze_n[jC-1], dx) ;
 
 		t_Der_Al = D1_backward_2ndOrder(Ze_n[jC], Al_nm1[jC], Al_nm2[jC], dt) ;
 		t_Der_Ze = D1_backward_2ndOrder(Ze_n[jC], Ze_nm1[jC], Ze_nm2[jC], dt) ;
 
 		tr_Der_Al = D1_backward_2ndOrder(
-				D1_stereographic_center_2ndOrder(x_j, s_L, Al_n[jC+1],   Al_n[jC-1],   dx),
-				D1_stereographic_center_2ndOrder(x_j, s_L, Al_nm1[jC+1], Al_nm1[jC-1], dx), 
+				D1_stereographic_center_2ndOrder(s_L, x_j, Al_n[jC+1],   Al_n[jC-1],   dx),
+				D1_stereographic_center_2ndOrder(s_L, x_j, Al_nm1[jC+1], Al_nm1[jC-1], dx), 
 				D1_stereographic_center_2ndOrder(x_j, s_L, Al_nm2[jC+1], Al_nm2[jC-1], dx),
 			dt)
 		;
 		tr_Der_Ze = D1_backward_2ndOrder(
-				D1_stereographic_center_2ndOrder(x_j, s_L, Ze_n[jC+1],   Ze_n[jC-1],   dx),
-				D1_stereographic_center_2ndOrder(x_j, s_L, Ze_nm1[jC+1], Ze_nm1[jC-1], dx), 
-				D1_stereographic_center_2ndOrder(x_j, s_L, Ze_nm2[jC+1], Ze_nm2[jC-1], dx),
+				D1_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1],   Ze_n[jC-1],   dx),
+				D1_stereographic_center_2ndOrder(s_L, x_j, Ze_nm1[jC+1], Ze_nm1[jC-1], dx), 
+				D1_stereographic_center_2ndOrder(s_L, x_j, Ze_nm2[jC+1], Ze_nm2[jC-1], dx),
 			dt)
 		;
 		eom_ThTh[jC] = 
@@ -155,11 +157,11 @@ static void compute_eom_scalar(
 		P = P_n[jC] ;
 		Q = Q_n[jC] ;
 
-		r_Der_Al = D1_stereographic_center_2ndOrder(x_j, s_L, Al_n[jC+1], Al_n[jC-1], dx) ; 
-		r_Der_Ze = D1_stereographic_center_2ndOrder(x_j, s_L, Ze_n[jC+1], Ze_n[jC-1], dx) ;
+		r_Der_Al = D1_stereographic_center_2ndOrder(s_L, x_j, Al_n[jC+1], Al_n[jC-1], dx) ; 
+		r_Der_Ze = D1_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1], Ze_n[jC-1], dx) ;
 
-		r_Der_P = D1_stereographic_center_2ndOrder(x_j, s_L, P_n[jC+1], P_n[jC-1], dx) ; 
-		r_Der_Q = D1_stereographic_center_2ndOrder(x_j, s_L, Q_n[jC+1], Q_n[jC-1], dx) ;
+		r_Der_P = D1_stereographic_center_2ndOrder(s_L, x_j, P_n[jC+1], P_n[jC-1], dx) ; 
+		r_Der_Q = D1_stereographic_center_2ndOrder(s_L, x_j, Q_n[jC+1], Q_n[jC-1], dx) ;
 
 		t_Der_P = D1_backward_2ndOrder(P_n[jC], P_nm1[jC], P_nm2[jC], dt) ;
 
@@ -226,11 +228,11 @@ void compute_diagnostics_massless_scalar_GR(
 		Q_n, 
 		eom_scalar)
 	;
-	set_array_val(exc_jC-1, 0, P_n) ;
-	set_array_val(exc_jC-1, 0, Q_n) ;
-	set_array_val(exc_jC-1, 0, eom_TR) ;
-	set_array_val(exc_jC-1, 0, eom_ThTh) ;
-	set_array_val(exc_jC-1, 0, eom_scalar) ;
+	set_array_val(0, exc_jC-1, 0, P_n) ;
+	set_array_val(0, exc_jC-1, 0, Q_n) ;
+	set_array_val(0, exc_jC-1, 0, eom_TR) ;
+	set_array_val(0, exc_jC-1, 0, eom_ThTh) ;
+	set_array_val(0, exc_jC-1, 0, eom_scalar) ;
 
 	free(SE_LL_TR) ;
 	free(SE_LL_ThTh) ;

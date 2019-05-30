@@ -445,6 +445,9 @@ static void save_all_grids(
 	return ;
 }
 /*==========================================================================*/
+/* compute diagnostics on each grid, and syncronize the excision point
+ * with the shadow grid */
+/*==========================================================================*/
 static void compute_all_grid_diagnostics(
 	amr_grid_hierarchy* gh, void (*compute_diagnostics)(amr_grid*))
 {

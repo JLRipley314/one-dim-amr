@@ -27,9 +27,10 @@ static inline double max_fabs(double var_1, double var_2)
 	return (fabs(var_1)>fabs(var_2)) ? fabs(var_1) : fabs(var_2) ;
 }
 /*==========================================================================*/
-static void set_array_val(int Nx, double val, double* array) 
+static void set_array_val(int start, int end, double val, double* array) 
 {
-	for (int iC=0; iC<Nx; iC++) {
+	if (end<start) return ;
+	for (int iC=start; iC<end; iC++) {
 		array[iC] = val ;
 	}
 	return ;
@@ -576,8 +577,8 @@ void initial_data_Gaussian(
 	double x = 0 ;
 	double r = 0 ;
 
-	set_array_val(Nx, 1.0, Al) ;
-	set_array_val(Nx, 0.0, Ze) ;
+	set_array_val(0, Nx, 1.0, Al) ;
+	set_array_val(0, Nx, 0.0, Ze) ;
 
 	int end_jC = (fabs(bbox[1]-s_L)<ERR_TOLERANCE) ? Nx-1 : Nx ;
 

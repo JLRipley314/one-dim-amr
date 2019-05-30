@@ -81,25 +81,25 @@ inline double AVG_CrankNicolson_2ndOrder(double v1, double v2)
 /*==========================================================================*/
 /* stereographic projection: r = x / (1-x/s_L) */
 /*==========================================================================*/
-inline double D1_stereographic_center_2ndOrder(double x, double s_L, double vp1, double vm1, double dx)
+inline double D1_stereographic_center_2ndOrder(double s_L, double x, double vp1, double vm1, double dx)
 {
         return
                 pow(1-x/s_L,2) * (vp1 - vm1) / (2.0 * dx) ;
         ;
 }
-inline double D1_stereographic_forward_2ndOrder(double x, double s_L, double vp2, double vp1, double v0,  double dx)
+inline double D1_stereographic_forward_2ndOrder(double s_L, double x, double vp2, double vp1, double v0,  double dx)
 {
         return
                 pow(1-x/s_L,2) * ((-(vp2) + (4.*(vp1)) - (3.*(v0)))/(2.*(dx)))
         ;
 }
-inline double D1_stereographic_backward_2ndOrder(double x, double s_L, double v0 , double vm1, double vm2, double dx)
+inline double D1_stereographic_backward_2ndOrder(double s_L, double x, double v0 , double vm1, double vm2, double dx)
 {
         return
                 pow(1-x/s_L,2) * ((+(vm2) - (4.*(vm1)) + (3.*(v0)))/(2.*(dx)))
         ;
 }
-inline double D2_stereographic_center_2ndOrder(double x, double s_L, double vp1, double v0 , double vm1, double dx)
+inline double D2_stereographic_center_2ndOrder(double s_L, double x, double vp1, double v0 , double vm1, double dx)
 {
         return
 		pow(1-x/s_L,2) * (vp1 - (2.*v0) + vm1) / (dx*dx)

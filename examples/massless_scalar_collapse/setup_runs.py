@@ -32,11 +32,11 @@ run_data = {
 
 	"param_search"	: "yes",#"no",#
 
-	"theory"	: "massless_scalar_GR",#"massless_scalar",#"EdGB",#"GR",#"EdGB_decoupled",#
+	"theory"	: "massless_scalar",#"massless_scalar_GR",#"EdGB",#"GR",#"EdGB_decoupled",#
 ###
 ###	coupling for EdGB coupling
 ###
-	"coupling_gbs"	: 0.1,
+	"coupling_gbs"	: 0.0,
 
 	"stereographic_L" : 100,
 	
@@ -51,7 +51,7 @@ run_data = {
 ###
 ###	Nx should be of the form 2**n + 1 with n an integer
 ###
-	"Nx"		: 2**8+1,
+	"Nx"		: 2**9+1,
 	"Nt"		: 2**10+1,
 	"t_step_save"	: 2**0,
 	"cfl_num"	: 0.25,  
@@ -61,9 +61,9 @@ run_data = {
 ###
 ###	if initial_data is r2Exp
 ###
-	"amp"		: 0.004,
+	"amp"		: 0.0001,
 	"width"		: 10.0,
-	"center"	: 10.0,
+	"center"	: 20.0,
 	"direction"	: "ingoing",# "stationary", #
 ###
 ###	if initial_data is initial_black_hole

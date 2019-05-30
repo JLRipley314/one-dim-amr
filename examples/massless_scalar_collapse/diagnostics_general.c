@@ -7,9 +7,11 @@
 #include "stereographic_routines.h"
 
 /*==========================================================================*/
-static void set_array_val(int Nx, double val, double* array) 
+/*==========================================================================*/
+static void set_array_val(int start, int end, double val, double* array) 
 {
-	for (int iC=0; iC<Nx; iC++) {
+	if (end<start) return ;
+	for (int iC=start; iC<end; iC++) {
 		array[iC] = val ;
 	}
 	return ;
@@ -83,25 +85,25 @@ static int compute_Ricci_scalar(
 		Al = Al_n[jC] ;
 		Ze = Ze_n[jC] ;
 
-		r_Der_Al = D1_stereographic_center_2ndOrder(x_j, s_L, Al_n[jC+1], Al_n[jC-1], dx) ; 
-		r_Der_Ze = D1_stereographic_center_2ndOrder(x_j, s_L, Ze_n[jC+1], Ze_n[jC-1], dx) ;
+		r_Der_Al = D1_stereographic_center_2ndOrder(s_L, x_j, Al_n[jC+1], Al_n[jC-1], dx) ; 
+		r_Der_Ze = D1_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1], Ze_n[jC-1], dx) ;
 
-		rr_Der_Al = D2_stereographic_center_2ndOrder(x_j, s_L, Al_n[jC+1], Al_n[jC], Al_n[jC-1], dx) ;
-		rr_Der_Ze = D2_stereographic_center_2ndOrder(x_j, s_L, Ze_n[jC+1], Ze_n[jC], Ze_n[jC-1], dx) ;
+		rr_Der_Al = D2_stereographic_center_2ndOrder(s_L, x_j, Al_n[jC+1], Al_n[jC], Al_n[jC-1], dx) ;
+		rr_Der_Ze = D2_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1], Ze_n[jC], Ze_n[jC-1], dx) ;
 
 		t_Der_Al = D1_backward_2ndOrder(Ze_n[jC], Al_nm1[jC], Al_nm2[jC], dt) ;
 		t_Der_Ze = D1_backward_2ndOrder(Ze_n[jC], Ze_nm1[jC], Ze_nm2[jC], dt) ;
 
 		tr_Der_Al = D1_backward_2ndOrder(
-				D1_stereographic_center_2ndOrder(x_j, s_L, Al_n[jC+1],   Al_n[jC-1],   dx),
-				D1_stereographic_center_2ndOrder(x_j, s_L, Al_nm1[jC+1], Al_nm1[jC-1], dx), 
-				D1_stereographic_center_2ndOrder(x_j, s_L, Al_nm2[jC+1], Al_nm2[jC-1], dx),
+				D1_stereographic_center_2ndOrder(s_L, x_j, Al_n[jC+1],   Al_n[jC-1],   dx),
+				D1_stereographic_center_2ndOrder(s_L, x_j, Al_nm1[jC+1], Al_nm1[jC-1], dx), 
+				D1_stereographic_center_2ndOrder(s_L, x_j, Al_nm2[jC+1], Al_nm2[jC-1], dx),
 			dt)
 		;
 		tr_Der_Ze = D1_backward_2ndOrder(
-				D1_stereographic_center_2ndOrder(x_j, s_L, Ze_n[jC+1],   Ze_n[jC-1],   dx),
-				D1_stereographic_center_2ndOrder(x_j, s_L, Ze_nm1[jC+1], Ze_nm1[jC-1], dx), 
-				D1_stereographic_center_2ndOrder(x_j, s_L, Ze_nm2[jC+1], Ze_nm2[jC-1], dx),
+				D1_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1],   Ze_n[jC-1],   dx),
+				D1_stereographic_center_2ndOrder(s_L, x_j, Ze_nm1[jC+1], Ze_nm1[jC-1], dx), 
+				D1_stereographic_center_2ndOrder(s_L, x_j, Ze_nm2[jC+1], Ze_nm2[jC-1], dx),
 			dt)
 		;
 		Ricci_scalar[jC] = 2*(
@@ -142,25 +144,25 @@ static int compute_Gauss_Bonnet_scalar(
 		Al = Al_n[jC] ;
 		Ze = Ze_n[jC] ;
 
-		r_Der_Al = D1_stereographic_center_2ndOrder(x_j, s_L, Al_n[jC+1], Al_n[jC-1], dx) ; 
-		r_Der_Ze = D1_stereographic_center_2ndOrder(x_j, s_L, Ze_n[jC+1], Ze_n[jC-1], dx) ;
+		r_Der_Al = D1_stereographic_center_2ndOrder(s_L, x_j, Al_n[jC+1], Al_n[jC-1], dx) ; 
+		r_Der_Ze = D1_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1], Ze_n[jC-1], dx) ;
 
-		rr_Der_Al = D2_stereographic_center_2ndOrder(x_j, s_L, Al_n[jC+1], Al_n[jC], Al_n[jC-1], dx) ;
-		rr_Der_Ze = D2_stereographic_center_2ndOrder(x_j, s_L, Ze_n[jC+1], Ze_n[jC], Ze_n[jC-1], dx) ;
+		rr_Der_Al = D2_stereographic_center_2ndOrder(s_L, x_j, Al_n[jC+1], Al_n[jC], Al_n[jC-1], dx) ;
+		rr_Der_Ze = D2_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1], Ze_n[jC], Ze_n[jC-1], dx) ;
 
 		t_Der_Al = D1_backward_2ndOrder(Ze_n[jC], Al_nm1[jC], Al_nm2[jC], dt) ;
 		t_Der_Ze = D1_backward_2ndOrder(Ze_n[jC], Ze_nm1[jC], Ze_nm2[jC], dt) ;
 
 		tr_Der_Al = D1_backward_2ndOrder(
-				D1_stereographic_center_2ndOrder(x_j, s_L, Al_n[jC+1],   Al_n[jC-1],   dx),
-				D1_stereographic_center_2ndOrder(x_j, s_L, Al_nm1[jC+1], Al_nm1[jC-1], dx), 
-				D1_stereographic_center_2ndOrder(x_j, s_L, Al_nm2[jC+1], Al_nm2[jC-1], dx),
+				D1_stereographic_center_2ndOrder(s_L, x_j, Al_n[jC+1],   Al_n[jC-1],   dx),
+				D1_stereographic_center_2ndOrder(s_L, x_j, Al_nm1[jC+1], Al_nm1[jC-1], dx), 
+				D1_stereographic_center_2ndOrder(s_L, x_j, Al_nm2[jC+1], Al_nm2[jC-1], dx),
 			dt)
 		;
 		tr_Der_Ze = D1_backward_2ndOrder(
-				D1_stereographic_center_2ndOrder(x_j, s_L, Ze_n[jC+1],   Ze_n[jC-1],   dx),
-				D1_stereographic_center_2ndOrder(x_j, s_L, Ze_nm1[jC+1], Ze_nm1[jC-1], dx), 
-				D1_stereographic_center_2ndOrder(x_j, s_L, Ze_nm2[jC+1], Ze_nm2[jC-1], dx),
+				D1_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1],   Ze_n[jC-1],   dx),
+				D1_stereographic_center_2ndOrder(s_L, x_j, Ze_nm1[jC+1], Ze_nm1[jC-1], dx), 
+				D1_stereographic_center_2ndOrder(s_L, x_j, Ze_nm2[jC+1], Ze_nm2[jC-1], dx),
 			dt)
 		;
 		Gauss_Bonnet_scalar[jC] = 8*Ze*(
@@ -221,13 +223,13 @@ void compute_diagnostics_general(
 		Ze_n, Ze_nm1, Ze_nm2,
 		Gauss_Bonnet_scalar)
 	;
-	set_array_val(*exc_jC-1, 0, Al_n) ;
-	set_array_val(*exc_jC-1, 0, Ze_n) ;
-	set_array_val(*exc_jC-1, 0, mass_aspect) ;
-	set_array_val(*exc_jC-1, 0, ingoing_null_characteristic) ;
-	set_array_val(*exc_jC-1, 0, outgoing_null_characteristic) ;
-	set_array_val(*exc_jC-1, 0, Ricci_scalar) ;
-	set_array_val(*exc_jC-1, 0, Gauss_Bonnet_scalar) ;
+	set_array_val(0, *exc_jC-1, 0, Al_n) ;
+	set_array_val(0, *exc_jC-1, 0, Ze_n) ;
+	set_array_val(0, *exc_jC-1, 0, mass_aspect) ;
+	set_array_val(0, *exc_jC-1, 0, ingoing_null_characteristic) ;
+	set_array_val(0, *exc_jC-1, 0, outgoing_null_characteristic) ;
+	set_array_val(0, *exc_jC-1, 0, Ricci_scalar) ;
+	set_array_val(0, *exc_jC-1, 0, Gauss_Bonnet_scalar) ;
 
 	int buffer_size = (2*mass_aspect[Nx-5]*0.2)/dx ; 
 
