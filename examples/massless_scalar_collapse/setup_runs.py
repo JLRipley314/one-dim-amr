@@ -32,7 +32,7 @@ run_data = {
 
 	"param_search"	: "yes",#"no",#
 
-	"theory"	: "massless_scalar",#"massless_scalar_GR",#"EdGB",#"GR",#"EdGB_decoupled",#
+	"theory"	: "massless_scalar_GR",#"massless_scalar",#"EdGB",#"GR",#"EdGB_decoupled",#
 ###
 ###	coupling for EdGB coupling
 ###
@@ -52,8 +52,8 @@ run_data = {
 ###	Nx should be of the form 2**n + 1 with n an integer
 ###
 	"Nx"		: 2**9+1,
-	"Nt"		: 2**13+1,
-	"t_step_save"	: 2**4,
+	"Nt"		: 2**8+1,
+	"t_step_save"	: 2**0,
 	"cfl_num"	: 0.25,  
 	"errlim"	: 1.0e-10, 
 	
@@ -61,9 +61,9 @@ run_data = {
 ###
 ###	if initial_data is r4Exp
 ###
-	"amp"		: 0.0001,
+	"amp"		: 0.00001,
 	"width"		: 10.0,
-	"center"	: 20.0,
+	"center"	: 5.0,
 	"direction"	: "ingoing",# "stationary", #
 ###
 ###	if initial_data is initial_black_hole
@@ -125,7 +125,7 @@ if test_type == "basic_run":
 ##############################################################################
 elif (test_type == "convergence_test"): 
 	sim_number = int(input("Launch how many sims with different resolutions? (enter integer) "))
-	sleep_time = 5 
+	sleep_time = 15 
 	convergence_test(sleep_time, run_data, sim_number)
 ##############################################################################
 ### specify the param and range to search for edge of black hole formation

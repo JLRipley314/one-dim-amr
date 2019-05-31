@@ -1,5 +1,6 @@
-# link together to make a static linked library
-
+#
+# link amr routines together to make a static linked library
+#
 CC=gcc
 
 CFLAGS= -g -Wall -fmax-errors=5 -std=gnu11 -lm

@@ -73,27 +73,7 @@ static void Kreiss_Oliger_filter_origin(
 {
 	double epsilon_ko = 0.9 ;
 	if (strcmp(parity,"even")==0) {
-/*		field[1] += (epsilon_ko/64.) * (
-			field[3] 
-		+ 	(-6.*field[3]) 
-		+ 	(15.*field[2]) 
-		+ 	(-20.*field[1]) 
-		+ 	(15.*field[0]) 
-		+ 	(-6.*field[1]) 
-		+	field[2] 
-		)
-		;
-		field[0] += (epsilon_ko/64.) * (
-			field[3] 
-		+ 	(-6.*field[2]) 
-		+ 	(15.*field[1]) 
-		+ 	(-20.*field[0]) 
-		+ 	(15.*field[1]) 
-		+ 	(-6.*field[2]) 
-		+	field[3] 
-		)
-		;
-*/		field[1] -= (epsilon_ko/16.) * (
+		field[1] -= (epsilon_ko/16.) * (
 			field[3] 
 		+ 	(-4.*field[2]) 
 		+ 	(6.*field[1]) 
@@ -110,27 +90,7 @@ static void Kreiss_Oliger_filter_origin(
 		)
 		;
 	} else if (strcmp(parity,"odd")==0) {
-/*		field[1] += (epsilon_ko/64.) * (
-			field[3] 
-		+ 	(-6.*field[3]) 
-		+ 	(15.*field[2]) 
-		+ 	(-20.*field[1]) 
-		+ 	(15.*field[0]) 
-		+ 	(-6.*(-field[1])) 
-		+	(-field[2]) 
-		)
-		;
-		field[0] += (epsilon_ko/64.) * (
-			field[3] 
-		+ 	(-6.*field[2]) 
-		+ 	(15.*field[1]) 
-		+ 	(-20.*field[0]) 
-		+ 	(15.*(-field[1])) 
-		+ 	(-6.*(-field[2])) 
-		+	(-field[3]) 
-		)
-		;
-*/		field[1] -= (epsilon_ko/16.) * (
+		field[1] -= (epsilon_ko/16.) * (
 			field[3] 
 		+ 	(-4.*field[2]) 
 		+ 	(6.*field[1]) 

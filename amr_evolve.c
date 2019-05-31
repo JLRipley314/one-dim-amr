@@ -112,7 +112,7 @@ static void inject_grid_func(
 	return ;
 }
 /*==========================================================================*/
-static void inject_overlaping_fields(
+static void amr_inject_overlaping_fields(
 		amr_field *fields, amr_grid *parent, amr_grid *grid)
 {
 	int index = 0 ;
@@ -358,7 +358,7 @@ static void amr_solve_ode_initial_data(
 	do {
 		amr_solve_ode_fields(gh->fields, grid, solve_ode) ;
 		if (grid->parent!=NULL) {
-			inject_overlaping_fields(gh->fields, grid->parent, grid) ;
+			amr_inject_overlaping_fields(gh->fields, grid->parent, grid) ;
 		}
 		grid = grid->parent ;
 	} while (grid!=NULL) ;	
@@ -369,12 +369,17 @@ static void amr_solve_ode_initial_data(
 	return ;
 }
 /*==========================================================================*/
-/* evolves all grids in hierarchy: from coarsest to finest.
+/* Recursive routine to evolve amr (or fmr if no regridding) hierarchy
+ * 
+ * Hyperbolics solved as in Berger&Oliger: coarse step onwards to finer
+ * levels, and inject on overlapping grids.
+ *
  * We solve the ODE fields as outlined in gr-qc/0508110: we extrapapolate
  * from previous solutions, then resolve the ODE over the whole hierarchy
  * when all levels align. The previous ODE level used for extrapapoaltion
  * is then reset to make it agree with linear extrapapolation with resolved
- * ODE values. */
+ * ODE values. 
+ */
 /*==========================================================================*/
 static void amr_evolve_grid(
 	amr_field* fields,
@@ -418,7 +423,7 @@ static void amr_evolve_grid(
 		/* 
 			TO DO: compute truncation error 
 		*/
-		inject_overlaping_fields(fields, grid->parent, grid) ;	
+		amr_inject_overlaping_fields(fields, grid->parent, grid) ;	
 	}
 	return ;
 }
@@ -485,16 +490,15 @@ void amr_main(
 {
 	int compute_diagnostics_tC = 1/gh->cfl_num ;
 
-	add_self_similar_initial_grids(gh, 2) ;
+//	add_self_similar_initial_grids(gh, 2) ;
 
 /*	initial data: the ode are assumed to set the "constrained" degrees
 	of freedom. 
 */
 	set_free_initial_data(gh, free_initial_data) ;
 	amr_solve_ode_initial_data(gh, solve_ode) ; 	
-	inject_overlaping_fields(gh->fields, gh->grids, gh->grids->child) ;
+	amr_inject_overlaping_fields(gh->fields, gh->grids, gh->grids->child) ;
 	compute_all_grid_diagnostics(gh, compute_diagnostics) ;
-
 	save_all_grids(gh, save_to_file) ;
 
 	for (int tC=1; tC<(gh->Nt); tC++) {
@@ -505,7 +509,7 @@ void amr_main(
 			evolve_hyperbolic_pde,
 			solve_ode) 
 		;
-		inject_overlaping_fields(gh->fields, gh->grids, gh->grids->child) ;
+		amr_inject_overlaping_fields(gh->fields, gh->grids, gh->grids->child) ;
 		if ((tC%(compute_diagnostics_tC)==0) 
 		||  (tC%(gh->t_step_save)==0)
 		) {

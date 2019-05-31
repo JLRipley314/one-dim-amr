@@ -246,8 +246,7 @@ void set_free_initial_data(amr_grid* grid)
 void rescale_Al(amr_grid* grid)
 {
 	double rescale_param = 1 ;
-	int level = grid->level ;
-	if (level==1) {
+	if ((grid->level)==1) {
 		rescale_param = grid->grid_funcs[Al_n_index][Nx-1] ;
 		for (amr_grid* iter=(grid->parent); iter!=NULL; iter=iter->child) {
 			for (int iC=0; iC<(iter->Nx); iC++) {

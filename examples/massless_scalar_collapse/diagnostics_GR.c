@@ -72,6 +72,7 @@ static void compute_eom_TR(
 		- 	(Al*pow(Ze,3))/pow(r_j,2) 
 		-	SE_LL_TR[jC] 
 		;
+		eom_TR[jC] = t_Der_Ze ;
 	}
 	return ;
 }/*==========================================================================*/
