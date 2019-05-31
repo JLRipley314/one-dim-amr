@@ -24,6 +24,7 @@ static void shift_field(int field_index, int time_levels, amr_grid *grid)
 {
 	int Nx = grid->Nx ;
 	for (int iC=field_index+time_levels-1; iC>field_index; iC--) {
+//		printf("grid level %d\tfield index %d\tlevel %d to level %d\n", grid->level, field_index, iC-1, iC) ;
 		copy_to_2nd_array(Nx, grid->grid_funcs[iC-1], grid->grid_funcs[iC]) ;
 	}
 }
@@ -36,6 +37,7 @@ static void shift_fields_one_time_level(
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		index = field->index ;
 		time_levels = field->time_levels ;
+//		printf("field %s\n",field->name) ;
 		shift_field(index,time_levels,grid) ;
 	}
 	return ;

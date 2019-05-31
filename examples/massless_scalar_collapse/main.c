@@ -112,7 +112,7 @@ amr_field* set_fields(void)
 	amr_add_field(fields, "P", "hyperbolic", time_levels, 0) ;
 	amr_add_field(fields, "Q", "hyperbolic", time_levels, 0) ;
 
-	amr_add_field(fields, "mass_aspect",  "diagnostic", time_levels, 0) ;
+	amr_add_field(fields, "mass_aspect",  "diagnostic", 1, 0) ;
 
 	amr_add_field(fields, "ingoing_null_characteristic",  "diagnostic", 1, 0) ;
 	amr_add_field(fields, "outgoing_null_characteristic", "diagnostic", 1, 0) ;
