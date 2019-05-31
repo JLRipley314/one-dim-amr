@@ -174,6 +174,7 @@ static void compute_eom_scalar(
 		+	(Q+P*Ze)*r_Der_Al/Al
 		+	2*(Q/r_j+P*(Ze/r_j))
 		;
+		eom_scalar[jC] = t_Der_P ;
 	}
 	return ;
 }
