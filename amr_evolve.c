@@ -418,8 +418,13 @@ static void evolve_grid(
 				solve_ode)
 			;
 		} 	
+		solve_ode_fields(fields, grid, solve_ode) ;
+		if (((grid->level)==0)
+		||  ((grid->tC)%REFINEMENT==0)
+		) {
+			set_grid_ode_extrap_levels(fields, grid) ;
+		}
 	}
-	set_grid_ode_extrap_levels(fields, grid) ;
 	if ((grid->child)!=NULL) {
 		/* 
 			TO DO: compute truncation error 

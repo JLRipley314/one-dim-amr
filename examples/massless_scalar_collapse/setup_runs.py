@@ -32,7 +32,7 @@ run_data = {
 
 	"param_search"	: "yes",#"no",#
 
-	"theory"	: "massless_scalar",#"massless_scalar_GR",#"EdGB",#"GR",#"EdGB_decoupled",#
+	"theory"	: "massless_scalar_GR",#"massless_scalar",#"EdGB",#"GR",#"EdGB_decoupled",#
 ###
 ###	coupling for EdGB coupling
 ###
