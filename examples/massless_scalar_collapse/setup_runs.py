@@ -32,7 +32,7 @@ run_data = {
 
 	"param_search"	: "yes",#"no",#
 
-	"theory"	: "massless_scalar_GR",#"massless_scalar",#"EdGB",#"GR",#"EdGB_decoupled",#
+	"theory"	: "massless_scalar",#"massless_scalar_GR",#"EdGB",#"GR",#"EdGB_decoupled",#
 ###
 ###	coupling for EdGB coupling
 ###
@@ -52,7 +52,7 @@ run_data = {
 ###	Nx should be of the form 2**n + 1 with n an integer
 ###
 	"Nx"		: 2**9+1,
-	"Nt"		: 2**8+1,
+	"Nt"		: 2**9+1,
 	"t_step_save"	: 2**0,
 	"cfl_num"	: 0.25,  
 	"errlim"	: 1.0e-10, 
