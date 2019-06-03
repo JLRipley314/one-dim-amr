@@ -91,6 +91,9 @@ char output_name_mass_aspect[MAX_NAME_LEN+1] ;
 char output_name_eom_TR[MAX_NAME_LEN+1] ;
 char output_name_eom_ThTh[MAX_NAME_LEN+1] ;
 char output_name_eom_scalar[MAX_NAME_LEN+1] ;
+
+char output_name_test_1[MAX_NAME_LEN+1] ;
+char output_name_test_2[MAX_NAME_LEN+1] ;
 /*---------------------------------------------------------------------------*/
 bool perim_interior[2] ;
 bool excision_on = true ;
@@ -371,6 +374,9 @@ void save_to_file(amr_grid* grid)
 		snprintf(output_name_eom_TR, MAX_NAME_LEN, "%seom_TR.sdf", output_dir) ;
 		snprintf(output_name_eom_ThTh, MAX_NAME_LEN, "%seom_ThTh.sdf", output_dir) ;
 		snprintf(output_name_eom_scalar, MAX_NAME_LEN, "%seom_scalar.sdf", output_dir) ;
+
+		snprintf(output_name_test_1, MAX_NAME_LEN, "%stest_1.sdf", output_dir) ;
+		snprintf(output_name_test_2, MAX_NAME_LEN, "%stest_2.sdf", output_dir) ;
 	}
 	made_output_files = true ;
 /* 	save to file-see man pages for bbhutil utilities on Choptuik's website 
@@ -379,6 +385,9 @@ void save_to_file(amr_grid* grid)
 	gft_out_bbox(output_name_Ze, time, &Nx, 1, bbox, Ze_n) ;
 	gft_out_bbox(output_name_P,  time, &Nx, 1, bbox,  P_n) ;
 	gft_out_bbox(output_name_Q,  time, &Nx, 1, bbox,  Q_n) ;
+
+	gft_out_bbox(output_name_test_1, time, &Nx, 1, bbox, Ze_nm1) ;
+	gft_out_bbox(output_name_test_2, time, &Nx, 1, bbox, Ze_nm2) ;
 
 	gft_out_bbox(output_name_mass_aspect,  time, &Nx, 1, bbox, mass_aspect) ;
 

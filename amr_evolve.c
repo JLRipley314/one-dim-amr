@@ -226,7 +226,7 @@ static void set_interior_hyperbolic_boundary_quad_interp(
 /*==========================================================================*/
 /* using quadratic interpolation in time for boundaries */
 /*==========================================================================*/
-void set_interior_hyperbolic_boundary(
+static void set_interior_hyperbolic_boundary(
 	amr_field* fields, amr_grid* parent, amr_grid* grid)
 {
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
@@ -241,7 +241,7 @@ void set_interior_hyperbolic_boundary(
 /*==========================================================================*/
 /* ode methods */
 /*==========================================================================*/
-void linear_extrapapolate_field(amr_field* field, amr_grid* grid) 
+static void linear_extrapapolate_field(amr_field* field, amr_grid* grid) 
 {
 	int field_index = field->index ;
 	int extrap_index = (field->index)+(field->time_levels) ;
@@ -259,7 +259,7 @@ void linear_extrapapolate_field(amr_field* field, amr_grid* grid)
 	return ;
 }
 /*==========================================================================*/
-void amr_extrapolate_ode_fields(amr_field* fields, amr_grid* grid) 
+static void amr_extrapolate_ode_fields(amr_field* fields, amr_grid* grid) 
 {
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		if (strcmp(field->pde_type,ODE) == 0) {
@@ -272,7 +272,7 @@ void amr_extrapolate_ode_fields(amr_field* fields, amr_grid* grid)
 /* for now: finer grid sets boundary condition for coarser to be integrated
  * outwards */
 /*==========================================================================*/
-void set_ode_initial_condition(amr_field* fields, amr_grid* grid) 
+static void set_ode_initial_condition(amr_field* fields, amr_grid* grid) 
 {
 	int index = 0 ;
 	int perim_coord = grid->child->perim_coords[1] ;
@@ -290,25 +290,36 @@ void set_ode_initial_condition(amr_field* fields, amr_grid* grid)
  * as all begin from r=0. The coarser level is integrated from the finer
  * level boundary outwards */
 /*==========================================================================*/
-void solve_ode_fields(
+static void solve_ode_fields(
 	amr_field* fields, amr_grid* grid, void (*solve_ode)(amr_grid*)) 
 {
 	if (grid->child==NULL) {
 		solve_ode(grid) ;
 	} else {
-		set_ode_initial_condition(fields, grid) ;
-		solve_ode(grid) ;
+		if ((grid->child->perim_coords[1])>(grid->excised_jC)) {
+			int temp_jC = grid->excised_jC ;
+			(grid->excision_on)=false ;
+			(grid->excised_jC)=(grid->child->perim_coords[1]) ;
+			set_ode_initial_condition(fields, grid) ;
+			solve_ode(grid) ;
+			grid->excised_jC = temp_jC ;
+			(grid->excision_on) = true ;
+		} else {
+			solve_ode(grid) ;
+		}
 	}
 	return ;
 }
 /*==========================================================================*/
 /* set extrap level whenever finer grids and this grid in sync */
 /*==========================================================================*/
-void set_extrap_levels(amr_field* field, amr_grid* grid) 
+static void set_extrap_levels(amr_field* field, amr_grid* grid) 
 {
 	int field_index = field->index ;
 	int extrap_levels = field->extrap_levels ;
 	int extrap_index = (field->index) + (field->time_levels) ;
+//	printf("field %s\textrap_index %d\t extrap_index+extrap_levels-1 %d\n", field->name, extrap_index, extrap_index+extrap_levels-1) ;
+//	fflush(NULL) ;	
 	for (int jC=0; jC<(grid->Nx); jC++) {
 	/*	adjust first extrapolation level for linear extrapolation
 	*/
@@ -325,7 +336,7 @@ void set_extrap_levels(amr_field* field, amr_grid* grid)
 	return ;
 }
 /*==========================================================================*/
-void set_grid_ode_extrap_levels(amr_field* fields, amr_grid* grid) 
+static void set_grid_ode_extrap_levels(amr_field* fields, amr_grid* grid) 
 {
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		if (strcmp(field->pde_type,ODE) == 0) {
@@ -337,14 +348,11 @@ void set_grid_ode_extrap_levels(amr_field* fields, amr_grid* grid)
 /*==========================================================================*/
 /* do twice as there are two extrapolation levels */
 /*==========================================================================*/
-static void set_all_grid_ode_extrap_levels(amr_grid_hierarchy* gh) 
+static void set_all_grids_ode_extrap_levels(amr_grid_hierarchy* gh) 
 {
 	amr_field* fields = gh->fields ;
 	for (amr_grid* grid=gh->grids; grid!=NULL; grid=grid->child) {
-		for (int iC=0; iC<2; iC++) {
-			set_grid_ode_extrap_levels(fields, grid) ;
-			set_grid_ode_extrap_levels(fields, grid) ;
-		}
+		set_grid_ode_extrap_levels(fields, grid) ;
 	}
 	return ;
 }
@@ -356,14 +364,15 @@ static void solve_ode_initial_data(
 	amr_set_to_tail(&grid) ;
 	do {
 		solve_ode_fields(gh->fields, grid, solve_ode) ;
-		if (grid->parent!=NULL) {
+		if (grid->level!=0) {
 			inject_overlaping_fields(gh->fields, grid->parent, grid) ;
 		}
 		grid = grid->parent ;
 	} while (grid!=NULL) ;	
 	shift_grids_one_time_level(gh) ;
 	shift_grids_one_time_level(gh) ;
-	set_all_grid_ode_extrap_levels(gh) ; 
+	set_all_grids_ode_extrap_levels(gh) ; 
+	set_all_grids_ode_extrap_levels(gh) ; 
 
 	return ;
 }
@@ -396,13 +405,10 @@ static void evolve_grid(
 				TO DO: regrid all finer levels 
 			*/
 		}
-		/* 	do not interpolate coarse grid + shadow,
-			both which span the entire domain so
-			boundary conditions are physical 
-		*/	
-		if (((grid->level)!=0) 
-		&&  ((grid->level)!=1)
-		) {
+/* 	do not interpolate coarse grid (level 1) and  shadow (level 0),
+	both which span the entire domain so boundary conditions are physical 
+*/	
+		if ((grid->level)>1) {
 			set_interior_hyperbolic_boundary(fields, grid->parent, grid) ;
 		}
 		amr_extrapolate_ode_fields(fields, grid) ;
@@ -416,9 +422,7 @@ static void evolve_grid(
 				solve_ode)
 			;
 		} 
-		/*	not ghost grid
-		*/
-		if ((grid->level)!=0) {
+		if ((grid->level)>0) { /* all grids finer than shadow grid */
 			solve_ode_fields(fields, grid, solve_ode) ;
 		}
 	}
@@ -446,7 +450,7 @@ static void set_free_initial_data(
 	}
 	shift_grids_one_time_level(gh) ;
 	shift_grids_one_time_level(gh) ;
-	set_all_grid_ode_extrap_levels(gh) ; 
+	set_all_grids_ode_extrap_levels(gh) ; 
 	return ;
 }
 /*==========================================================================*/
@@ -465,7 +469,7 @@ static void save_all_grids(
 static void compute_all_grid_diagnostics(
 	amr_grid_hierarchy* gh, void (*compute_diagnostics)(amr_grid*))
 {
-	for (amr_grid* grid=gh->grids; grid != NULL; grid=grid->child) {
+	for (amr_grid* grid=gh->grids; grid!=NULL; grid=grid->child) {
 		compute_diagnostics(grid) ;
 		if ((grid->parent!=NULL)
 		&&  (grid->parent->excised_jC > grid->perim_coords[0])
@@ -494,7 +498,7 @@ void amr_main(
 {
 	int compute_diagnostics_tC = 1/gh->cfl_num ;
 
-//	add_self_similar_initial_grids(gh, 2) ;
+//	add_self_similar_initial_grids(gh, 3) ;
 
 /*	initial data: the ode are assumed to set the "constrained" degrees
 	of freedom. 

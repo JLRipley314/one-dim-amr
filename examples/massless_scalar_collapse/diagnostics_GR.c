@@ -47,7 +47,7 @@ static void compute_eom_TR(
 	int Nx, 
 	double dt, double dx,
 	double s_L, int exc_jC, 
-	double* Al_n, double* Al_nm1, double* Al_nm2,
+	double* Al_n, 
 	double* Ze_n, double* Ze_nm1, double* Ze_nm2,
 	double* SE_LL_TR,
 	double* eom_TR)
@@ -65,15 +65,14 @@ static void compute_eom_TR(
 		r_Der_Ze = D1_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1], Ze_n[jC-1], dx) ;
 
 		t_Der_Ze = D1_backward_2ndOrder(Ze_n[jC], Ze_nm1[jC], Ze_nm2[jC], dt) ;
+		t_Der_Ze = D1_forward_2ndOrder(Ze_n[jC], Ze_nm1[jC], Ze_nm2[jC], dt) ;
+		t_Der_Ze = (Ze_n[jC]-Ze_nm2[jC])/(2*dt) ;
 
 		eom_TR[jC] = 
 		+ 	(2*t_Der_Ze*Ze)/r_j 
 		- 	(2*r_Der_Ze*Al*pow(Ze,2))/r_j 
 		- 	(Al*pow(Ze,3))/pow(r_j,2) 
 		-	SE_LL_TR[jC] 
-		;
-		eom_TR[jC] = 
-			t_Der_Ze
 		;
 	}
 	return ;
@@ -104,7 +103,7 @@ static void compute_eom_ThTh(
 		rr_Der_Al = D2_stereographic_center_2ndOrder(s_L, x_j, Al_n[jC+1], Al_n[jC], Al_n[jC-1], dx) ;
 		rr_Der_Ze = D2_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1], Ze_n[jC], Ze_n[jC-1], dx) ;
 
-		t_Der_Al = D1_backward_2ndOrder(Ze_n[jC], Al_nm1[jC], Al_nm2[jC], dt) ;
+		t_Der_Al = D1_backward_2ndOrder(Al_n[jC], Al_nm1[jC], Al_nm2[jC], dt) ;
 		t_Der_Ze = D1_backward_2ndOrder(Ze_n[jC], Ze_nm1[jC], Ze_nm2[jC], dt) ;
 
 		tr_Der_Al = D1_backward_2ndOrder(
@@ -166,6 +165,8 @@ static void compute_eom_scalar(
 		r_Der_P = D1_stereographic_center_2ndOrder(s_L, x_j, P_n[jC+1], P_n[jC-1], dx) ; 
 		r_Der_Q = D1_stereographic_center_2ndOrder(s_L, x_j, Q_n[jC+1], Q_n[jC-1], dx) ;
 
+		t_Der_P = (P_n[jC]-P_nm2[jC])/(2.*dt) ;
+		t_Der_P = D1_forward_2ndOrder(P_n[jC], P_nm1[jC], P_nm2[jC], dt) ;
 		t_Der_P = D1_backward_2ndOrder(P_n[jC], P_nm1[jC], P_nm2[jC], dt) ;
 
 		eom_scalar[jC] = 
@@ -177,7 +178,98 @@ static void compute_eom_scalar(
 		+	2*(Q/r_j+P*(Ze/r_j))
 		;
 		eom_scalar[jC] *= r_j ; 
-		eom_scalar[jC] = t_Der_P ;
+	}
+	return ;
+}
+/*==========================================================================*/
+static void compute_eom_scalar_center(
+	int Nx, 
+	double dt, double dx,
+	double s_L, int exc_jC, 
+	double* Al_nm1, 
+	double* Ze_nm1,
+	double* P_n, double* P_nm1, double* P_nm2,
+	double* Q_nm1, 
+	double* eom_scalar)
+{
+	double x_j, r_j,
+		Al, Ze, P, Q, 
+		r_Der_Al, r_Der_Ze, r_Der_P, r_Der_Q,  
+		t_Der_P
+	;
+	for (int jC=exc_jC+1; jC<Nx-1; jC++) {
+		x_j = jC * dx ;
+                r_j = stereographic_r(s_L, x_j) ; 
+
+		Al = Al_nm1[jC] ;
+		Ze = Ze_nm1[jC] ;
+
+		P = P_nm1[jC] ;
+		Q = Q_nm1[jC] ;
+
+		r_Der_Al = D1_stereographic_center_2ndOrder(s_L, x_j, Al_nm1[jC+1], Al_nm1[jC-1], dx) ; 
+		r_Der_Ze = D1_stereographic_center_2ndOrder(s_L, x_j, Ze_nm1[jC+1], Ze_nm1[jC-1], dx) ;
+
+		r_Der_P = D1_stereographic_center_2ndOrder(s_L, x_j, P_nm1[jC+1], P_nm1[jC-1], dx) ; 
+		r_Der_Q = D1_stereographic_center_2ndOrder(s_L, x_j, Q_nm1[jC+1], Q_nm1[jC-1], dx) ;
+
+		t_Der_P = (P_n[jC]-P_nm2[jC])/(2.*dt) ;
+
+		eom_scalar[jC] = 
+		-	t_Der_P/Al
+		+	P*r_Der_Ze
+		+	r_Der_Q
+		+	Ze*r_Der_P
+		+	(Q+P*Ze)*r_Der_Al/Al
+		+	2*(Q/r_j+P*(Ze/r_j))
+		;
+		eom_scalar[jC] *= r_j ; 
+	}
+	return ;
+}
+/*==========================================================================*/
+static void compute_eom_scalar_forward(
+	int Nx, 
+	double dt, double dx,
+	double s_L, int exc_jC, 
+	double* Al_nm2, 
+	double* Ze_nm2,
+	double* P_n, double* P_nm1, double* P_nm2,
+	double* Q_nm2, 
+	double* eom_scalar)
+{
+	double x_j, r_j,
+		Al, Ze, P, Q, 
+		r_Der_Al, r_Der_Ze, r_Der_P, r_Der_Q,  
+		t_Der_P
+	;
+	for (int jC=exc_jC+1; jC<Nx-1; jC++) {
+		x_j = jC * dx ;
+                r_j = stereographic_r(s_L, x_j) ; 
+
+		Al = Al_nm2[jC] ;
+		Ze = Ze_nm2[jC] ;
+
+		P = P_nm2[jC] ;
+		Q = Q_nm2[jC] ;
+
+		r_Der_Al = D1_stereographic_center_2ndOrder(s_L, x_j, Al_nm2[jC+1], Al_nm2[jC-1], dx) ; 
+		r_Der_Ze = D1_stereographic_center_2ndOrder(s_L, x_j, Ze_nm2[jC+1], Ze_nm2[jC-1], dx) ;
+
+		r_Der_P = D1_stereographic_center_2ndOrder(s_L, x_j, P_nm2[jC+1], P_nm2[jC-1], dx) ; 
+		r_Der_Q = D1_stereographic_center_2ndOrder(s_L, x_j, Q_nm2[jC+1], Q_nm2[jC-1], dx) ;
+
+		t_Der_P = D1_forward_2ndOrder(P_n[jC], P_nm1[jC], P_nm2[jC], dt) ;
+
+		eom_scalar[jC] = 
+		-	t_Der_P/Al
+		+	P*r_Der_Ze
+		+	r_Der_Q
+		+	Ze*r_Der_P
+		+	(Q+P*Ze)*r_Der_Al/Al
+		+	2*(Q/r_j+P*(Ze/r_j))
+		;
+		eom_scalar[jC] *= r_j ; 
 	}
 	return ;
 }
@@ -200,8 +292,8 @@ void compute_diagnostics_massless_scalar_GR(
 	compute_SE_LL_components_massless_scalar(
 		Nx, dx,
 		s_L, exc_jC,
-		Al_n, Ze_n,
-		P_n,  Q_n,
+		Al_nm1, Ze_nm1,
+		P_nm1,  Q_nm1,
 		SE_LL_TR,
 		SE_LL_ThTh)
 	;
@@ -209,7 +301,7 @@ void compute_diagnostics_massless_scalar_GR(
 		Nx, 
 		dt, dx,
 		s_L, exc_jC, 
-		Al_n, Al_nm1, Al_nm2,
+		Al_nm1, 
 		Ze_n, Ze_nm1, Ze_nm2,
 		SE_LL_TR,
 		eom_TR)
@@ -233,7 +325,27 @@ void compute_diagnostics_massless_scalar_GR(
 		Q_n, 
 		eom_scalar)
 	;
-	set_array_val(0, exc_jC-1, 0, P_n) ;
+/*	compute_eom_scalar_center(
+		Nx, 
+		dt, dx,
+		s_L, exc_jC, 
+		Al_nm1, 
+		Ze_nm1,
+		P_n, P_nm1, P_nm2,
+		Q_nm1, 
+		eom_scalar)
+	;
+	compute_eom_scalar_forward(
+		Nx, 
+		dt, dx,
+		s_L, exc_jC, 
+		Al_nm2, 
+		Ze_nm2,
+		P_n, P_nm1, P_nm2,
+		Q_nm2, 
+		eom_scalar)
+	;
+*/	set_array_val(0, exc_jC-1, 0, P_n) ;
 	set_array_val(0, exc_jC-1, 0, Q_n) ;
 	set_array_val(0, exc_jC-1, 0, eom_TR) ;
 	set_array_val(0, exc_jC-1, 0, eom_ThTh) ;
