@@ -72,7 +72,9 @@ static void compute_eom_TR(
 		- 	(Al*pow(Ze,3))/pow(r_j,2) 
 		-	SE_LL_TR[jC] 
 		;
-//		eom_TR[jC] = t_Der_Ze ;
+		eom_TR[jC] = 
+			t_Der_Ze
+		;
 	}
 	return ;
 }/*==========================================================================*/
@@ -174,7 +176,8 @@ static void compute_eom_scalar(
 		+	(Q+P*Ze)*r_Der_Al/Al
 		+	2*(Q/r_j+P*(Ze/r_j))
 		;
-//		eom_scalar[jC] = t_Der_P ;
+		eom_scalar[jC] *= r_j ; 
+		eom_scalar[jC] = t_Der_P ;
 	}
 	return ;
 }

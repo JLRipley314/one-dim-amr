@@ -259,11 +259,6 @@ void rescale_Al(amr_grid* grid)
 /*===========================================================================*/
 void solve_ode(amr_grid* grid)
 {
-	int child_perim_coords[2] = {-1,-1} ;
-	if (grid->child!=NULL) {
-		child_perim_coords[0] = grid->child->perim_coords[0] ;
-		child_perim_coords[1] = grid->child->perim_coords[1] ;
-	}
 	if (strcmp(theory, "massless_scalar_GR") == 0) {
 		set_globals(grid) ;
 		solve_Al_Ze(
@@ -272,7 +267,6 @@ void solve_ode(amr_grid* grid)
 			dt, 	dx,
 			excision_on,
 			excised_jC,
-			child_perim_coords,
 			bbox,
 			Al_n, 	Al_nm1, Ze_n, Ze_nm1,
 			 P_n, 	 P_nm1,  Q_n,  Q_nm1)

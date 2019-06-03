@@ -22,7 +22,7 @@ def convergence_test(
 
 	for iC in range(0,sim_number): 
 		run_data["output_dir"] = make_directory_name_current_time_and_Nx(run_data)
-		print("\n\n",run_data["output_dir"],"\n\n")
+		print("\n",run_data["output_dir"],"\n")
 		os.makedirs(run_data["output_dir"])
 
 		write_initial_data(run_data)

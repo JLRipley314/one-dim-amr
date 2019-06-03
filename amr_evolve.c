@@ -276,10 +276,7 @@ void set_ode_initial_condition(amr_field* fields, amr_grid* grid)
 {
 	int index = 0 ;
 	int perim_coord = grid->child->perim_coords[1] ;
-	int child_Nx = 1 ; /* shadow grid matches level 1 at the origin */
-	if (grid->parent!=NULL) { /* i.e. not shadow grid */
-		child_Nx = grid->child->Nx ;
-	}
+	int child_Nx = grid->child->Nx ;
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		if (strcmp(field->pde_type,ODE) == 0) {
 			index = field->index ;
@@ -400,16 +397,17 @@ static void evolve_grid(
 			*/
 		}
 		/* 	do not interpolate coarse grid + shadow,
-			both which span the entire grid 
+			both which span the entire domain so
+			boundary conditions are physical 
 		*/	
-		if (((grid->parent)!=NULL) 
-		&&  ((grid->parent->parent)!=NULL)
+		if (((grid->level)!=0) 
+		&&  ((grid->level)!=1)
 		) {
 			set_interior_hyperbolic_boundary(fields, grid->parent, grid) ;
 		}
 		amr_extrapolate_ode_fields(fields, grid) ;
 		evolve_hyperbolic_pde(grid) ;
-		if (grid->child != NULL) {
+		if ((grid->child)!=NULL) {
 			evolve_grid(
 				fields,
 				grid->child,
@@ -417,12 +415,11 @@ static void evolve_grid(
 				evolve_hyperbolic_pde,
 				solve_ode)
 			;
-		} 	
-		solve_ode_fields(fields, grid, solve_ode) ;
-		if (((grid->level)==0)
-		||  ((grid->tC)%REFINEMENT==0)
-		) {
-			set_grid_ode_extrap_levels(fields, grid) ;
+		} 
+		/*	not ghost grid
+		*/
+		if ((grid->level)!=0) {
+			solve_ode_fields(fields, grid, solve_ode) ;
 		}
 	}
 	if ((grid->child)!=NULL) {
@@ -431,6 +428,7 @@ static void evolve_grid(
 		*/
 		inject_overlaping_fields(fields, grid, grid->child) ;	
 	}
+	set_grid_ode_extrap_levels(fields, grid) ;
 	return ;
 }
 /*==========================================================================*/

@@ -342,26 +342,20 @@ void solve_Al_Ze(
 	int Nx,
 	double dt, 	double dx,
 	bool excision_on,
-	int exc_jC,
-	int child_perim_coords[2],
+	int start_jC,
 	double bbox[2],
 	double* Al_n, 	double* Al_nm1, double* Ze_n, double* Ze_nm1,
 	double*  P_n, 	double*  P_nm1, double*  Q_n, double*  Q_nm1)
 {
-	if (exc_jC==Nx-1) {
+	if (start_jC==Nx-1) { /* if interior to the excision point */
 		return ;
 	}
 	double res = 0 ;
-	int start_jC = 0 ;
 	do {
 		res = 0 ;
 		if ((excision_on==true)
-		&&  (exc_jC>0)
-		&&  	(   (child_perim_coords[1]==Nx-1) /* i.e. if this is the shadow grid */
-		     	||  (exc_jC>child_perim_coords[1])
-			)
+		&&  (start_jC>0)
 		) {	
-			start_jC = exc_jC ;
 			res += compute_iteration_GR_excision_boundary_condition_Ze(
 				s_L,
 				Nx,
@@ -371,14 +365,6 @@ void solve_Al_Ze(
 				Al_n,  Al_nm1, Ze_n, Ze_nm1,
 				 P_n,   P_nm1,  Q_n,  Q_nm1)
 			;
-		} else if (
-		    (child_perim_coords[1]>0)
-		&&  (child_perim_coords[1]>exc_jC)
-		&&  (child_perim_coords[1]!=Nx-1) /* i.e. if this is not the shadow grid */
-		) {
-			start_jC = child_perim_coords[1] ;
-		} else {
-			start_jC = 0 ;
 		}
 		res += compute_iteration_GR_Ze(
 			s_L,
