@@ -64,8 +64,9 @@ static void compute_eom_TR(
 
 		r_Der_Ze = D1_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1], Ze_n[jC-1], dx) ;
 
-		t_Der_Ze = D1_backward_2ndOrder(Ze_n[jC], Ze_nm1[jC], Ze_nm2[jC], dt) ;
 		t_Der_Ze = D1_forward_2ndOrder(Ze_n[jC], Ze_nm1[jC], Ze_nm2[jC], dt) ;
+		t_Der_Ze = D1_backward_2ndOrder(Ze_n[jC], Ze_nm1[jC], Ze_nm2[jC], dt) ;
+		t_Der_Ze = (+(Ze_nm2[jC]) - (4.*(Ze_nm1[jC])) + (3.*(Ze_n[jC])))/(2.*(dt)) ;
 		t_Der_Ze = (Ze_n[jC]-Ze_nm2[jC])/(2*dt) ;
 
 		eom_TR[jC] = 

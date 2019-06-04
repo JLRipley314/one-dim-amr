@@ -386,8 +386,20 @@ void save_to_file(amr_grid* grid)
 	gft_out_bbox(output_name_P,  time, &Nx, 1, bbox,  P_n) ;
 	gft_out_bbox(output_name_Q,  time, &Nx, 1, bbox,  Q_n) ;
 
-	gft_out_bbox(output_name_test_1, time, &Nx, 1, bbox, Ze_nm1) ;
-	gft_out_bbox(output_name_test_2, time, &Nx, 1, bbox, Ze_nm2) ;
+	double* test_1 = calloc(Nx,sizeof(double)) ;
+	double* test_2 = calloc(Nx,sizeof(double)) ;
+
+	for (int jC=0; jC<Nx; jC++) {
+		test_1[jC] = (+(Ze_nm2[jC]) - (4.*(Ze_nm1[jC])) + (3.*(Ze_n[jC])))/(2.*(dt)) ;
+		test_1[jC] = (Ze_n[jC] - Ze_nm1[jC])/dt ;
+		test_2[jC] = (Ze_n[jC] - Ze_nm2[jC])/(2.*dt) ;
+	}
+
+	gft_out_bbox(output_name_test_1, time, &Nx, 1, bbox, test_1) ;
+	gft_out_bbox(output_name_test_2, time, &Nx, 1, bbox, test_2) ;
+
+	free(test_1) ;
+	free(test_2) ;
 
 	gft_out_bbox(output_name_mass_aspect,  time, &Nx, 1, bbox, mass_aspect) ;
 
