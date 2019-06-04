@@ -24,7 +24,6 @@ static void shift_field(int field_index, int time_levels, amr_grid *grid)
 {
 	int Nx = grid->Nx ;
 	for (int iC=field_index+time_levels-1; iC>field_index; iC--) {
-//		printf("grid level %d\tfield index %d\tlevel %d to level %d\n", grid->level, field_index, iC-1, iC) ;
 		copy_to_2nd_array(Nx, grid->grid_funcs[iC-1], grid->grid_funcs[iC]) ;
 	}
 }
@@ -37,7 +36,6 @@ static void shift_fields_one_time_level(
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		index = field->index ;
 		time_levels = field->time_levels ;
-//		printf("field %s\n",field->name) ;
 		shift_field(index,time_levels,grid) ;
 	}
 	return ;
@@ -241,20 +239,43 @@ static void set_interior_hyperbolic_boundary(
 /*==========================================================================*/
 /* ode methods */
 /*==========================================================================*/
-static void linear_extrapapolate_field(amr_field* field, amr_grid* grid) 
+static void linear_extrapapolate_level_0_field(amr_field* field, amr_grid* grid) 
 {
 	int field_index = field->index ;
-	int extrap_index = (field->index)+(field->time_levels) ;
-	int tC = grid->tC ;
+	int extrap_index = (field_index)+(field->time_levels) ;
 	double p_0, p_1 ;
 
 	for (int jC=0; jC<(grid->Nx); jC++) {
 		p_0 = grid->grid_funcs[extrap_index][jC] ;
 		p_1 = (
 			(grid->grid_funcs[extrap_index][jC])-(grid->grid_funcs[extrap_index+1][jC])
+		) ;
+
+		grid->grid_funcs[field_index][jC] = p_0 + p_1 ;
+	}	
+	return ;
+}
+/*==========================================================================*/
+/* extrapolation for level n>0 */
+/*==========================================================================*/
+static void linear_extrapapolate_level_n_field(amr_field* field, amr_grid* grid) 
+{
+	int field_index = field->index ;
+	int extrap_index = (field_index)+(field->time_levels) ;
+	double p_0, p_1 ;
+	int step ;
+	if ((grid->tC)==(grid->parent->tC)*REFINEMENT) {
+		step = REFINEMENT ;
+	} else {
+		step = (grid->tC)%REFINEMENT ;
+	}
+	for (int jC=0; jC<(grid->Nx); jC++) {
+		p_0 = grid->grid_funcs[extrap_index][jC] ;
+		p_1 = (
+			(grid->grid_funcs[extrap_index][jC])-(grid->grid_funcs[extrap_index+1][jC])
 		) / REFINEMENT ;
 
-		grid->grid_funcs[field_index][jC] = p_0 + p_1*(tC%REFINEMENT) ;
+		grid->grid_funcs[field_index][jC] = p_0 + p_1*step ;
 	}	
 	return ;
 }
@@ -263,7 +284,11 @@ static void amr_extrapolate_ode_fields(amr_field* fields, amr_grid* grid)
 {
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		if (strcmp(field->pde_type,ODE) == 0) {
-			linear_extrapapolate_field(field,grid) ;
+			if ((grid->level)==0) {
+				linear_extrapapolate_level_0_field(field,grid) ;
+			} else {
+				linear_extrapapolate_level_n_field(field,grid) ;
+			}
 		}
 	}
 	return ;

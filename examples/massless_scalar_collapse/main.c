@@ -390,9 +390,8 @@ void save_to_file(amr_grid* grid)
 	double* test_2 = calloc(Nx,sizeof(double)) ;
 
 	for (int jC=0; jC<Nx; jC++) {
-		test_1[jC] = (+(Ze_nm2[jC]) - (4.*(Ze_nm1[jC])) + (3.*(Ze_n[jC])))/(2.*(dt)) ;
-		test_1[jC] = (Ze_n[jC] - Ze_nm1[jC])/dt ;
-		test_2[jC] = (Ze_n[jC] - Ze_nm2[jC])/(2.*dt) ;
+		test_1[jC] = Ze_nm1[jC] ;
+		test_2[jC] = Ze_nm2[jC] ;
 	}
 
 	gft_out_bbox(output_name_test_1, time, &Nx, 1, bbox, test_1) ;
