@@ -84,7 +84,7 @@ char output_name_ingoing_null_characteristic[MAX_NAME_LEN+1] ;
 char output_name_outgoing_null_characteristic[MAX_NAME_LEN+1] ;
 
 char output_name_Ricci_scalar[MAX_NAME_LEN+1] ;
-char output_name_Gauss_Bonner_scalar[MAX_NAME_LEN+1] ;
+char output_name_Gauss_Bonnet_scalar[MAX_NAME_LEN+1] ;
 
 char output_name_mass_aspect[MAX_NAME_LEN+1] ;
 
@@ -377,7 +377,7 @@ void save_to_file(amr_grid* grid)
 		snprintf(output_name_ingoing_null_characteristic,  MAX_NAME_LEN, "%singoing_null_characteristic.sdf", output_dir) ;
 		snprintf(output_name_outgoing_null_characteristic, MAX_NAME_LEN, "%soutgoing_null_characteristic.sdf",  output_dir) ;
 		snprintf(output_name_Ricci_scalar,        MAX_NAME_LEN, "%sRicci_scalar.sdf",        output_dir) ;
-		snprintf(output_name_Gauss_Bonner_scalar, MAX_NAME_LEN, "%sGauss_Bonner_scalar.sdf", output_dir) ;
+		snprintf(output_name_Gauss_Bonner_scalar, MAX_NAME_LEN, "%sGauss_Bonnet_scalar.sdf", output_dir) ;
 
 		snprintf(output_name_eom_TR, MAX_NAME_LEN, "%seom_TR.sdf", output_dir) ;
 		snprintf(output_name_eom_ThTh, MAX_NAME_LEN, "%seom_ThTh.sdf", output_dir) ;
@@ -413,7 +413,7 @@ void save_to_file(amr_grid* grid)
 	gft_out_bbox(output_name_ingoing_null_characteristic,  time, &Nx, 1, bbox, ingoing_null_characteristic) ;
 	gft_out_bbox(output_name_outgoing_null_characteristic, time, &Nx, 1, bbox, outgoing_null_characteristic) ;
 	gft_out_bbox(output_name_Ricci_scalar,        time, &Nx, 1, bbox,  Ricci_scalar) ;
-	gft_out_bbox(output_name_Gauss_Bonner_scalar, time, &Nx, 1, bbox,  Gauss_Bonnet_scalar) ;
+	gft_out_bbox(output_name_Gauss_Bonnet_scalar, time, &Nx, 1, bbox,  Gauss_Bonnet_scalar) ;
 
 	gft_out_bbox(output_name_eom_TR, time, &Nx, 1, bbox, eom_TR) ;
 	gft_out_bbox(output_name_eom_ThTh, time, &Nx, 1, bbox, eom_ThTh) ;
