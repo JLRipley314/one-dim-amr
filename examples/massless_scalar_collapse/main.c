@@ -179,6 +179,7 @@ void set_globals(amr_grid* grid)
 	P_n   = grid->grid_funcs[P_n_index  ] ;
 	P_nm1 = grid->grid_funcs[P_nm1_index] ;
 	P_nm2 = grid->grid_funcs[P_nm2_index] ;
+
 	Q_n   = grid->grid_funcs[Q_n_index  ] ;
 	Q_nm1 = grid->grid_funcs[Q_nm1_index] ;
 	Q_nm2 = grid->grid_funcs[Q_nm2_index] ;
@@ -186,9 +187,14 @@ void set_globals(amr_grid* grid)
 	Al_n   = grid->grid_funcs[Al_n_index  ] ;
 	Al_nm1 = grid->grid_funcs[Al_nm1_index] ;
 	Al_nm2 = grid->grid_funcs[Al_nm2_index] ;
+	Al_extr_m1 = grid->grid_funcs[Al_extr_m1_index] ;
+	Al_extr_m2 = grid->grid_funcs[Al_extr_m2_index] ;
+
 	Ze_n   = grid->grid_funcs[Ze_n_index  ] ;
 	Ze_nm1 = grid->grid_funcs[Ze_nm1_index] ;
 	Ze_nm2 = grid->grid_funcs[Ze_nm2_index] ;
+	Ze_extr_m1 = grid->grid_funcs[Ze_extr_m1_index] ;
+	Ze_extr_m2 = grid->grid_funcs[Ze_extr_m2_index] ;
 
 	mass_aspect = grid->grid_funcs[mass_aspect_index] ;
 
@@ -274,7 +280,9 @@ void solve_ode(amr_grid* grid)
 			Al_n, 	Al_nm1, Ze_n, Ze_nm1,
 			 P_n, 	 P_nm1,  Q_n,  Q_nm1)
 		;
-		rescale_Al(grid) ;
+		if ((grid->level)==0) {
+			rescale_Al(grid) ;
+		}
 	}
 	return ;
 }
@@ -391,7 +399,7 @@ void save_to_file(amr_grid* grid)
 
 	for (int jC=0; jC<Nx; jC++) {
 		test_1[jC] = Ze_nm1[jC] ;
-		test_2[jC] = Ze_nm2[jC] ;
+		test_2[jC] = Ze_n[jC] ;
 	}
 
 	gft_out_bbox(output_name_test_1, time, &Nx, 1, bbox, test_1) ;

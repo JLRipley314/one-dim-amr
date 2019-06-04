@@ -12,7 +12,7 @@ def make_directory_name_current_time(run_data:dict) -> str:
 
 	dir_name = "_".join("_".join(time.asctime().split(" ")).split(":"))
 
-	dir_name_path = "{}/{}/".format(run_data["output_dir"],dir_name)
+	dir_name_path = "{}/{}/".format(run_data["base_output_dir"],dir_name)
 
 	return dir_name_path
 ###############################################################################

@@ -167,7 +167,7 @@ void amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent)
 	new_grid->parent = parent ;
 	new_grid->child = NULL ;
 
-	new_grid->level = parent->level+1 ;
+	new_grid->level = (parent->level)+1 ;
 
 	new_grid->dt = parent->dt/REFINEMENT ;
 	new_grid->dx = parent->dx/REFINEMENT ;

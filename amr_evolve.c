@@ -118,7 +118,6 @@ static void inject_overlaping_fields(
 	int index = 0 ;
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		index = field->index ;
-	//	printf("%d %d %s\n",grid->level, parent->level, field->name) ;
 		inject_grid_func(
 			grid->Nx, 
 			grid->perim_coords[0], 
@@ -250,7 +249,6 @@ static void linear_extrapapolate_level_0_field(amr_field* field, amr_grid* grid)
 		p_1 = (
 			(grid->grid_funcs[extrap_index][jC])-(grid->grid_funcs[extrap_index+1][jC])
 		) ;
-
 		grid->grid_funcs[field_index][jC] = p_0 + p_1 ;
 	}	
 	return ;
@@ -299,13 +297,12 @@ static void amr_extrapolate_ode_fields(amr_field* fields, amr_grid* grid)
 /*==========================================================================*/
 static void set_ode_initial_condition(amr_field* fields, amr_grid* grid) 
 {
-	int index = 0 ;
-	int perim_coord = grid->child->perim_coords[1] ;
+	int excised_jC = grid->excised_jC ;
 	int child_Nx = grid->child->Nx ;
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		if (strcmp(field->pde_type,ODE) == 0) {
-			index = field->index ;
-			grid->grid_funcs[index][perim_coord] = grid->child->grid_funcs[index][child_Nx-1] ;
+			int index = field->index ;
+			grid->grid_funcs[index][excised_jC] = grid->child->grid_funcs[index][child_Nx-1] ;
 		}
 	}
 	return ; 
@@ -318,20 +315,18 @@ static void set_ode_initial_condition(amr_field* fields, amr_grid* grid)
 static void solve_ode_fields(
 	amr_field* fields, amr_grid* grid, void (*solve_ode)(amr_grid*)) 
 {
-	if (grid->child==NULL) {
+	if (((grid->child)==NULL) 
+	||  ((grid->child->perim_coords[1])<(grid->excised_jC))
+	) {
 		solve_ode(grid) ;
 	} else {
-		if ((grid->child->perim_coords[1])>(grid->excised_jC)) {
-			int temp_jC = grid->excised_jC ;
-			(grid->excision_on)=false ;
-			(grid->excised_jC)=(grid->child->perim_coords[1]) ;
-			set_ode_initial_condition(fields, grid) ;
-			solve_ode(grid) ;
-			grid->excised_jC = temp_jC ;
-			(grid->excision_on) = true ;
-		} else {
-			solve_ode(grid) ;
-		}
+		int temp_jC = grid->excised_jC ;
+		(grid->excision_on)=false ;
+		(grid->excised_jC)=(grid->child->perim_coords[1]) ;
+		set_ode_initial_condition(fields, grid) ;
+		solve_ode(grid) ;
+		grid->excised_jC = temp_jC ;
+		(grid->excision_on) = true ;
 	}
 	return ;
 }
@@ -343,8 +338,6 @@ static void set_extrap_levels(amr_field* field, amr_grid* grid)
 	int field_index = field->index ;
 	int extrap_levels = field->extrap_levels ;
 	int extrap_index = (field->index) + (field->time_levels) ;
-//	printf("field %s\textrap_index %d\t extrap_index+extrap_levels-1 %d\n", field->name, extrap_index, extrap_index+extrap_levels-1) ;
-//	fflush(NULL) ;	
 	for (int jC=0; jC<(grid->Nx); jC++) {
 	/*	adjust first extrapolation level for linear extrapolation
 	*/
@@ -371,15 +364,39 @@ static void set_grid_ode_extrap_levels(amr_field* fields, amr_grid* grid)
 	return ;
 }
 /*==========================================================================*/
-/* do twice as there are two extrapolation levels */
+/* shift extrapolation levels once and set first extrapolation level to
+ * the most recent grid value */
 /*==========================================================================*/
-static void set_all_grids_ode_extrap_levels(amr_grid_hierarchy* gh) 
+static void shift_extrap_field(int field_index, int time_levels, int extrap_levels, amr_grid *grid)
 {
-	amr_field* fields = gh->fields ;
-	for (amr_grid* grid=gh->grids; grid!=NULL; grid=grid->child) {
-		set_grid_ode_extrap_levels(fields, grid) ;
+	int Nx = grid->Nx ;
+	for (int iC=(field_index+time_levels+extrap_levels-1); iC>(field_index+time_levels); iC--) {
+		copy_to_2nd_array(Nx, grid->grid_funcs[iC-1], grid->grid_funcs[iC]) ;
+	}
+	copy_to_2nd_array(Nx, grid->grid_funcs[field_index], grid->grid_funcs[field_index+time_levels]) ;
+}
+/*==========================================================================*/
+static void shift_extrap_fields_one_level(
+	amr_field *fields,
+	amr_grid *grid)
+{
+	int index, time_levels, extrap_levels ;
+	for (amr_field* field=fields; field!=NULL; field=field->next) {
+		index = field->index ;
+		time_levels = field->time_levels ;
+		extrap_levels = field->extrap_levels ;
+		if ((field->extrap_levels)!=0) {
+			shift_extrap_field(index,time_levels,extrap_levels,grid) ;
+		}
 	}
 	return ;
+}
+/*==========================================================================*/
+static void shift_grids_ode_extrap_levels(amr_grid_hierarchy* gh)
+{
+	for (amr_grid* grid=gh->grids; grid!=NULL; grid=grid->child) {
+		shift_extrap_fields_one_level(gh->fields, grid) ;
+	}
 }
 /*==========================================================================*/
 static void solve_ode_initial_data(
@@ -389,15 +406,13 @@ static void solve_ode_initial_data(
 	amr_set_to_tail(&grid) ;
 	do {
 		solve_ode_fields(gh->fields, grid, solve_ode) ;
-		if (grid->level!=0) {
-			inject_overlaping_fields(gh->fields, grid->parent, grid) ;
-		}
+		inject_overlaping_fields(gh->fields, grid->parent, grid) ;
 		grid = grid->parent ;
-	} while (grid!=NULL) ;	
+	} while ((grid->level)!=0) ;	
 	shift_grids_one_time_level(gh) ;
 	shift_grids_one_time_level(gh) ;
-	set_all_grids_ode_extrap_levels(gh) ; 
-	set_all_grids_ode_extrap_levels(gh) ; 
+	shift_grids_ode_extrap_levels(gh) ; 
+	shift_grids_ode_extrap_levels(gh) ; 
 
 	return ;
 }
@@ -475,7 +490,6 @@ static void set_free_initial_data(
 	}
 	shift_grids_one_time_level(gh) ;
 	shift_grids_one_time_level(gh) ;
-	set_all_grids_ode_extrap_levels(gh) ; 
 	return ;
 }
 /*==========================================================================*/
@@ -523,14 +537,13 @@ void amr_main(
 {
 	int compute_diagnostics_tC = 1/gh->cfl_num ;
 
-//	add_self_similar_initial_grids(gh, 3) ;
+	add_self_similar_initial_grids(gh, 1) ;
 
 /*	initial data: the ode are assumed to set the "constrained" degrees
 	of freedom. 
 */
 	set_free_initial_data(gh, free_initial_data) ;
 	solve_ode_initial_data(gh, solve_ode) ; 	
-	inject_overlaping_fields(gh->fields, gh->grids, gh->grids->child) ;
 	compute_all_grid_diagnostics(gh, compute_diagnostics) ;
 	save_all_grids(gh, save_to_file) ;
 
