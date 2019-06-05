@@ -249,17 +249,17 @@ void set_free_initial_data(amr_grid* grid)
 	return ;
 }
 /*===========================================================================*/
-/* rescale Al on all levels so value at spatial infinity is unity.
- * level is the finest grid the spans the entire computational domain */
+/* rescale the extrapolation levels so Al is rescaled for next time step */
 /*===========================================================================*/
 void rescale_Al(amr_grid* grid)
 {
 	double rescale_param = 1 ;
-	if ((grid->level)==1) {
+	if ((grid->level)==0) {
 		rescale_param = grid->grid_funcs[Al_n_index][Nx-1] ;
 		for (amr_grid* iter=(grid->parent); iter!=NULL; iter=iter->child) {
 			for (int iC=0; iC<(iter->Nx); iC++) {
-				iter->grid_funcs[Al_n_index][iC] /= rescale_param ;
+				iter->grid_funcs[Al_extr_m1_index][iC] /= rescale_param ;
+				iter->grid_funcs[Al_extr_m2_index][iC] /= rescale_param ;
 			}
 		}
 	}
@@ -280,9 +280,6 @@ void solve_ode(amr_grid* grid)
 			Al_n, 	Al_nm1, Ze_n, Ze_nm1,
 			 P_n, 	 P_nm1,  Q_n,  Q_nm1)
 		;
-		if ((grid->level)==0) {
-			rescale_Al(grid) ;
-		}
 	}
 	return ;
 }
@@ -377,7 +374,7 @@ void save_to_file(amr_grid* grid)
 		snprintf(output_name_ingoing_null_characteristic,  MAX_NAME_LEN, "%singoing_null_characteristic.sdf", output_dir) ;
 		snprintf(output_name_outgoing_null_characteristic, MAX_NAME_LEN, "%soutgoing_null_characteristic.sdf",  output_dir) ;
 		snprintf(output_name_Ricci_scalar,        MAX_NAME_LEN, "%sRicci_scalar.sdf",        output_dir) ;
-		snprintf(output_name_Gauss_Bonner_scalar, MAX_NAME_LEN, "%sGauss_Bonnet_scalar.sdf", output_dir) ;
+		snprintf(output_name_Gauss_Bonnet_scalar, MAX_NAME_LEN, "%sGauss_Bonnet_scalar.sdf", output_dir) ;
 
 		snprintf(output_name_eom_TR, MAX_NAME_LEN, "%seom_TR.sdf", output_dir) ;
 		snprintf(output_name_eom_ThTh, MAX_NAME_LEN, "%seom_ThTh.sdf", output_dir) ;
@@ -398,8 +395,8 @@ void save_to_file(amr_grid* grid)
 	double* test_2 = calloc(Nx,sizeof(double)) ;
 
 	for (int jC=0; jC<Nx; jC++) {
-		test_1[jC] = Ze_nm1[jC] ;
-		test_2[jC] = Ze_n[jC] ;
+		test_1[jC] = Al_extr_m1[jC] ;
+		test_2[jC] = Al_extr_m2[jC] ;
 	}
 
 	gft_out_bbox(output_name_test_1, time, &Nx, 1, bbox, test_1) ;

@@ -52,7 +52,7 @@ run_data = {
 ###	Nx should be of the form 2**n + 1 with n an integer
 ###
 	"Nx"		: 2**9+1,
-	"Nt"		: 2**13+1,
+	"Nt"		: 2**10+1,
 	"t_step_save"	: 2**2,
 	"cfl_num"	: 0.25,  
 	"errlim"	: 1.0e-10, 
@@ -61,7 +61,7 @@ run_data = {
 ###
 ###	if initial_data is r4Exp
 ###
-	"amp"		: 0.000005,
+	"amp"		: 0.000001,#for black hole formation: 0.00004,
 	"width"		: 10.0,
 	"center"	: 5.0,
 	"direction"	: "ingoing",# "stationary", #
@@ -116,7 +116,10 @@ if test_type == "basic_run":
 		write_slurm_script(run_data)
 		subprocess.call("sbatch run_TEdGB_collapse.slurm", shell="True")  
 	else:
-		subprocess.call("./sim ", shell="True")  
+		subprocess.call(
+			"./sim >{}/output_{}.txt 2>&1 &".format(
+				run_data["output_dir"],run_data["theory"]),
+		 shell="True")  
 ##############################################################################
 ### with fixed initial data we run sim with N different resolutions:
 ### Nx, (2*(Nx-1)+1) , etc. 

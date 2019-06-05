@@ -287,7 +287,7 @@ static void amr_extrapolate_ode_fields(amr_field* fields, amr_grid* grid)
 			} else {
 				linear_extrapapolate_level_n_field(field,grid) ;
 			}
-		}
+		}	
 	}
 	return ;
 }
@@ -353,6 +353,8 @@ static void set_extrap_levels(amr_field* field, amr_grid* grid)
 	}	
 	return ;
 }
+/*==========================================================================*/
+/* TO DO: rescale Al (the lapse) HERE for unit evolution at spatial infty */
 /*==========================================================================*/
 static void set_grid_ode_extrap_levels(amr_field* fields, amr_grid* grid) 
 {
@@ -537,7 +539,7 @@ void amr_main(
 {
 	int compute_diagnostics_tC = 1/gh->cfl_num ;
 
-	add_self_similar_initial_grids(gh, 2) ;
+	add_self_similar_initial_grids(gh, 1) ;
 
 /*	initial data: the ode are assumed to set the "constrained" degrees
 	of freedom. 
