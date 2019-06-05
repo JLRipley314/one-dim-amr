@@ -72,24 +72,22 @@ int amr_add_field(amr_field* fields, char* name, char* pde_type, int time_levels
 
 	current->next->prev = current ;
 	current->next->next = NULL ;
-//	printf("name %s\n",  current->next->name) ;
-//	printf("index %d\n", current->next->index) ;
 
 	return 0 ;
 }
 /*============================================================================*/
-int amr_set_to_head(amr_grid** grid) 
+void amr_set_to_head(amr_grid** grid) 
 {
-	if (grid==NULL) return -1 ;
-	while ((*grid)->parent!=NULL) (*grid)=(*grid)->parent ;
-	return 0 ;
+	assert(grid!=NULL) ;
+	while (((*grid)->parent)!=NULL) (*grid)=(*grid)->parent ;
+	return ;
 }
 /*============================================================================*/
-int amr_set_to_tail(amr_grid** grid) 
+void amr_set_to_tail(amr_grid** grid) 
 {
-	if (grid==NULL) return -1 ;
+	assert(grid!=NULL) ;
 	while ((*grid)->child!=NULL) (*grid)=(*grid)->child ;
-	return 0 ;
+	return ;
 }
 /*============================================================================*/
 int amr_return_field_index(amr_field* fields, char* name) 

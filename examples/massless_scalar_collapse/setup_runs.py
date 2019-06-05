@@ -129,7 +129,7 @@ if run_type == "basic_run":
 ##############################################################################
 elif (run_type == "convergence_test"): 
 	sim_number = int(input("Launch how many sims with different resolutions? (enter integer) "))
-	sleep_time = 60  
+	sleep_time = 5  
 	convergence_test(sleep_time, run_data, sim_number)
 ##############################################################################
 ### specify the param and range to search for edge of black hole formation

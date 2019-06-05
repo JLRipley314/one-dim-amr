@@ -532,16 +532,17 @@ static void set_past_t_data_first_order(amr_grid_hierarchy* gh)
 /*==========================================================================*/
 /* flip the extrapolation levels about the grid at level t */
 /*==========================================================================*/
-static void flip_ode_extrap_levels(amr_field* field, amr_grid* grid)
+static void flip_earlier_time_levels(amr_field* field, amr_grid* grid)
 {
+	int time_levels= field->time_levels ; 
 	int extrap_levels= field->extrap_levels ; 
-	int field_index = field->index ;
-	int extrap_index = (field_index)+(field->time_levels) ;
+	int field_index= field->index ;
 	for (int jC=0; jC<(grid->Nx); jC++) {
-		for (int iC=extrap_index+extrap_levels-1; iC>=extrap_index; iC--) {
-			grid->grid_funcs[iC][jC] 
+		for (int iC=1; iC<(time_levels+extrap_levels); iC++) {
+			
+			grid->grid_funcs[field_index+iC][jC] 
 			= 	2*(grid->grid_funcs[field_index][jC]) 
-			- 	(grid->grid_funcs[iC][jC]) 
+			- 	(grid->grid_funcs[field_index+iC][jC]) 
 			;
 		}
 	}	
@@ -552,11 +553,8 @@ static void flip_dt(amr_field* fields, amr_grid* grids)
 {
 	for (amr_grid* grid=grids; grid!=NULL; grid=grid->child) {
 		for (amr_field* field=fields; field!=NULL; field=field->next) {
-			if (strcmp((field->name),ODE)==0) {
-				flip_ode_extrap_levels(field, grid) ;
-			}
+			flip_earlier_time_levels(field, grid) ;
 		}
-		flip_ode_extrap_levels(fields, grid) ;
 		grid->dt *= -1 ;
 	}
 	return ;
@@ -575,24 +573,25 @@ static void set_initial_data(
 	set_free_initial_data(gh, free_initial_data) ;
 	solve_ode_initial_data(gh, solve_ode) ; 	
 	set_past_t_data_first_order(gh) ;
-
-	evolve_grid(
-		gh->fields, 
-		gh->grids,
-		1,
-		evolve_hyperbolic_pde,
-		solve_ode) 
-	;
-	flip_dt(gh->fields,gh->grids) ;
-	evolve_grid(
-		gh->fields, 
-		gh->grids,
-		1,
-		evolve_hyperbolic_pde,
-		solve_ode) 
-	;
-	flip_dt(gh->fields,gh->grids) ;
-
+	
+	for (int iC=0; iC<1; iC++) {
+		evolve_grid(
+			gh->fields, 
+			gh->grids,
+			2,
+			evolve_hyperbolic_pde,
+			solve_ode) 
+		;
+		flip_dt(gh->fields,gh->grids) ;
+		evolve_grid(
+			gh->fields, 
+			gh->grids,
+			2,
+			evolve_hyperbolic_pde,
+			solve_ode) 
+		;
+		flip_dt(gh->fields,gh->grids) ;
+	}
 	set_free_initial_data(gh, free_initial_data) ;
 	solve_ode_initial_data(gh, solve_ode) ; 	
 
