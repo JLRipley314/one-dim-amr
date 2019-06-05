@@ -153,7 +153,7 @@ int amr_find_finest_grid(amr_grid_hierarchy* gh, amr_grid* grid)
 /*============================================================================*/
 void amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent)
 {
-	if (parent->level+1 >= AMR_MAX_LEVELS) {
+	if ((parent->level)+1 >= AMR_MAX_LEVELS) {
 		fprintf(stderr,"ERROR(amr_add_grid): level>=AMR_MAX_LEVELS\n") ;
 		exit(EXIT_FAILURE) ;
 	}
@@ -169,8 +169,8 @@ void amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent)
 
 	new_grid->level = (parent->level)+1 ;
 
-	new_grid->dt = parent->dt/REFINEMENT ;
-	new_grid->dx = parent->dx/REFINEMENT ;
+	new_grid->dt = (parent->dt)/REFINEMENT ;
+	new_grid->dx = (parent->dx)/REFINEMENT ;
 	new_grid->time = parent->time ;
 	new_grid->tC = 0 ;
 
@@ -181,8 +181,8 @@ void amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent)
 
 	new_grid->excised_jC = REFINEMENT*(parent->excised_jC-left_coord) ;
 
-	new_grid->bbox[0] = parent->bbox[0] + (left_coord *parent->dx) ;
-	new_grid->bbox[1] = parent->bbox[0] + (right_coord*parent->dx) ;
+	new_grid->bbox[0] = parent->bbox[0] + (left_coord*(parent->dx)) ;
+	new_grid->bbox[1] = parent->bbox[0] + (right_coord*(parent->dx)) ;
 	
 	new_grid->num_grid_funcs  = parent->num_grid_funcs ;
 	new_grid->grid_funcs = allocate_double_2DArray(new_grid->num_grid_funcs, new_grid->Nx, 0.) ;
@@ -204,6 +204,7 @@ void amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent)
 		new_grid->perim_interior[1] = true ;
 	}
 	printf("amr_add_finer_grid: made grid level %d\n", new_grid->level) ;
+	printf("REFINEMENT %d\n", REFINEMENT) ;
 	printf("bbox[0]\t%f\n", new_grid->bbox[0]) ;
 	printf("bbox[1]\t%f\n", new_grid->bbox[1]) ;
 	printf("perim_coords[0]\t%d\n", new_grid->perim_coords[0]) ;
@@ -239,7 +240,9 @@ amr_grid_hierarchy* amr_init_grid_hierarchy(
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		num_grid_funcs += field->time_levels + field->extrap_levels ;
 	} 
-/*	base (shadow) grid */
+/*---------------------------	
+ * base (shadow) grid 
+ *-------------------------*/
 	amr_grid* base_grid = malloc(sizeof(amr_grid)) ;
 	assert(base_grid != NULL) ;	
 	base_grid->level = 0 ;
@@ -330,15 +333,18 @@ int regrid_finer_levels(amr_grid* grid)
 	return 0 ;
 }
 /*============================================================================*/
+/* starting from level 1 grid, add self similar grid hierarchy from origin */
+/*============================================================================*/
 void add_self_similar_initial_grids(
-	amr_grid_hierarchy* gh, int num_grids) 
+	amr_grid_hierarchy* gh, int grid_size_ratio, int num_grids) 
 {
 	amr_grid* grid = gh->grids->child ;
-	int Nx = gh->grids->Nx ;
+	int Nx = grid->Nx ; 
 
 	for (int iC=0; iC<num_grids; iC++) {
-		amr_add_finer_grid(0, Nx-1, grid) ;
+		amr_add_finer_grid(0, (int)(Nx/grid_size_ratio), grid) ;
 		grid = grid->child ;
+		Nx = grid->Nx ;
 	}
 	grid = NULL ;
 	return ; 

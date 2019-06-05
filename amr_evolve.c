@@ -538,8 +538,9 @@ void amr_main(
 	void (*save_to_file)(amr_grid*))
 {
 	int compute_diagnostics_tC = 1/gh->cfl_num ;
-
-	add_self_similar_initial_grids(gh, 1) ;
+	int grid_size_ratio = 2 ;
+	int grid_levels = 1 ;
+	add_self_similar_initial_grids(gh, grid_size_ratio, grid_levels) ;
 
 /*	initial data: the ode are assumed to set the "constrained" degrees
 	of freedom. 

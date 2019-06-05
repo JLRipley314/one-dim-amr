@@ -121,7 +121,7 @@ amr_grid_hierarchy* amr_init_grid_hierarchy(
 ;
 int amr_compute_truncation_error(int field_index, amr_grid* parent, amr_grid* grid) ; 
 
-void add_self_similar_initial_grids(amr_grid_hierarchy* gh, int num_grids) ;
+void add_self_similar_initial_grids(amr_grid_hierarchy* gh, int grid_size_ratio, int num_grids) ;
 
 int amr_destroy_grid_hierarchy(amr_grid_hierarchy* gh) ;
 

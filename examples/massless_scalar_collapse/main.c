@@ -249,20 +249,23 @@ void set_free_initial_data(amr_grid* grid)
 	return ;
 }
 /*===========================================================================*/
-/* rescale the extrapolation levels so Al is rescaled for next time step */
+/* rescale Al when all levels are aligned. do this BEFORE solving for the
+ * hyperbolic variables on this level */
 /*===========================================================================*/
 void rescale_Al(amr_grid* grid)
 {
-	double rescale_param = 1 ;
 	if ((grid->level)==0) {
-		rescale_param = grid->grid_funcs[Al_n_index][Nx-1] ;
-		for (amr_grid* iter=(grid->parent); iter!=NULL; iter=iter->child) {
-			for (int iC=0; iC<(iter->Nx); iC++) {
-				iter->grid_funcs[Al_extr_m1_index][iC] /= rescale_param ;
-				iter->grid_funcs[Al_extr_m2_index][iC] /= rescale_param ;
-			}
+		double rescale_param = grid->grid_funcs[Al_n_index][Nx-1] ;
+		for (int iC=0; iC<(grid->Nx); iC++) {
+			grid->grid_funcs[Al_n_index][iC] /= rescale_param ;
 		}
-	}
+	} else if ((grid->tC)%(int)round(pow(REFINEMENT,grid->level))) {
+		double rescale_param = grid->parent->grid_funcs[Al_n_index][grid->perim_coords[1]] ;
+		for (int iC=0; iC<(grid->Nx); iC++) {
+			grid->grid_funcs[Al_n_index][iC] /= rescale_param ;
+		}
+	} else {}
+	return ;
 }
 /*===========================================================================*/
 /*===========================================================================*/
@@ -289,6 +292,7 @@ void solve_ode(amr_grid* grid)
 void evolve_hyperbolic_pde(amr_grid* grid)
 {
 	set_globals(grid) ;
+	rescale_Al(grid) ;
 	advance_tStep_massless_scalar(
 		stereographic_L,
 		Nx, dt, dx, 
