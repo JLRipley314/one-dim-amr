@@ -1,8 +1,4 @@
 #############################################################################
-###
-### This formats the heredoc to feed into ssc_polarSlicing_main_run
-###
-#############################################################################
 
 import shutil
 
@@ -50,7 +46,7 @@ def write_run_data(run_data: dict) -> str:
 #############################################################################
 def write_slurm_script(run_data: dict) -> None:
 
-	run_data["varName"] = "output"
+	run_data["var_name"] = "output"
 
 	outputName = "{}/{}".format(run_data["output_dir"],"output.out") 	
 

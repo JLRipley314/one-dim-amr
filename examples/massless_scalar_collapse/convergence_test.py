@@ -1,3 +1,4 @@
+###############################################################################
 import time, os
 from math import sqrt
 import subprocess, traceback
@@ -8,14 +9,13 @@ from write_run_data import (
 from make_read_write_files_dirs import (
 	make_directory_name_current_time_and_Nx
 )
-# how small we"re willing the denominator in the norms to be 
 ###############################################################################
 ### launch N sims with fixed initial data
+### subprocess.call: wait uNtil subprocess over to coNtinue
 ###############################################################################
 def convergence_test(
 	sleep_time:float, run_data:dict, sim_number:int
 ) -> None:
-### subprocess.call: wait uNtil subprocess over to coNtinue
 	Nx  = run_data["Nx"]
 	Nt  = run_data["Nt"]
 	tss = run_data["t_step_save"]
@@ -42,9 +42,11 @@ def convergence_test(
 		run_data["Nx"] = str(2*(int(run_data["Nx"])-1)+1)
 		run_data["t_step_save"] = str(2*(int(run_data["t_step_save"])))
 		run_data["Nt"] = str(2*(int(run_data["Nt"])-1)+1)
-	
-	run_data["Nx"]         = Nx
-	run_data["Nt"]         = Nt
+###
+###	return with the original Nx, etc. values
+###	
+	run_data["Nx"] = Nx
+	run_data["Nt"] = Nt
 	run_data["t_step_save"] = tss
 
 	return

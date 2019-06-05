@@ -10,7 +10,7 @@
 /*==========================================================================*/
 /* routines for copying time steps to next level */
 /*==========================================================================*/
-static void copy_to_2nd_array(int Nx, double *field_1, double *field_2) 
+static void copy_to_2nd_array(int Nx, double* field_1, double* field_2) 
 {
 	for (int iC=0; iC<Nx; iC++) {
 		field_2[iC] = field_1[iC] ;
@@ -20,7 +20,7 @@ static void copy_to_2nd_array(int Nx, double *field_1, double *field_2)
 /*==========================================================================*/
 /* shifting fields from farthest back in time to most recent in time */
 /*==========================================================================*/
-static void shift_field(int field_index, int time_levels, amr_grid *grid)
+static void shift_field(int field_index, int time_levels, amr_grid* grid)
 {
 	int Nx = grid->Nx ;
 	for (int iC=field_index+time_levels-1; iC>field_index; iC--) {
@@ -29,8 +29,8 @@ static void shift_field(int field_index, int time_levels, amr_grid *grid)
 }
 /*==========================================================================*/
 static void shift_fields_one_time_level(
-	amr_field *fields,
-	amr_grid *grid)
+	amr_field* fields,
+	amr_grid* grid)
 {
 	int index, time_levels ;
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
@@ -113,7 +113,7 @@ static void inject_grid_func(
 }
 /*==========================================================================*/
 static void inject_overlaping_fields(
-		amr_field *fields, amr_grid *parent, amr_grid *grid)
+		amr_field* fields, amr_grid* parent, amr_grid* grid)
 {
 	int index = 0 ;
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
@@ -369,7 +369,7 @@ static void set_grid_ode_extrap_levels(amr_field* fields, amr_grid* grid)
 /* shift extrapolation levels once and set first extrapolation level to
  * the most recent grid value */
 /*==========================================================================*/
-static void shift_extrap_field(int field_index, int time_levels, int extrap_levels, amr_grid *grid)
+static void shift_extrap_field(int field_index, int time_levels, int extrap_levels, amr_grid* grid)
 {
 	int Nx = grid->Nx ;
 	for (int iC=(field_index+time_levels+extrap_levels-1); iC>(field_index+time_levels); iC--) {
@@ -379,8 +379,8 @@ static void shift_extrap_field(int field_index, int time_levels, int extrap_leve
 }
 /*==========================================================================*/
 static void shift_extrap_fields_one_level(
-	amr_field *fields,
-	amr_grid *grid)
+	amr_field* fields,
+	amr_grid* grid)
 {
 	int index, time_levels, extrap_levels ;
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
@@ -411,10 +411,6 @@ static void solve_ode_initial_data(
 		inject_overlaping_fields(gh->fields, grid->parent, grid) ;
 		grid = grid->parent ;
 	} while ((grid->level)!=0) ;	
-	shift_grids_one_time_level(gh) ;
-	shift_grids_one_time_level(gh) ;
-	shift_grids_ode_extrap_levels(gh) ; 
-	shift_grids_ode_extrap_levels(gh) ; 
 
 	return ;
 }
@@ -490,8 +486,6 @@ static void set_free_initial_data(
 		free_initial_data(grid) ;
 		grid = grid->child ;
 	}
-	shift_grids_one_time_level(gh) ;
-	shift_grids_one_time_level(gh) ;
 	return ;
 }
 /*==========================================================================*/
@@ -527,27 +521,112 @@ static void compute_all_grid_diagnostics(
 	return ;
 }
 /*==========================================================================*/
+static void set_past_t_data_first_order(amr_grid_hierarchy* gh) 
+{
+	shift_grids_one_time_level(gh) ;
+	shift_grids_one_time_level(gh) ;
+	shift_grids_ode_extrap_levels(gh) ; 
+	shift_grids_ode_extrap_levels(gh) ; 
+	return ;
+}
+/*==========================================================================*/
+/* flip the extrapolation levels about the grid at level t */
+/*==========================================================================*/
+static void flip_ode_extrap_levels(amr_field* field, amr_grid* grid)
+{
+	int extrap_levels= field->extrap_levels ; 
+	int field_index = field->index ;
+	int extrap_index = (field_index)+(field->time_levels) ;
+	for (int jC=0; jC<(grid->Nx); jC++) {
+		for (int iC=extrap_index+extrap_levels-1; iC>=extrap_index; iC--) {
+			grid->grid_funcs[iC][jC] 
+			= 	2*(grid->grid_funcs[field_index][jC]) 
+			- 	(grid->grid_funcs[iC][jC]) 
+			;
+		}
+	}	
+	return ;
+}
+/*==========================================================================*/
+static void flip_dt(amr_field* fields, amr_grid* grids)
+{
+	for (amr_grid* grid=grids; grid!=NULL; grid=grid->child) {
+		for (amr_field* field=fields; field!=NULL; field=field->next) {
+			if (strcmp((field->name),ODE)==0) {
+				flip_ode_extrap_levels(field, grid) ;
+			}
+		}
+		flip_ode_extrap_levels(fields, grid) ;
+		grid->dt *= -1 ;
+	}
+	return ;
+}
+/*==========================================================================*/
+/* initial data: the ode are assumed to set the "constrained" degrees
+ * of freedom. details of this algorithm can be found in the appendix of
+ * gr-qc/0508110 */
+/*==========================================================================*/
+static void set_initial_data(
+	amr_grid_hierarchy* gh, 
+	void (*free_initial_data)(amr_grid*),
+	void (*evolve_hyperbolic_pde)(amr_grid*),
+	void (*solve_ode)(amr_grid*))
+{
+	set_free_initial_data(gh, free_initial_data) ;
+	solve_ode_initial_data(gh, solve_ode) ; 	
+	set_past_t_data_first_order(gh) ;
+
+	evolve_grid(
+		gh->fields, 
+		gh->grids,
+		1,
+		evolve_hyperbolic_pde,
+		solve_ode) 
+	;
+	flip_dt(gh->fields,gh->grids) ;
+	evolve_grid(
+		gh->fields, 
+		gh->grids,
+		1,
+		evolve_hyperbolic_pde,
+		solve_ode) 
+	;
+	flip_dt(gh->fields,gh->grids) ;
+
+	set_free_initial_data(gh, free_initial_data) ;
+	solve_ode_initial_data(gh, solve_ode) ; 	
+
+	return ;
+}
+/*==========================================================================*/
 /* evolves all grids in hierarchy */
 /*==========================================================================*/
 void amr_main(
-	amr_grid_hierarchy *gh, 
+	amr_grid_hierarchy* gh, 
 	void (*free_initial_data)(amr_grid*),
 	void (*evolve_hyperbolic_pde)(amr_grid*),
 	void (*solve_ode)(amr_grid*),
 	void (*compute_diagnostics)(amr_grid*),
 	void (*save_to_file)(amr_grid*))
 {
-	int compute_diagnostics_tC = 1/gh->cfl_num ;
+	int compute_diagnostics_tC = 1/(gh->cfl_num) ;
+/* 
+	add_initial...: for the fixed amr grid hierarchy 
+*/
 	int grid_size_ratio = 2 ;
 	int grid_levels = 1 ;
 	add_self_similar_initial_grids(gh, grid_size_ratio, grid_levels) ;
 
-/*	initial data: the ode are assumed to set the "constrained" degrees
-	of freedom. 
-*/
-	set_free_initial_data(gh, free_initial_data) ;
+	set_initial_data(
+		gh, 
+		free_initial_data, 
+		evolve_hyperbolic_pde,
+		solve_ode)
+	;
+/*	set_free_initial_data(gh, free_initial_data) ;
 	solve_ode_initial_data(gh, solve_ode) ; 	
-	compute_all_grid_diagnostics(gh, compute_diagnostics) ;
+	set_past_t_data_first_order(gh) ;
+*/	compute_all_grid_diagnostics(gh, compute_diagnostics) ;
 	save_all_grids(gh, save_to_file) ;
 
 	for (int tC=1; tC<(gh->Nt); tC++) {

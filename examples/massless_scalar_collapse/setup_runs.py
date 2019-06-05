@@ -20,17 +20,17 @@ from critical_param_search import critical_param_search
 
 ##############################################################################
 assert len(sys.argv) == 2, (
-	"argv[1] is empty-meed a test_type to run!"
+	"argv[1] is empty-meed a run_type to run!"
 	)
 	
-test_type = sys.argv[1]
+run_type = sys.argv[1]
 ##############################################################################
-### Initialize Basic Simulation Data 
+### Initialize run data 
 ##############################################################################
 run_data = {
 	"computer"	: "jlr_laptop",#"Feynman_cluster",#
 
-	"param_search"	: "yes",#"no",#
+	"param_search"	: "no",#"yes",#
 
 	"theory"	: "massless_scalar_GR",#"massless_scalar",#"EdGB",#"GR",#"EdGB_decoupled",#
 ###
@@ -49,11 +49,12 @@ run_data = {
 
 	"characteristics_calculator" : "",
 ###
-###	Nx should be of the form 2**n + 1 with n an integer
+###	Nx, Nt should be of the form 2**n + 1 with n an integer
+###	cfl_num: Courant Friedrichs Lewy number (for hyperbolics)
 ###
 	"Nx"		: 2**8+1,
-	"Nt"		: 2**11+1,
-	"t_step_save"	: 2**1,
+	"Nt"		: 2**4+1,
+	"t_step_save"	: 2**0,
 	"cfl_num"	: 0.25,  
 	"errlim"	: 1.0e-10, 
 	
@@ -61,7 +62,7 @@ run_data = {
 ###
 ###	if initial_data is r4Exp
 ###
-	"amp"		: 0.000001,#for black hole formation: 0.00004,
+	"amp"		: 0.000001,#for black hole formation: 0.00004,# 
 	"width"		: 10.0,
 	"center"	: 5.0,
 	"direction"	: "ingoing",# "stationary", #
@@ -70,7 +71,7 @@ run_data = {
 ###
 	"initial_black_hole_mass" : 10.0,
 
-	"varName"	: "output",
+	"var_name"	: "output",
 ###
 ### Information for the slurm scripts if running of Feynman
 ###
@@ -104,7 +105,7 @@ run_data["dt"] = dt
 run_data = format_run_data(run_data)
 ##############################################################################
 ##############################################################################
-if test_type == "basic_run":
+if run_type == "basic_run":
 
 	run_data["output_dir"] = make_directory_name_current_time(run_data)
 	os.makedirs(run_data["output_dir"])
@@ -124,16 +125,16 @@ if test_type == "basic_run":
 ### with fixed initial data we run sim with N different resolutions:
 ### Nx, (2*(Nx-1)+1) , etc. 
 ### Note we assume Nx of the for 2**n + 1 with n integer
-### sleep time: how long to wait before launching the next sim
+### sleep time: how long to wait before launching the next sim (in seconds)
 ##############################################################################
-elif (test_type == "convergence_test"): 
+elif (run_type == "convergence_test"): 
 	sim_number = int(input("Launch how many sims with different resolutions? (enter integer) "))
-	sleep_time = 10 
+	sleep_time = 60  
 	convergence_test(sleep_time, run_data, sim_number)
 ##############################################################################
 ### specify the param and range to search for edge of black hole formation
 ##############################################################################
-elif (test_type) == "critical_param_search":
+elif (run_type) == "critical_param_search":
 
 	param = "r4Exp_amp"	
 	param_range = [0.1208984375,0.12109375]	
