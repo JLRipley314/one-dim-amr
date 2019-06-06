@@ -34,7 +34,7 @@ static int compute_mass_aspect(
 	return 0 ;
 } 
 /*==========================================================================*/
-static int compute_ingoing_outgoing_null_characteristics(
+static int compute_null_characteristics(
 	int Nx, double* Al, double* Ze,
 	double* ingoing_null_characteristic,
 	double* outgoing_null_characteristic)
@@ -202,7 +202,7 @@ void compute_diagnostics_general(
 		Ze_n,
 		mass_aspect)
 	;
-	compute_ingoing_outgoing_null_characteristics(
+	compute_null_characteristics(
 		Nx, Al_n, Ze_n,
 		ingoing_null_characteristic,
 		outgoing_null_characteristic)

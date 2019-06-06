@@ -255,15 +255,17 @@ void set_free_initial_data(amr_grid* grid)
 void rescale_Al(amr_grid* grid)
 {
 	if ((grid->level)==0) {
+	} else if ((grid->level)==1) {
 		double rescale_param = grid->grid_funcs[Al_n_index][Nx-1] ;
 		for (int iC=0; iC<(grid->Nx); iC++) {
 			grid->grid_funcs[Al_n_index][iC] /= rescale_param ;
 		}
-	} else if ((grid->tC)%(int)round(pow(REFINEMENT,grid->level))) {
+	} else if ((grid->tC)%(int)round(pow(REFINEMENT,grid->level))==0) {
 		double rescale_param = grid->parent->grid_funcs[Al_n_index][grid->perim_coords[1]] ;
 		for (int iC=0; iC<(grid->Nx); iC++) {
 			grid->grid_funcs[Al_n_index][iC] /= rescale_param ;
 		}
+		printf("level %d\ttC %d\tpow(2,l) %d\tmod %d\tAl %f\n", grid->level, grid->tC, (int)round(pow(REFINEMENT,grid->level)), (grid->tC)%(int)round(pow(REFINEMENT,grid->level)), grid->grid_funcs[Al_n_index][grid->Nx-1]) ;
 	} else {}
 	return ;
 }
@@ -339,7 +341,7 @@ void compute_diagnostics(amr_grid* grid)
 		Ricci_scalar,
 		Gauss_Bonnet_scalar)
 	;
-	if (grid->parent==NULL) { 
+	if ((grid->level)==0) { 
 		grid->excised_jC = excised_jC ;
 		printf("t\t%f\tMA\t%f\texc_jC\t%d\n", (grid->tC)*dt, mass_aspect[Nx-1], excised_jC) ;
 	}
