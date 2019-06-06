@@ -3,21 +3,12 @@
 
 #include <stdbool.h>
 
-void initial_data_Gaussian(
-	double s_L,
-	int Nx, 	
-	double dt, double dx,
-	double bbox[2],
-	char* direction,
-	double amp, double width, double center,
-	double* Al, double* Ze, 
-	double*  P, double*  Q)
-;
 /* we set Dirichlet boundary conditions for now */
 void advance_tStep_massless_scalar(
 	double s_L,
 	int Nx, 
 	double dt, double dx, 
+	double err_tolerance,
 	bool excision_on,
 	int exc_jC,
 	double bbox[2], 
@@ -29,6 +20,7 @@ void solve_Al_Ze(
 	double s_L,
 	int Nx,
 	double dt, 	double dx,
+	double err_tolerance,
 	bool excision_on,
 	int start_jC,
 	double bbox[2],

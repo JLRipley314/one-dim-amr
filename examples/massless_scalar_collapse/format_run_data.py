@@ -5,7 +5,7 @@
 def format_run_data(run_data: dict) -> dict:
 
 	run_data["cfl_num"] = "{:.10e}".format(float(run_data["cfl_num"]))
-	run_data["errlim"] = "{:.10e}".format(float(run_data["errlim"]))
+	run_data["err_tolerance"] = "{:.10e}".format(float(run_data["err_tolerance"]))
 	run_data["coupling_gbs"]= "{:.10e}".format(float(run_data["coupling_gbs"]))
 
 	run_data["amp"] = "{:.10e}".format(float(run_data["amp"]))

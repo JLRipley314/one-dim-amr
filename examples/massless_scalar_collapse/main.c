@@ -13,6 +13,7 @@
 #include "amr_grid_hierarchy.h"
 #include "diagnostics_general.h"
 #include "diagnostics_GR.h"
+#include "free_initial_data.h"
 #include "evolution_routines_GR.h"
 #include "file_io.h"
 
@@ -51,6 +52,8 @@ double dt, dx ;
 double time ;
 double stereographic_L ; /* stereographic length: for compactification */
 
+double err_tolerance ;
+
 int Nx, Nt, t_step_save ;
 int excised_jC ;
 /*---------------------------------------------------------------------------*/
@@ -59,6 +62,7 @@ int excised_jC ;
 char *initial_data, *direction ;
 
 double amp, width, center ;
+double initial_black_hole_mass ;
 /*---------------------------------------------------------------------------*/
 int num_fields ;
 
@@ -236,16 +240,36 @@ void set_free_initial_data(amr_grid* grid)
 {
 	set_globals(grid) ;
 
-	initial_data_Gaussian(
-		stereographic_L,
-		Nx, 	
-		dt, dx,
-		bbox,
-		direction,
-		amp, width, center,
-		Al_n, Ze_n, 
-		P_n, Q_n)
-	;
+	if (strcmp(initial_data,"r4Exp")==0) {
+		initial_data_Gaussian(
+			stereographic_L,
+			Nx, 	
+			dt, dx,
+			bbox,
+			direction,
+			amp, width, center,
+			Al_n, Ze_n, 
+			P_n, Q_n)
+		;
+	} else if (strcmp(initial_data,"initial_black_hole")==0) {
+		if ((grid->level)==0) {
+			(grid->excised_jC) = (int)round(initial_black_hole_mass/(2.*dx)) ;
+		} else {
+			set_excision_point(grid) ;
+		}
+		initial_data_black_hole(
+			stereographic_L,
+			Nx, 	
+			dt, dx,
+			bbox,
+			initial_black_hole_mass,
+			grid->excised_jC,
+			Al_n, Ze_n)
+		;
+	} else {
+		fprintf(stderr, "ERROR(set_free_initial_data): initial_data = %s\n", initial_data) ;
+		exit(EXIT_FAILURE) ;
+	}
 	return ;
 }
 /*===========================================================================*/
@@ -254,19 +278,29 @@ void set_free_initial_data(amr_grid* grid)
 /*===========================================================================*/
 void rescale_Al(amr_grid* grid)
 {
-	if ((grid->level)==0) {
-	} else if ((grid->level)==1) {
-		double rescale_param = grid->grid_funcs[Al_n_index][Nx-1] ;
+/*	if (excised_jC>0) {
+		double rescale_param = 
+			grid->grid_funcs[Al_n_index][excised_jC]
+		/	grid->grid_funcs[Al_nm1_index][excised_jC]
+		;
 		for (int iC=0; iC<(grid->Nx); iC++) {
 			grid->grid_funcs[Al_n_index][iC] /= rescale_param ;
 		}
-	} else if ((grid->tC)%(int)round(pow(REFINEMENT,grid->level))==0) {
-		double rescale_param = grid->parent->grid_funcs[Al_n_index][grid->perim_coords[1]] ;
-		for (int iC=0; iC<(grid->Nx); iC++) {
-			grid->grid_funcs[Al_n_index][iC] /= rescale_param ;
+	} else {
+*/		if ((grid->level)==0) {
+			double rescale_param = grid->grid_funcs[Al_n_index][Nx-1] ;
+			for (int iC=0; iC<Nx; iC++) {
+				grid->grid_funcs[Al_n_index][iC] /= rescale_param ;
+			}
+		} else {
+			double rescale_param = 
+				grid->grid_funcs[Al_n_index][Nx-1]
+			/	grid->parent->grid_funcs[Al_n_index][grid->perim_coords[1]] 
+			;
+			for (int iC=0; iC<Nx; iC++) {
+				grid->grid_funcs[Al_n_index][iC] /= rescale_param ;
+			}
 		}
-		printf("level %d\ttC %d\tpow(2,l) %d\tmod %d\tAl %f\n", grid->level, grid->tC, (int)round(pow(REFINEMENT,grid->level)), (grid->tC)%(int)round(pow(REFINEMENT,grid->level)), grid->grid_funcs[Al_n_index][grid->Nx-1]) ;
-	} else {}
 	return ;
 }
 /*===========================================================================*/
@@ -279,6 +313,7 @@ void solve_ode(amr_grid* grid)
 			stereographic_L,
 			Nx,
 			dt, 	dx,
+			err_tolerance,
 			excision_on,
 			excised_jC,
 			bbox,
@@ -298,6 +333,7 @@ void evolve_hyperbolic_pde(amr_grid* grid)
 	advance_tStep_massless_scalar(
 		stereographic_L,
 		Nx, dt, dx, 
+		err_tolerance,
 		excision_on,
 		excised_jC,
 		bbox, perim_interior,
@@ -437,10 +473,13 @@ int main(int argc, char* argv[])
 		&cfl_num, 
 		&bbox[0], &bbox[1],
 		&stereographic_L,
-		&dt, &dx) 
+		&dt, &dx,
+		&err_tolerance) 
 	; 
-	get_initial_data(&initial_data, &direction, &amp, &width, &center) ; 
-
+	get_initial_data(
+		&initial_data, &direction, &amp, &width, &center, 
+		&initial_black_hole_mass) 
+	; 
 	amr_field* fields = set_fields() ; 
 	find_field_indices(fields) ; 
 

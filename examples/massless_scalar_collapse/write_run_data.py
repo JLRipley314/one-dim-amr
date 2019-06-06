@@ -35,7 +35,7 @@ def write_run_data(run_data: dict) -> str:
 		f.write("stereographic_L={}\n".format(run_data["stereographic_L"]))
 		f.write("cfl_num={}\n".format(run_data["cfl_num"]))
 		f.write("coupling_gbs={}\n".format(run_data["coupling_gbs"]))
-		f.write("errlim={}\n".format(run_data["errlim"]))
+		f.write("err_tolerance={}\n".format(run_data["err_tolerance"]))
 
 	shutil.copyfile(
 		"{}/run_data.txt".format(run_data["home_dir"]),

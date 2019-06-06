@@ -3,7 +3,7 @@
 #include <math.h>
 #include <stdbool.h>
 
-#include "stereographic_routines.h"
+#include "stencils.h"
 #include "diagnostics_GR.h"
 
 
@@ -116,6 +116,12 @@ static void compute_eom_ThTh(
 				D1_stereographic_center_2ndOrder(s_L, x_j, Ze_nm2[jC+1], Ze_nm2[jC-1], dx),
 			dt)
 		;
+		tr_Der_Ze = D1_backward_2ndOrder(
+				D1_center_2ndOrder(Ze_n[jC+1],   Ze_n[jC-1],   dx),
+				D1_center_2ndOrder(Ze_nm1[jC+1], Ze_nm1[jC-1], dx), 
+				D1_center_2ndOrder(Ze_nm2[jC+1], Ze_nm2[jC-1], dx),
+			dt)
+		;
 		eom_ThTh[jC] = 
 		-	(pow(r_j,2)*pow(r_Der_Ze,2)) 
 		+ 	t_Der_Ze*((pow(r_j,2)*r_Der_Al)/pow(Al,2) + r_j/Al) 
@@ -128,6 +134,7 @@ static void compute_eom_ThTh(
 		+ 	r_Der_Al*((-3*pow(r_j,2)*r_Der_Ze*Ze)/Al + (r_j - r_j*pow(Ze,2))/Al) 
 		- 	SE_LL_ThTh[jC] 
 		;
+		eom_ThTh[jC] = tr_Der_Ze ; 
 	}
 	return ;
 }

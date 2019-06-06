@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 #include "diagnostics_general.h"
-#include "stereographic_routines.h"
+#include "stencils.h"
 
 /*==========================================================================*/
 /*==========================================================================*/

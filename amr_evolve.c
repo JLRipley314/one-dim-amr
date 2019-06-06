@@ -501,23 +501,29 @@ static void save_all_grids(
 /* compute diagnostics on each grid, and syncronize the excision point
  * with the shadow grid */
 /*==========================================================================*/
+void set_excision_point(amr_grid* grid)
+{
+	if (((grid->level) > 0)
+	&&  ((grid->parent->excised_jC) > (grid->perim_coords[0]))
+	) {
+		printf("grid->parent->excised_jC %d\tgrid->perim_coords[1] %d\n", (grid->parent->excised_jC), (grid->perim_coords[1])) ;
+		if ((grid->parent->excised_jC) < (grid->perim_coords[1])) {
+			grid->excised_jC = REFINEMENT * (
+				grid->parent->excised_jC - grid->perim_coords[0]
+			) ;
+		} else {
+			grid->excised_jC = grid->Nx-1 ;
+		}
+	}
+	return ;
+}
+/*==========================================================================*/
 static void compute_all_grid_diagnostics(
 	amr_grid_hierarchy* gh, void (*compute_diagnostics)(amr_grid*))
 {
 	for (amr_grid* grid=gh->grids; grid!=NULL; grid=grid->child) {
 		compute_diagnostics(grid) ;
-		if (((grid->level) > 0)
-		&&  ((grid->parent->excised_jC) > (grid->perim_coords[0]))
-		) {
-			printf("grid->parent->excised_jC %d\tgrid->perim_coords[1] %d\n", (grid->parent->excised_jC), (grid->perim_coords[1])) ;
-			if ((grid->parent->excised_jC) < (grid->perim_coords[1])) {
-				grid->excised_jC = REFINEMENT * (
-					grid->parent->excised_jC - grid->perim_coords[0]
-				) ;
-			} else {
-				grid->excised_jC = grid->Nx-1 ;
-			}
-		}
+		set_excision_point(grid) ;
 	}
 	return ;
 }
@@ -623,10 +629,7 @@ void amr_main(
 		evolve_hyperbolic_pde,
 		solve_ode)
 	;
-/*	set_free_initial_data(gh, free_initial_data) ;
-	solve_ode_initial_data(gh, solve_ode) ; 	
-	set_past_t_data_first_order(gh) ;
-*/	compute_all_grid_diagnostics(gh, compute_diagnostics) ;
+	compute_all_grid_diagnostics(gh, compute_diagnostics) ;
 	save_all_grids(gh, save_to_file) ;
 
 	for (int tC=1; tC<(gh->Nt); tC++) {

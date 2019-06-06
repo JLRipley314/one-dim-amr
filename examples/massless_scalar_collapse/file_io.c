@@ -55,7 +55,8 @@ void get_run_data(
 	double* cfl_num, 
 	double* bbox_0, double* bbox_1,
 	double* stereographic_L,
-	double* dt, double* dx) 
+	double* dt, double* dx, 
+	double* err_tolerance)
 {
 	char run_data_name[MAX_NAME_LEN+1] ;
 	snprintf(run_data_name, MAX_NAME_LEN, "%srun_data.txt", HOME_DIR) ;
@@ -85,6 +86,8 @@ void get_run_data(
 		get_double_val(line_val, token, "dt", delimeter, dt) ;
 
 		get_double_val(line_val, token, "stereographic_L", delimeter, stereographic_L) ;
+
+		get_double_val(line_val, token, "err_tolerance", delimeter, err_tolerance) ;
 	}
 /*	
 	this is for the coarsest grid so the bounding box (bbox)
@@ -102,7 +105,8 @@ void get_run_data(
 void get_initial_data(
 	char** initial_data,
 	char** direction,
-	double* amp, double* width, double* center) 
+	double* amp, double* width, double* center,
+	double* initial_black_hole_mass) 
 {
 	char initial_data_name[MAX_NAME_LEN+1] ;
 	snprintf(initial_data_name, MAX_NAME_LEN, "%sinitial_data.txt", HOME_DIR) ;
@@ -126,6 +130,8 @@ void get_initial_data(
 		get_double_val(line_val, token, "amp", delimeter, amp) ;
 		get_double_val(line_val, token, "width", delimeter, width) ;
 		get_double_val(line_val, token, "center", delimeter, center) ;
+
+		get_double_val(line_val, token, "initial_black_hole_mass", delimeter, initial_black_hole_mass) ;
 
 	}
 	free(line) ;

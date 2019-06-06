@@ -17,13 +17,15 @@ void get_run_data(
 	double* cfl_num, 
 	double* bbox_0, double* bbox_1,
 	double* stereographic_L,
-	double* dt, double* dx) 
+	double* dt, double* dx,
+	double* err_tolerance) 
 ; 
 /*==========================================================================*/
 void get_initial_data(
 	char** initial_data,
 	char** direction,
-	double* amp, double* width, double* center) 
+	double* amp, double* width, double* center,
+	double* initial_black_hole_mass) 
 ;
 /*==========================================================================*/
 #endif

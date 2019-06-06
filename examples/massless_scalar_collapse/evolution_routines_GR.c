@@ -5,9 +5,8 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "evolution_routines_GR.h"
-#include "stereographic_routines.h"
+#include "stencils.h"
 
-#define ERR_TOLERANCE ((double)1e-10)
 #define MACHINE_EPSILON ((double)1e-14)
 
 /*==========================================================================*/
@@ -26,15 +25,6 @@ inline double weighted_infty_norm(double weight, double val_1, double val_2)
 static inline double max_fabs(double var_1, double var_2) 
 {
 	return (fabs(var_1)>fabs(var_2)) ? fabs(var_1) : fabs(var_2) ;
-}
-/*==========================================================================*/
-static void set_array_val(int start, int end, double val, double* array) 
-{
-	if (end<start) return ;
-	for (int iC=start; iC<end; iC++) {
-		array[iC] = val ;
-	}
-	return ;
 }
 /*==========================================================================*/
 /* see gr-qc/0302072 */
@@ -341,6 +331,7 @@ void solve_Al_Ze(
 	double s_L,
 	int Nx,
 	double dt, 	double dx,
+	double err_tolerance,
 	bool excision_on,
 	int start_jC,
 	double bbox[2],
@@ -384,7 +375,7 @@ void solve_Al_Ze(
 			Al_n, 	Ze_n, 
 			P_n, 	Q_n)
 		;
-	} while (res>ERR_TOLERANCE) ;
+	} while (res>err_tolerance) ;
 	return ;
 }
 /*==========================================================================*/
@@ -561,6 +552,7 @@ void advance_tStep_massless_scalar(
 	double s_L,
 	int Nx, 
 	double dt, double dx, 
+	double err_tolerance,
 	bool excision_on,
 	int exc_jC,
 	double bbox[2], 
@@ -584,7 +576,7 @@ void advance_tStep_massless_scalar(
 			Al_n, 	Al_nm1, Ze_n, Ze_nm1,
 			 P_n, 	 P_nm1,  Q_n,  Q_nm1)
 		;
-	} while (res>ERR_TOLERANCE) ;
+	} while (res>err_tolerance) ;
 
 	Kreiss_Oliger_filter(Nx, P_n) ;
 	Kreiss_Oliger_filter(Nx, Q_n) ;
@@ -595,51 +587,3 @@ void advance_tStep_massless_scalar(
 	}
 	return ;
 }	
-/*==========================================================================*/
-/* leftgoing Gaussian pulse */
-/*==========================================================================*/
-void initial_data_Gaussian(
-	double s_L,
-	int Nx, 	
-	double dt, double dx,
-	double bbox[2],
-	char* direction,
-	double amp, double width, double center,
-	double* Al, double* Ze, 
-	double*  P, double*  Q)
-{
-	double left_point = bbox[0] ;
-
-	double x = 0 ;
-	double r = 0 ;
-
-	set_array_val(0, Nx, 1.0, Al) ;
-	set_array_val(0, Nx, 0.0, Ze) ;
-
-	int end_jC = (fabs(bbox[1]-s_L)<ERR_TOLERANCE) ? Nx-1 : Nx ;
-
-	printf("bbox[1]\t%f\ts_L\t%f\twhole grid\t%d\tNx\t%d\tend_jC\t%d\n", bbox[1], s_L, (fabs(bbox[1]-s_L)<ERR_TOLERANCE), Nx, end_jC) ;
-
-	for (int jC=0; jC<end_jC; jC++) {
-		x = (jC * dx) + left_point ;
-		r = stereographic_r(s_L, x) ;
-		Q[jC] = amp * exp(-pow((r-center)/width,2)) * (
-			(-(r-center)/pow(width,2)) * pow(r,4) 
-		+	4*pow(r,3)
-		) ;
-		if (strcmp(direction,"ingoing")==0) {
-			P[jC] = + Q[jC] ;
-		} else if (strcmp(direction,"outgoing")==0) {
-			P[jC] = - Q[jC] ;
-		} else {
-			fprintf(stderr,"ERROR(initial_data_Gaussian): direction!={{in,out}going}\n") ;
-			exit(EXIT_FAILURE) ;
-		}
-		P[jC]=0;
-	}
-	if (end_jC == Nx-1) {
-		P[Nx-1] = 0 ;
-		Q[Nx-1] = 0 ;
-	}
-	return ;
-}
