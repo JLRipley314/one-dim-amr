@@ -273,34 +273,25 @@ void set_free_initial_data(amr_grid* grid)
 	return ;
 }
 /*===========================================================================*/
-/* rescale Al when all levels are aligned. do this BEFORE solving for the
- * hyperbolic variables on this level */
+/* rescale Al to be unity at spatial infinity at the coarsest level, then
+ * synchronize all higher levels to this value */
 /*===========================================================================*/
 void rescale_Al(amr_grid* grid)
 {
-/*	if (excised_jC>0) {
-		double rescale_param = 
-			grid->grid_funcs[Al_n_index][excised_jC]
-		/	grid->grid_funcs[Al_nm1_index][excised_jC]
-		;
-		for (int iC=0; iC<(grid->Nx); iC++) {
+	if ((grid->level)==0) {
+		double rescale_param = grid->grid_funcs[Al_n_index][Nx-1] ;
+		for (int iC=0; iC<Nx; iC++) {
 			grid->grid_funcs[Al_n_index][iC] /= rescale_param ;
 		}
 	} else {
-*/		if ((grid->level)==0) {
-			double rescale_param = grid->grid_funcs[Al_n_index][Nx-1] ;
-			for (int iC=0; iC<Nx; iC++) {
-				grid->grid_funcs[Al_n_index][iC] /= rescale_param ;
-			}
-		} else {
-			double rescale_param = 
-				grid->grid_funcs[Al_n_index][Nx-1]
-			/	grid->parent->grid_funcs[Al_n_index][grid->perim_coords[1]] 
-			;
-			for (int iC=0; iC<Nx; iC++) {
-				grid->grid_funcs[Al_n_index][iC] /= rescale_param ;
-			}
+		double rescale_param = 
+			grid->grid_funcs[Al_n_index][Nx-1]
+		/	grid->parent->grid_funcs[Al_n_index][grid->perim_coords[1]] 
+		;
+		for (int iC=0; iC<Nx; iC++) {
+			grid->grid_funcs[Al_n_index][iC] /= rescale_param ;
 		}
+	}
 	return ;
 }
 /*===========================================================================*/
