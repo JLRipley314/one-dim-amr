@@ -32,7 +32,7 @@ run_data = {
 
 	"param_search"	: "no",#"yes",#
 
-	"theory"	: "massless_scalar_GR",#"massless_scalar",#"EdGB",#"GR",#"EdGB_decoupled",#
+	"theory"	: "EdGB",#"massless_scalar_GR",#"massless_scalar",#"GR",#"EdGB_decoupled",#
 ###
 ###	coupling for EdGB coupling
 ###
@@ -53,7 +53,7 @@ run_data = {
 ###	cfl_num: Courant Friedrichs Lewy number (for hyperbolics)
 ###
 	"Nx"		: 2**8+1,
-	"Nt"		: 2**10+1,
+	"Nt"		: 2**12+1,
 	"t_step_save"	: 2**0,
 	"cfl_num"	: 0.25,  
 	"err_tolerance"	: 1.0e-12, 
@@ -62,7 +62,7 @@ run_data = {
 ###
 ###	if initial_data is r4Exp
 ###
-	"amp"		: 0.00001,
+	"amp"		: 0.0002,
 	"width"		: 5.0,
 	"center"	: 5.0,
 	"direction"	: "stationary",#"ingoing",#"outgoing",#

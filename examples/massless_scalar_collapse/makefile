@@ -8,17 +8,23 @@ LDFLAGS = -L/home/jripley/one-dim-amr
 
 OBJECTS = main.o \
 	evolution_routines_GR.o \
+	evolution_routines_EdGB.o \
 	free_initial_data.o \
 	diagnostics_GR.o \
+	diagnostics_EdGB.o \
 	diagnostics_general.o \
 	file_io.o \
 	stencils.o
 
 DEPS_MAIN = evolution_routines_GR.h \
+	evolution_routines_EdGB.h \
 	free_initial_data.h \
 	file_io.h
 
 DEPS_EVOLUTION_ROUTINES_GR = evolution_routines_GR.h \
+	stencils.h
+
+DEPS_EVOLUTION_ROUTINES_EDGB = evolution_routines_EdGB.h \
 	stencils.h
 
 DEPS_FREE_ID = free_initial_data.h \
@@ -28,6 +34,9 @@ DEPS_DIAGNOSTICS_GENERAL = diagnostics_general.h \
 	stencils.h
 
 DEPS_DIAGNOSTICS_GR = diagnostics_GR.h \
+	stencils.h
+
+DEPS_DIAGNOSTICS_EDGB = diagnostics_EdGB.h \
 	stencils.h
 
 DEPS_FILE_IO = file_io.h
@@ -42,6 +51,9 @@ main.o: main.c $(DEPS_MAIN)
 
 evolution_routines_GR.o: evolution_routines_GR.c $(DEPS_EVOLUTION_ROUTINES_GR)
 	$(CC) -c evolution_routines_GR.c $(LIBS) $(LDFLAGS) $(CFLAGS)
+
+evolution_routines_EDGB.o: evolution_routines_EdGB.c $(DEPS_EVOLUTION_ROUTINES_EDGB)
+	$(CC) -c evolution_routines_EdGB.c $(LIBS) $(LDFLAGS) $(CFLAGS)
 
 free_initial_data.o: free_initial_data.c $(DEPS_FREE_ID)
 	$(CC) -c free_initial_data.c $(LIBS) $(LDFLAGS) $(CFLAGS)

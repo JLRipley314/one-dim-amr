@@ -55,6 +55,7 @@ void get_run_data(
 	double* cfl_num, 
 	double* bbox_0, double* bbox_1,
 	double* stereographic_L,
+	double* coupling_gbs,
 	double* dt, double* dx, 
 	double* err_tolerance)
 {
@@ -86,6 +87,8 @@ void get_run_data(
 		get_double_val(line_val, token, "dt", delimeter, dt) ;
 
 		get_double_val(line_val, token, "stereographic_L", delimeter, stereographic_L) ;
+
+		get_double_val(line_val, token, "coupling_gbs", delimeter, coupling_gbs) ;
 
 		get_double_val(line_val, token, "err_tolerance", delimeter, err_tolerance) ;
 	}

@@ -15,6 +15,7 @@
 #include "diagnostics_GR.h"
 #include "free_initial_data.h"
 #include "evolution_routines_GR.h"
+#include "evolution_routines_EdGB.h"
 #include "file_io.h"
 
 /*===========================================================================*/
@@ -51,6 +52,7 @@ double bbox[2] ;
 double dt, dx ;
 double time ;
 double stereographic_L ; /* stereographic length: for compactification */
+double coupling_gbs ; /* for EdGB theory. gbs: Gauss-Bonnet scalar */
 
 double err_tolerance ;
 
@@ -298,8 +300,8 @@ void rescale_Al(amr_grid* grid)
 /*===========================================================================*/
 void solve_ode(amr_grid* grid)
 {
+	set_globals(grid) ;
 	if (strcmp(theory, "massless_scalar_GR") == 0) {
-		set_globals(grid) ;
 		solve_Al_Ze(
 			stereographic_L,
 			Nx,
@@ -311,7 +313,19 @@ void solve_ode(amr_grid* grid)
 			Al_n, 	Al_nm1, Ze_n, Ze_nm1,
 			 P_n, 	 P_nm1,  Q_n,  Q_nm1)
 		;
-	}
+	} else if (strcmp(theory,"EdGB")==0) { 
+		solve_Al_Ze_EdGB(
+			stereographic_L, coupling_gbs,
+			Nx,
+			dt, 	dx,
+			err_tolerance, 
+			excision_on,
+			excised_jC,
+			bbox,
+			Al_n, Al_nm1, Ze_n, Ze_nm1,
+			 P_n,  P_nm1,  Q_n,  Q_nm1)
+		;
+	} else {} ;
 	return ;
 }
 /*===========================================================================*/
@@ -321,16 +335,31 @@ void evolve_hyperbolic_pde(amr_grid* grid)
 {
 	set_globals(grid) ;
 	rescale_Al(grid) ;
-	advance_tStep_massless_scalar(
-		stereographic_L,
-		Nx, dt, dx, 
-		err_tolerance,
-		excision_on,
-		excised_jC,
-		bbox, perim_interior,
-		Al_n, Al_nm1, Ze_n, Ze_nm1,
-		 P_n,  P_nm1,  Q_n,  Q_nm1
-	) ;	
+	if (strcmp(theory,"massless_scalar_GR")==0) {
+		advance_tStep_massless_scalar(
+			stereographic_L,
+			Nx, dt, dx, 
+			err_tolerance,
+			excision_on,
+			excised_jC,
+			bbox, perim_interior,
+			Al_n, Al_nm1, Ze_n, Ze_nm1,
+			 P_n,  P_nm1,  Q_n,  Q_nm1
+		) ;	
+	} else if (strcmp(theory,"EdGB")==0) {
+		advance_tStep_massless_scalar_EdGB(
+			stereographic_L, coupling_gbs,
+			Nx, 
+			dt, dx, 
+			err_tolerance, 
+			excision_on,
+			excised_jC,
+			bbox, 
+			perim_interior,
+			Al_n, Al_nm1, Ze_n, Ze_nm1,
+			 P_n,  P_nm1,  Q_n,  Q_nm1)
+		;
+	}
 	return ;
 }
 /*===========================================================================*/
@@ -464,6 +493,7 @@ int main(int argc, char* argv[])
 		&cfl_num, 
 		&bbox[0], &bbox[1],
 		&stereographic_L,
+		&coupling_gbs,
 		&dt, &dx,
 		&err_tolerance) 
 	; 

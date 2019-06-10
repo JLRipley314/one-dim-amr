@@ -33,6 +33,7 @@ def write_run_data(run_data: dict) -> str:
 		f.write("Nt={}\n".format(run_data["Nt"]))
 		f.write("t_step_save={}\n".format(run_data["t_step_save"]))
 		f.write("stereographic_L={}\n".format(run_data["stereographic_L"]))
+		f.write("coupling_gbs={}\n".format(run_data["coupling_gbs"]))
 		f.write("cfl_num={}\n".format(run_data["cfl_num"]))
 		f.write("coupling_gbs={}\n".format(run_data["coupling_gbs"]))
 		f.write("err_tolerance={}\n".format(run_data["err_tolerance"]))
