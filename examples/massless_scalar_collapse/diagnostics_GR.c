@@ -5,7 +5,7 @@
 
 #include "stencils.h"
 #include "diagnostics_GR.h"
-
+#include "diagnostics_general.h"
 
 /*==========================================================================*/
 static void set_array_val(int start, int end, double val, double* array) 
@@ -17,7 +17,7 @@ static void set_array_val(int start, int end, double val, double* array)
 	return ;
 }
 /*==========================================================================*/
-void compute_SE_LL_components_massless_scalar(
+static void compute_SE_LL_components_massless_scalar(
 	int Nx, double dx,
 	double s_L,   int exc_jC,
 	double* Al_n, double* Ze_n,

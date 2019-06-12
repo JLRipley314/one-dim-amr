@@ -1,6 +1,7 @@
 #ifndef _DIAGNOSTICS_GENERAL_H_
 #define _DIAGNOSTICS_GENERAL_H_
 
+/*==========================================================================*/
 void compute_diagnostics_general(
 	int Nx,  
 	double s_L,

@@ -29,7 +29,12 @@ static inline double max_fabs(double var_1, double var_2)
 /*==========================================================================*/
 /* ODE solvers for lapse and shift */
 /*==========================================================================*/
-static double compute_iteration_GR_Al(
+/* there is Jr/Ze term that is zero in empty
+ * space but undefined if below machine precision.
+ * The slope is zero though in empty spacce so
+ * to that precision we do this. */
+/*==========================================================================*/
+static double compute_iteration_Al(
 	double s_L,
 	int Nx,
 	double dt, 	double dx,
@@ -38,77 +43,56 @@ static double compute_iteration_GR_Al(
 	double* Al, 	double* Ze, 
 	double*  P, 	double*  Q)
 {
-        double
-                x_j1h, r_j1h, dr
-        ;
-        double
-                Al_j1h, Ze_j1h, Q_j1h, P_j1h
-        ;
-        double
-                r_Der_Al_j1h
-        ;
-        double
-                Jr_j1h
-        ;
 	int size = 0 ;
 	if (fabs(bbox[1]-s_L)<MACHINE_EPSILON) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
 	else size = Nx ;
-        double res_Al = 0 ;
-        double jac_Al = 1 ;
         double res_infty_norm = 0 ; /* returning this */
  /* scalar field functions */
         for (int jC=start_jC; jC<Nx-1; jC++) {
-                x_j1h = ((jC+1) + jC) * dx / 2 ;
+                double x_joh = ((jC+1) + jC) * dx / 2 ;
 
-                r_j1h = stereographic_r(s_L, x_j1h) ;
+                double r_joh = stereographic_r(s_L, x_joh) ;
 
-                dr = stereographic_dr(s_L, x_j1h, dx) ;
-/*--------------------------------------------------------------------------*/
-/* there is Jr/Ze term that is zero in empty
- * space but undefined if below machine precision.
- * The slope is zero though in empty spacce so
- * to that precision we do this. */
-/*--------------------------------------------------------------------------*/
-                Al_j1h = (Al[jC+1] + Al[jC]) / 2 ;
-                Ze_j1h = (Ze[jC+1] + Ze[jC]) / 2 ;
+                double dr = stereographic_dr(s_L, x_joh, dx) ;
+                double Al_joh = (Al[jC+1] + Al[jC]) / 2 ;
+                double Ze_joh = (Ze[jC+1] + Ze[jC]) / 2 ;
 
-                Q_j1h = (Q[jC+1] + Q[jC]) / 2 ;
-                P_j1h = (P[jC+1] + P[jC]) / 2 ;
+                double Q_joh = (Q[jC+1] + Q[jC]) / 2 ;
+                double P_joh = (P[jC+1] + P[jC]) / 2 ;
 
-                r_Der_Al_j1h = (Al[jC+1] - Al[jC]) / dr ;
+                double r_Der_Al_joh = (Al[jC+1] - Al[jC]) / dr ;
 
-                Jr_j1h = - Q_j1h * P_j1h ;
+                double Jr_joh = - Q_joh * P_joh ;
 
-                if ((fabs(Jr_j1h) < 10*MACHINE_EPSILON)
-                &&  (fabs(Ze_j1h) < 10*MACHINE_EPSILON)
+                if ((fabs(Jr_joh) < 10*MACHINE_EPSILON)
+                &&  (fabs(Ze_joh) < 10*MACHINE_EPSILON)
                 ) {
                         Al[jC+1] = Al[jC] ;
                 } else {
-                        res_Al =
-                        +       r_Der_Al_j1h*Ze_j1h
-                        -       (r_j1h*Al_j1h*Jr_j1h)/2.
+                        double res_Al =
+                        +       r_Der_Al_joh*Ze_joh
+                        -       (r_joh*Al_joh*Jr_joh)/2.
                         ;
-                        jac_Al =
-                                Ze_j1h/dr
-                        -       r_j1h*Jr_j1h/4.
+                        double jac_Al =
+                                Ze_joh/dr
+                        -       r_joh*Jr_joh/4.
                         ;
                         Al[jC+1] -= res_Al / jac_Al ;
+			if ((isnan(res_Al) != 0)
+			||  (isnan(jac_Al) != 0)
+			) {
+				printf("jC:%d\tres_Al:%.e\tjac_Al:%.e\n", jC, res_Al, jac_Al) ;
+				exit(EXIT_FAILURE) ;
+				}
+			res_infty_norm = weighted_infty_norm(1-x_joh/s_L, res_Al, res_infty_norm) ;
                 }
-/*--------------------------------------------------------------------------*/
-                if ((isnan(res_Al) != 0)
-                ||  (isnan(jac_Al) != 0)
-                ) {
-                        printf("jC:%d\tres_Al:%.e\tjac_Al:%.e\n", jC, res_Al, jac_Al) ;
-                        exit(EXIT_FAILURE) ;
-                }
-                res_infty_norm = weighted_infty_norm(1-x_j1h/s_L, res_Al, res_infty_norm) ;
         }
 	if (size==Nx-1) Al[Nx-1] = Al[Nx-2] ;
 
         return res_infty_norm ;
 }
 /*==========================================================================*/
-static double compute_iteration_GR_Ze(
+static double compute_iteration_Ze(
 	double s_L,
 	int Nx,
 	double dt, 	double dx,
@@ -117,70 +101,46 @@ static double compute_iteration_GR_Ze(
 	double* Al, 	double* Ze, 
 	double*  P, 	double*  Q)
 {
-        double
-                x_j1h, x_jp1, x_j,
-                r_j1h, r_jp1, r_j,
-                dr
-        ;
-        double
-                Al_sqrd_jp1, Al_sqrd_j,
-                Ze_sqrd_jp1, Ze_sqrd_j
-        ;
-        double
-                Al_j1h, Q_j1h, P_j1h
-        ;
-        double
-                rho_j1h
-        ;
 	int size = 0 ;
 	if (fabs(bbox[1]-s_L)<MACHINE_EPSILON) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
 	else size = Nx ;
-        double res_Ze_sqrd = 0 ; 
-        double jac_Ze_sqrd = 1 ; 
  /* scalar field functions */   
 
         double res_infty_norm = 0 ; /* returning this */
 
         for (int jC=start_jC; jC<size-1; jC++) {
-                x_j1h = ((jC+1) + jC) * dx / 2 ; 
+                double x_joh = ((jC+1) + jC) * dx / 2 ; 
 
-                x_jp1 = (jC+1) * dx ;
-                x_j   = (jC+0) * dx ;
+                double x_jp1 = (jC+1) * dx ;
+                double x_j   = (jC+0) * dx ;
 
-                r_j1h = stereographic_r(s_L, x_j1h) ;
-                r_jp1 = stereographic_r(s_L, x_jp1) ;
-                r_j   = stereographic_r(s_L, x_j  ) ; 
+                double r_joh = stereographic_r(s_L, x_joh) ;
+                double r_jp1 = stereographic_r(s_L, x_jp1) ;
+                double r_j   = stereographic_r(s_L, x_j  ) ; 
 
-                dr = stereographic_dr(s_L, x_j1h, dx) ;
+                double dr = stereographic_dr(s_L, x_joh, dx) ;
 
-                Al_j1h = (Al[jC+1] + Al[jC]) / 2. ;
+                double Al_joh = (Al[jC+1] + Al[jC]) / 2. ;
 
-                Al_sqrd_jp1 = pow(Al[jC+1], 2) ;
-                Al_sqrd_j   = pow(Al[jC+0], 2) ;
+                double Al_sqrd_jp1 = pow(Al[jC+1], 2) ;
+                double Al_sqrd_j   = pow(Al[jC+0], 2) ;
 
-                Ze_sqrd_jp1 = pow(Ze[jC+1], 2) ;
-                Ze_sqrd_j   = pow(Ze[jC+0], 2) ;
+                double Ze_sqrd_jp1 = pow(Ze[jC+1], 2) ;
+                double Ze_sqrd_j   = pow(Ze[jC+0], 2) ;
 
-                Q_j1h = (Q[jC+1] + Q[jC]) / 2. ;
-                P_j1h = (P[jC+1] + P[jC]) / 2. ;
+                double Q_joh = (Q[jC+1] + Q[jC]) / 2. ;
+                double P_joh = (P[jC+1] + P[jC]) / 2. ;
 
-                rho_j1h = (1./2) * (pow(Q_j1h,2) + pow(P_j1h,2)) ;
+                double rho_joh = (1./2) * (pow(Q_joh,2) + pow(P_joh,2)) ;
 /*---------------------------------------------------------------------------*/
-                res_Ze_sqrd = 
-                (
+                double res_Ze_sqrd = (
                         (       (r_jp1)*Al_sqrd_jp1*Ze_sqrd_jp1
                         -       (r_j  )*Al_sqrd_j  *Ze_sqrd_j
                         )/dr
                 )
-                -       pow(r_j1h,2)*pow(Al_j1h,2)*rho_j1h
+                -       pow(r_joh,2)*pow(Al_joh,2)*rho_joh
                 ;
-
-                jac_Ze_sqrd = 
-                (
-                        (
-                                (r_jp1)*Al_sqrd_jp1
-                        )/dr
-                )
+                double jac_Ze_sqrd = (r_jp1)*Al_sqrd_jp1/dr
                 ;
                 Ze_sqrd_jp1 -= res_Ze_sqrd/jac_Ze_sqrd ;
                 Ze[jC+1]  = sqrt(Ze_sqrd_jp1) ;
@@ -191,14 +151,14 @@ static double compute_iteration_GR_Ze(
                         printf("jC:%d\tZe:%.6e\tres_Ze_sqrd:%.e\tjac_Ze_sqrd:%.e\n", jC, Ze[jC+1], res_Ze_sqrd, jac_Ze_sqrd) ;
                         exit(EXIT_FAILURE) ;
                 }
-                res_infty_norm = weighted_infty_norm(1-x_j1h/s_L, res_Ze_sqrd, res_infty_norm) ;
+                res_infty_norm = weighted_infty_norm(1-x_joh/s_L, res_Ze_sqrd, res_infty_norm) ;
         }
 	if (size==Nx-1) Ze[Nx-1] = 0 ;
 
         return res_infty_norm ;
 }
 /*==========================================================================*/
-static double compute_iteration_GR_excision_boundary_condition_Ze(
+static double compute_iteration_excision_boundary_condition_Ze(
 	double s_L,
 	int Nx,
 	double dt, 	double dx,
@@ -267,7 +227,7 @@ void solve_Al_Ze(
 		if ((excision_on==true)
 		&&  (start_jC>0)
 		) {	
-			res += compute_iteration_GR_excision_boundary_condition_Ze(
+			res += compute_iteration_excision_boundary_condition_Ze(
 				s_L,
 				Nx,
 				dt, 	dx,
@@ -277,7 +237,7 @@ void solve_Al_Ze(
 				 P_n,   P_nm1,  Q_n,  Q_nm1)
 			;
 		}
-		res += compute_iteration_GR_Ze(
+		res += compute_iteration_Ze(
 			s_L,
 			Nx,
 			dt, 	dx,
@@ -286,7 +246,7 @@ void solve_Al_Ze(
 			Al_n, 	Ze_n, 
 			P_n, 	Q_n)
 		;
-		res += compute_iteration_GR_Al(
+		res += compute_iteration_Al(
 			s_L,
 			Nx,
 			dt, 	dx,
@@ -299,7 +259,7 @@ void solve_Al_Ze(
 	return ;
 }
 /*==========================================================================*/
-static double compute_iteration_GR_Crank_Nicolson_PQ(
+static double compute_iteration_Crank_Nicolson_PQ(
 	double s_L,
 	int Nx,
 	double dt, 	double dx,
@@ -374,6 +334,36 @@ static double compute_iteration_GR_Crank_Nicolson_PQ(
 			dr)
 		;
 		jac_P = (1./dt) ;
+
+		double Al = (Al_n[jC] + Al_nm1[jC]) / 2. ;
+		double Ze = (Ze_n[jC] + Ze_nm1[jC]) / 2. ;
+
+		double P = (P_n[jC] + P_nm1[jC]) / 2. ;
+		double Q = (Q_n[jC] + Q_nm1[jC]) / 2. ;
+
+		double 
+		r_Der_Al  = (Al_n[jC+1]   - Al_n[jC]  ) / dr ;
+		r_Der_Al += (Al_nm1[jC+1] - Al_nm1[jC]) / dr ;
+		r_Der_Al /= 2 ;
+		double 
+		r_Der_Ze  = (Ze_n[jC+1]   - Ze_n[jC]  ) / dr ;
+		r_Der_Ze += (Ze_nm1[jC+1] - Ze_nm1[jC]) / dr ;
+		r_Der_Ze /= 2 ;
+		double 
+		r_Der_P  = (P_n[jC+1]   - P_n[jC]  ) / dr ;
+		r_Der_P += (P_nm1[jC+1] - P_nm1[jC]) / dr ;
+		r_Der_P /= 2 ;
+		double 
+		r_Der_Q  = (Q_n[jC+1]   - Q_n[jC]  ) / dr ;
+		r_Der_Q += (Q_nm1[jC+1] - Q_nm1[jC]) / dr ;
+		r_Der_Q /= 2 ;
+		double
+		t_Der_P = (P_n[jC] - P_nm1[jC]) / dt ;
+
+		res_P = t_Der_P - (2./r_j)*Al*(Q+Ze*P) - r_Der_Al*Q - Al*r_Der_Q - (Al*r_Der_Ze+r_Der_Al*Ze)*P - Al*Ze*r_Der_P ;
+		;
+		jac_P = (1./dt) - (2./r_j)*Al*Ze*(1./2) - (Al*r_Der_Ze+r_Der_Al*Ze)*(1./2) ;
+		;
 	/* one iteration */
 		Q_n[jC] -= res_Q / jac_Q ;
 		P_n[jC] -= res_P / jac_P ;
@@ -485,7 +475,7 @@ void advance_tStep_massless_scalar(
 	}
 	double res = 0 ;
 	do {
-		res = compute_iteration_GR_Crank_Nicolson_PQ(
+		res = compute_iteration_Crank_Nicolson_PQ(
 			s_L,
 			Nx,
 			dt, 	dx,
