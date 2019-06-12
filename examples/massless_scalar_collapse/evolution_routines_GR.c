@@ -272,15 +272,6 @@ static double compute_iteration_Crank_Nicolson_PQ(
 {
 	double lower_x = bbox[0] ;
 
-	double  
-		x_jm1, x_j, x_jp1, x_jp2, 
-		r_jm1, r_j, r_jp1, r_jp2, dr 
-	;
-	double res_Q = 0 ;
-	double res_P = 0 ;
-	double jac_Q = 1 ;
-	double jac_P = 1 ;
-
 	int size = 0 ;
 	if (fabs(bbox[1]-s_L)<MACHINE_EPSILON) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
 	else size = Nx ;
@@ -290,81 +281,53 @@ static double compute_iteration_Crank_Nicolson_PQ(
    at infinity in our computational domain */
 /*--------------------------------------------------------------------------*/
 	for (int jC=exc_jC+1;jC<size-1;jC++) {
-		x_j   = lower_x + (dx * (jC)  ) ;
-		x_jp1 = lower_x + (dx * (jC+1)) ;
-		x_jm1 = lower_x + (dx * (jC-1)) ;
+		double x_j   = lower_x + (dx * (jC)  ) ;
+		double x_jp1 = lower_x + (dx * (jC+1)) ;
+		double x_jm1 = lower_x + (dx * (jC-1)) ;
 
-		r_j   = stereographic_r(s_L, x_j  ) ;
-		r_jp1 = stereographic_r(s_L, x_jp1) ;
-		r_jm1 = stereographic_r(s_L, x_jm1) ;
+		double r_j   = stereographic_r(s_L, x_j  ) ;
+		double r_jp1 = stereographic_r(s_L, x_jp1) ;
+		double r_jm1 = stereographic_r(s_L, x_jm1) ;
 
-		dr = stereographic_dr(s_L, x_j, dx) ;
-	/* Q field */
-		res_Q = D1_CrankNicolson_2ndOrder(
-			Q_n[jC], 
-			Q_nm1[jC], 
-			dt)
-		;
-		res_Q -= (1./2.)*D1_center_2ndOrder(
-			Al_n[jC+1]*(P_n[jC+1] + Ze_n[jC+1]*Q_n[jC+1]),
-			Al_n[jC-1]*(P_n[jC-1] + Ze_n[jC-1]*Q_n[jC-1]),
+		double dr = stereographic_dr(s_L, x_j, dx) ;
+
+		double Al_jp1 = (Al_n[jC+1]+Al_nm1[jC+1])/2 ;
+		double Al_jm1 = (Al_n[jC-1]+Al_nm1[jC-1])/2 ;
+
+		double Ze_jp1 = (Ze_n[jC+1]+Ze_nm1[jC+1])/2 ;
+		double Ze_jm1 = (Ze_n[jC-1]+Ze_nm1[jC-1])/2 ;
+
+		double P_jp1 = (P_n[jC+1]+P_nm1[jC+1])/2 ;
+		double P_jm1 = (P_n[jC-1]+P_nm1[jC-1])/2 ;
+
+		double Q_jp1 = (Q_n[jC+1]+Q_nm1[jC+1])/2 ;
+		double Q_jm1 = (Q_n[jC-1]+Q_nm1[jC-1])/2 ;
+	/* Q field 
+	*/
+		double res_Q = D1_CrankNicolson_2ndOrder(
+				Q_n[jC], 
+				Q_nm1[jC], 
+				dt)
+		-	D1_center_2ndOrder(
+				Al_jp1*(P_jp1 + Ze_jp1*Q_jp1),
+				Al_jm1*(P_jm1 + Ze_jm1*Q_jm1),
 			dr)
 		;
-		res_Q -= (1./2.)*D1_center_2ndOrder(
-			Al_nm1[jC+1]*(P_nm1[jC+1] + Ze_nm1[jC+1]*Q_nm1[jC+1]),
-			Al_nm1[jC-1]*(P_nm1[jC-1] + Ze_nm1[jC-1]*Q_nm1[jC-1]),
-			dr)
+		double jac_Q = (1./dt) ;
+	/* P field 
+	*/
+		double res_P = D1_CrankNicolson_2ndOrder(
+				P_n[jC], 
+				P_nm1[jC], 
+				dt)
+		-	pow(r_j,-2)*D1_center_2ndOrder(
+				pow(r_jp1,2)*Al_jp1*(Q_jp1 + Ze_jp1*P_jp1),
+				pow(r_jm1,2)*Al_jm1*(Q_jm1 + Ze_jm1*P_jm1),
+				dr)
 		;
-		jac_Q = (1./dt) ;
-	/* P field */
-		res_P = 
-			D1_CrankNicolson_2ndOrder(
-			P_n[jC], 
-			P_nm1[jC], 
-			dt)
-		;
-		res_P -= (1./2.)*pow(r_j,-2)*D1_center_2ndOrder(
-			pow(r_jp1,2)*Al_n[jC+1]*(Q_n[jC+1] + Ze_n[jC+1]*P_n[jC+1]),
-			pow(r_jm1,2)*Al_n[jC-1]*(Q_n[jC-1] + Ze_n[jC-1]*P_n[jC-1]),
-			dr)
-		;
-		res_P -= (1./2.)*pow(r_j,-2)*D1_center_2ndOrder(
-			pow(r_jp1,2)*Al_nm1[jC+1]*(Q_nm1[jC+1] + Ze_nm1[jC+1]*P_nm1[jC+1]),
-			pow(r_jm1,2)*Al_nm1[jC-1]*(Q_nm1[jC-1] + Ze_nm1[jC-1]*P_nm1[jC-1]),
-			dr)
-		;
-		jac_P = (1./dt) ;
-
-		double Al = (Al_n[jC] + Al_nm1[jC]) / 2. ;
-		double Ze = (Ze_n[jC] + Ze_nm1[jC]) / 2. ;
-
-		double P = (P_n[jC] + P_nm1[jC]) / 2. ;
-		double Q = (Q_n[jC] + Q_nm1[jC]) / 2. ;
-
-		double 
-		r_Der_Al  = (Al_n[jC+1]   - Al_n[jC]  ) / dr ;
-		r_Der_Al += (Al_nm1[jC+1] - Al_nm1[jC]) / dr ;
-		r_Der_Al /= 2 ;
-		double 
-		r_Der_Ze  = (Ze_n[jC+1]   - Ze_n[jC]  ) / dr ;
-		r_Der_Ze += (Ze_nm1[jC+1] - Ze_nm1[jC]) / dr ;
-		r_Der_Ze /= 2 ;
-		double 
-		r_Der_P  = (P_n[jC+1]   - P_n[jC]  ) / dr ;
-		r_Der_P += (P_nm1[jC+1] - P_nm1[jC]) / dr ;
-		r_Der_P /= 2 ;
-		double 
-		r_Der_Q  = (Q_n[jC+1]   - Q_n[jC]  ) / dr ;
-		r_Der_Q += (Q_nm1[jC+1] - Q_nm1[jC]) / dr ;
-		r_Der_Q /= 2 ;
-		double
-		t_Der_P = (P_n[jC] - P_nm1[jC]) / dt ;
-
-		res_P = t_Der_P - (2./r_j)*Al*(Q+Ze*P) - r_Der_Al*Q - Al*r_Der_Q - (Al*r_Der_Ze+r_Der_Al*Ze)*P - Al*Ze*r_Der_P ;
-		;
-		jac_P = (1./dt) - (2./r_j)*Al*Ze*(1./2) - (Al*r_Der_Ze+r_Der_Al*Ze)*(1./2) ;
-		;
-	/* one iteration */
+		double jac_P = (1./dt) ;
+	/* one iteration 
+	*/
 		Q_n[jC] -= res_Q / jac_Q ;
 		P_n[jC] -= res_P / jac_P ;
 
@@ -378,13 +341,13 @@ static double compute_iteration_Crank_Nicolson_PQ(
 	if ((exc_jC == 0) 
 	&&  (perim_interior[0] == false)
 	) {
-		x_j = 0 ;
-		dr  = pow(1. - (x_j/s_L), -2) * dx;
+		double x_j = 0 ;
+		double dr  = pow(1. - (x_j/s_L), -2) * dx;
 
-		res_P = D1_forward_2ndOrder(
-			P_n[2], P_n[1], P_n[0], 
-		dr) ;
-		jac_P = - (3./2.) / dr ;
+		double res_P = D1_forward_2ndOrder(
+				P_n[2], P_n[1], P_n[0], 
+				dr) ;
+		double jac_P = - (3./2.) / dr ;
 
 		P_n[0] -= res_P / jac_P ;
 
@@ -393,56 +356,59 @@ static double compute_iteration_Crank_Nicolson_PQ(
 	if ((exc_jC > 0) 
 	&&  (excision_on==true)
 	) {
-		x_j   = lower_x + (dx * (exc_jC))   ;
-		x_jp1 = lower_x + (dx * (exc_jC+1)) ;
-		x_jp2 = lower_x + (dx * (exc_jC+2)) ;
+		double x_j   = lower_x + (dx * (exc_jC))   ;
+		double x_jp1 = lower_x + (dx * (exc_jC+1)) ;
+		double x_jp2 = lower_x + (dx * (exc_jC+2)) ;
 
-		r_j   = stereographic_r(s_L, x_j  ) ;
-		r_jp1 = stereographic_r(s_L, x_jp1) ;
-		r_jp2 = stereographic_r(s_L, x_jp2) ;
+		double r_j   = stereographic_r(s_L, x_j  ) ;
+		double r_jp1 = stereographic_r(s_L, x_jp1) ;
+		double r_jp2 = stereographic_r(s_L, x_jp2) ;
 
-		dr = stereographic_dr(s_L, x_j, dx) ;
-	/* Q field */
-		res_Q = D1_CrankNicolson_2ndOrder(
-			Q_n[exc_jC], 
-			Q_nm1[exc_jC], 
-			dt)
+		double dr = stereographic_dr(s_L, x_j, dx) ;
+
+		double Al_j   = (Al_n[exc_jC+0]+Al_nm1[exc_jC+0])/2 ;
+		double Al_jp1 = (Al_n[exc_jC+1]+Al_nm1[exc_jC+1])/2 ;
+		double Al_jp2 = (Al_n[exc_jC+2]+Al_nm1[exc_jC+2])/2 ;
+
+		double Ze_j   = (Ze_n[exc_jC+0]+Ze_nm1[exc_jC+0])/2 ;
+		double Ze_jp1 = (Ze_n[exc_jC+1]+Ze_nm1[exc_jC+1])/2 ;
+		double Ze_jp2 = (Ze_n[exc_jC+2]+Ze_nm1[exc_jC+2])/2 ;
+
+		double P_j   = (P_n[exc_jC+0]+P_nm1[exc_jC+0])/2 ;
+		double P_jp1 = (P_n[exc_jC+1]+P_nm1[exc_jC+1])/2 ;
+		double P_jp2 = (P_n[exc_jC+2]+P_nm1[exc_jC+2])/2 ;
+
+		double Q_j   = (Q_n[exc_jC+0]+Q_nm1[exc_jC+0])/2 ;
+		double Q_jp1 = (Q_n[exc_jC+1]+Q_nm1[exc_jC+1])/2 ;
+		double Q_jp2 = (Q_n[exc_jC+2]+Q_nm1[exc_jC+2])/2 ;
+	/* Q field 
+	*/
+		double res_Q = D1_CrankNicolson_2ndOrder(
+				Q_n[exc_jC], 
+				Q_nm1[exc_jC], 
+				dt)
+		-	D1_forward_2ndOrder(
+				Al_jp2*(P_jp2 + Ze_jp2*Q_jp2),
+				Al_jp1*(P_jp1 + Ze_jp1*Q_jp1),
+				Al_j  *(P_j   + Ze_j*  Q_j  ),
+				dr)
 		;
-		res_Q -= (1./2.)*D1_forward_2ndOrder(
-			Al_n[exc_jC+2]*(P_n[exc_jC+2] + Ze_n[exc_jC+2]*Q_n[exc_jC+2]),
-			Al_n[exc_jC+1]*(P_n[exc_jC+1] + Ze_n[exc_jC+1]*Q_n[exc_jC+1]),
-			Al_n[exc_jC+0]*(P_n[exc_jC+0] + Ze_n[exc_jC+0]*Q_n[exc_jC+0]),
-			dr)
-		;
-		res_Q -= (1./2.)*D1_forward_2ndOrder(
-			Al_nm1[exc_jC+2]*(P_nm1[exc_jC+2] + Ze_nm1[exc_jC+2]*Q_nm1[exc_jC+2]),
-			Al_nm1[exc_jC+1]*(P_nm1[exc_jC+1] + Ze_nm1[exc_jC+1]*Q_nm1[exc_jC+1]),
-			Al_nm1[exc_jC+0]*(P_nm1[exc_jC+0] + Ze_nm1[exc_jC+0]*Q_nm1[exc_jC+0]),
-			dr)
-		;
-		jac_Q =	1/dt 
-		- 	(1./2.) * (-3./(2*dr)) * Al_n[exc_jC]*Ze_n[exc_jC] 
+		double jac_Q =	1/dt 
+		- 	(1./2.)*(-3./(2*dr))*Al_j*Ze_j 
 		;
 	/* P field */
-		res_P = D1_CrankNicolson_2ndOrder(
-			P_n[exc_jC], 
-			P_nm1[exc_jC], 
-			dt)
+		double res_P = D1_CrankNicolson_2ndOrder(
+				P_n[exc_jC], 
+				P_nm1[exc_jC], 
+				dt)
+		-	 pow(r_j,-2)*D1_forward_2ndOrder(
+				pow(r_jp2,2)*Al_jp2*(Q_jp2 + Ze_jp2*P_jp2),
+				pow(r_jp1,2)*Al_jp1*(Q_jp1 + Ze_jp1*P_jp1),
+				pow(r_j,  2)*Al_j  *(Q_j   + Ze_j  *P_j  ),
+				dr)
 		;
-		res_P -= (1./2.)*pow(r_j,-2)*D1_forward_2ndOrder(
-			pow(r_jp2,2)*Al_n[exc_jC+2]*(Q_n[exc_jC+2] + Ze_n[exc_jC+2]*P_n[exc_jC+2]),
-			pow(r_jp1,2)*Al_n[exc_jC+1]*(Q_n[exc_jC+1] + Ze_n[exc_jC+1]*P_n[exc_jC+1]),
-			pow(r_j,  2)*Al_n[exc_jC+0]*(Q_n[exc_jC+0] + Ze_n[exc_jC+0]*P_n[exc_jC+0]),
-			dr)
-		;
-		res_P -= (1./2.)*pow(r_j,-2)*D1_forward_2ndOrder(
-			pow(r_jp2,2)*Al_nm1[exc_jC+2]*(Q_nm1[exc_jC+2] + Ze_nm1[exc_jC+2]*P_nm1[exc_jC+2]),
-			pow(r_jp1,2)*Al_nm1[exc_jC+1]*(Q_nm1[exc_jC+1] + Ze_nm1[exc_jC+1]*P_nm1[exc_jC+1]),
-			pow(r_j  ,2)*Al_nm1[exc_jC+0]*(Q_nm1[exc_jC+0] + Ze_nm1[exc_jC+0]*P_nm1[exc_jC+0]),
-			dr)
-		;
-		jac_P = 1./dt
-		-	(1./2.) * (-3./(2*dr)) * Al_n[exc_jC] * Ze_n[exc_jC]
+		double jac_P = 1./dt
+		-	(1./2.)*(-3./(2*dr))*Al_j*Ze_j
 		;
 	/****/
 		Q_n[exc_jC] -= res_Q / jac_Q ;
