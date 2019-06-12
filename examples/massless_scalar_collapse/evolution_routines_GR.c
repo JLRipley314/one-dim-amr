@@ -396,7 +396,8 @@ static double compute_iteration_Crank_Nicolson_PQ(
 		double jac_Q =	1/dt 
 		- 	(1./2.)*(-3./(2*dr))*Al_j*Ze_j 
 		;
-	/* P field */
+	/* P field 
+	*/
 		double res_P = D1_CrankNicolson_2ndOrder(
 				P_n[exc_jC], 
 				P_nm1[exc_jC], 
