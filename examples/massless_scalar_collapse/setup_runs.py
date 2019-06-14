@@ -32,11 +32,11 @@ run_data = {
 
 	"param_search"	: "no",#"yes",#
 
-	"theory"	: "massless_scalar_GR",#"EdGB",#"massless_scalar",#"GR",#"EdGB_decoupled",#
+	"theory"	: "EdGB",#"massless_scalar_GR",#"massless_scalar",#"GR",#"EdGB_decoupled",#
 ###
-###	coupling for EdGB coupling
+###	EdGB: coupling for Gauss-Bonnet scalar (gbs)
 ###
-	"coupling_gbs"	: 0.0,
+	"coupling_gbs"	: 1.0,
 
 	"stereographic_L" : 100,
 	
@@ -53,18 +53,18 @@ run_data = {
 ###	cfl_num: Courant Friedrichs Lewy number (for hyperbolics)
 ###
 	"Nx"		: 2**8+1,
-	"Nt"		: 2**11+1,
+	"Nt"		: 2**10+1,
 	"t_step_save"	: 2**0,
 	"cfl_num"	: 0.25,  
-	"err_tolerance"	: 1.0e-10, 
+	"err_tolerance"	: 1.0e-8, 
 	
 	"initial_data" : "r4Exp",#"initial_black_hole",#"initial_black_hole_with_r4Exp",#"presetPQPhi",# 
 ###
 ###	if initial_data is r4Exp
 ###
-	"amp"		: 0.00001,#2,
+	"amp"		: 0.000006,#2,
 	"width"		: 5.0,
-	"center"	: 5.0,
+	"center"	: 10.0,
 	"direction"	: "stationary",#"ingoing",#"outgoing",#
 ###
 ###	if initial_data is initial_black_hole

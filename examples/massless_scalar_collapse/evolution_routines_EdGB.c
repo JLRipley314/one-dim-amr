@@ -368,23 +368,41 @@ static double compute_iteration_Crank_Nicolson_PQ(
 
 		double dr = stereographic_dr(s_L, x_j, dx) ;
 
+		double Al     = (Al_n[jC  ]+Al_nm1[jC  ])/2 ;
 		double Al_jp1 = (Al_n[jC+1]+Al_nm1[jC+1])/2 ;
 		double Al_jm1 = (Al_n[jC-1]+Al_nm1[jC-1])/2 ;
 
+		double Ze     = (Ze_n[jC  ]+Ze_nm1[jC  ])/2 ;
 		double Ze_jp1 = (Ze_n[jC+1]+Ze_nm1[jC+1])/2 ;
 		double Ze_jm1 = (Ze_n[jC-1]+Ze_nm1[jC-1])/2 ;
 
+		double P     = (P_n[jC  ]+P_nm1[jC  ])/2 ;
 		double P_jp1 = (P_n[jC+1]+P_nm1[jC+1])/2 ;
 		double P_jm1 = (P_n[jC-1]+P_nm1[jC-1])/2 ;
 
+		double Q     = (Q_n[jC  ]+Q_nm1[jC  ])/2 ;
 		double Q_jp1 = (Q_n[jC+1]+Q_nm1[jC+1])/2 ;
 		double Q_jm1 = (Q_n[jC-1]+Q_nm1[jC-1])/2 ;
+
+		double t_Der_Q = D1_CrankNicolson_2ndOrder(Q_n[jC], Q_nm1[jC], dt) ;
+		double t_Der_P = D1_CrankNicolson_2ndOrder(P_n[jC], P_nm1[jC], dt) ;
+
+		double r_Der_Al = D1_center_2ndOrder(Al_jp1, Al_jm1, dr) ;
+		double r_Der_Ze = D1_center_2ndOrder(Ze_jp1, Ze_jm1, dr) ;
+		double r_Der_P  = D1_center_2ndOrder( P_jp1,  P_jm1, dr) ;
+		double r_Der_Q  = D1_center_2ndOrder( Q_jp1,  Q_jm1, dr) ;
+
+		double phi_Der_f = 1 ;
+		double phiphi_Der_f = 0 ;
+
+		double SE_LL_TR = (Al*(2*P*Q + (pow(P,2) + pow(Q,2))*Ze))/2. ;
+		double SE_LL_ThTh = (pow(r_j,2)*(pow(P,2) - pow(Q,2)))/2. ;
+
+		double P_Der_SE_LL_TR = (Al*(Q + P*Ze))/2. ;
+		double P_Der_SE_LL_ThTh = (pow(r_j,2)*P)/2. ;
 	/* Q field 
 	*/
-		double res_Q = D1_CrankNicolson_2ndOrder(
-				Q_n[jC], 
-				Q_nm1[jC], 
-				dt)
+		double res_Q = t_Der_Q 
 		-	D1_center_2ndOrder(
 				Al_jp1*(P_jp1 + Ze_jp1*Q_jp1),
 				Al_jm1*(P_jm1 + Ze_jm1*Q_jm1),
@@ -393,16 +411,36 @@ static double compute_iteration_Crank_Nicolson_PQ(
 		double jac_Q = (1./dt) ;
 	/* P field 
 	*/
-		double res_P = D1_CrankNicolson_2ndOrder(
-				P_n[jC], 
-				P_nm1[jC], 
-				dt)
+		double res_P = t_Der_P  
 		-	pow(r_j,-2)*D1_center_2ndOrder(
 				pow(r_jp1,2)*Al_jp1*(Q_jp1 + Ze_jp1*P_jp1),
 				pow(r_jm1,2)*Al_jm1*(Q_jm1 + Ze_jm1*P_jm1),
 				dr)
+		+	c_gbs*phi_Der_f*
+			compute_res_Crank_Nicolson_Gauss_Bonnet_scalar(
+				r_j,	c_gbs,
+				Al, 	Ze,
+				P,	Q,
+				t_Der_P,
+				r_Der_Al,	r_Der_Ze,
+				r_Der_P,	r_Der_Q,
+				phi_Der_f,	phiphi_Der_f,
+				SE_LL_TR,	SE_LL_ThTh)
 		;
-		double jac_P = (1./dt) ;
+		double jac_P = (1./dt) 
+		+	c_gbs*phi_Der_f*
+			compute_jac_Crank_Nicolson_Gauss_Bonnet_scalar(
+				dt,	dr,
+				r_j,	c_gbs,
+				Al, 	Ze,
+				P,	Q,
+				t_Der_P,
+				r_Der_Al,	r_Der_Ze,
+				r_Der_P,	r_Der_Q,
+				phi_Der_f,	phiphi_Der_f,
+				SE_LL_TR,	SE_LL_ThTh,
+				P_Der_SE_LL_TR,	P_Der_SE_LL_ThTh)
+		;
 	/* one iteration 
 	*/
 		Q_n[jC] -= res_Q / jac_Q ;
@@ -430,7 +468,6 @@ static double compute_iteration_Crank_Nicolson_PQ(
 		P_n[0] -= res_P / jac_P ;
 
 		res_infty_norm = weighted_infty_norm(1-x_j/s_L, res_P, res_infty_norm) ;
-		printf("D1_forward_2ndOrder\t%.5e\tres_infty_norm\t%.5e\n", res_P, res_infty_norm) ;
 	}
 	if ((exc_jC > 0) 
 	&&  (excision_on==true)
