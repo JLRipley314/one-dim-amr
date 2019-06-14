@@ -1,6 +1,6 @@
 CC = gcc -I/home/jripley/one-dim-amr
 
-CFLAGS = -g -fmax-errors=5 -Wall -O2
+CFLAGS = -g -fmax-errors=5 -Wall -O3
 
 LIBS = -lm -lamr -lbbhutil
 
@@ -18,6 +18,8 @@ OBJECTS = main.o \
 
 DEPS_MAIN = evolution_routines_GR.h \
 	evolution_routines_EdGB.h \
+	diagnostics_GR.h \
+	diagnostics_EdGB.h \
 	free_initial_data.h \
 	file_io.h
 

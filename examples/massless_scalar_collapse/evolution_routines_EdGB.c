@@ -7,7 +7,7 @@
 #include "evolution_routines_GR.h"
 #include "stencils.h"
 
-#define MACHINE_EPSILON ((double)1e-14)
+static const double machine_epsilon = 1e-14 ;
 
 /*==========================================================================*/
 /* 	Notations:
@@ -17,14 +17,9 @@
 /*==========================================================================*/
 
 /*==========================================================================*/
-inline double weighted_infty_norm(double weight, double val_1, double val_2)
+static inline double weighted_infty_norm(double weight, double val_1, double val_2)
 {
         return (fabs(val_2)>fabs(val_1)) ? fabs(weight*val_2) : fabs(weight*val_1) ;
-}
-/*==========================================================================*/
-static inline double max_fabs(double var_1, double var_2) 
-{
-	return (fabs(var_1)>fabs(var_2)) ? fabs(var_1) : fabs(var_2) ;
 }
 /*==========================================================================*/
 /* ODE solvers for lapse and shift */
@@ -47,7 +42,7 @@ static double compute_iteration_Al(
 	double phi_Der_f_joh = 1 ;
 
 	int size = 0 ;
-	if (fabs(bbox[1]-s_L)<MACHINE_EPSILON) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
+	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
 	else size = Nx ;
         double res_infty_norm = 0 ; /* returning this */
  /* scalar field functions */
@@ -70,8 +65,8 @@ static double compute_iteration_Al(
 
                 double Jr_joh = - Q_joh * P_joh ;
 
-                if ((fabs(Jr_joh) < 10*MACHINE_EPSILON)
-                &&  (fabs(Ze_joh) < 10*MACHINE_EPSILON)
+                if ((fabs(Jr_joh) < 10*machine_epsilon)
+                &&  (fabs(Ze_joh) < 10*machine_epsilon)
                 ) {
                         Al[jC+1] = Al[jC] ;
                 } else {
@@ -128,7 +123,7 @@ static double compute_iteration_Ze(
 	double phi_Der_f_j   = 1 ;
 
 	int size = 0 ;
-	if (fabs(bbox[1]-s_L)<MACHINE_EPSILON) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
+	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
 	else size = Nx ;
  /* scalar field functions */   
 
@@ -323,7 +318,7 @@ static double compute_jac_Crank_Nicolson_Gauss_Bonnet_scalar(
 	double P_Der_SE_LL_TR,	double P_Der_SE_LL_ThTh)
 {
 	return
-	0
+		(2*P_Der_SE_LL_TR*Ze)/(pow(r_j,2)*Al) - (16*phiphi_Der_f*P_Der_SE_LL_TR*c_gbs*pow(Q,2)*Ze)/(pow(r_j,2)*Al) - (4*P_Der_SE_LL_ThTh*pow(Ze,2))/pow(r_j,4) + (32*phi_Der_f*P_Der_SE_LL_ThTh*c_gbs*Q*pow(Ze,2))/pow(r_j,5) + (32*phi_Der_f*P_Der_SE_LL_ThTh*c_gbs*P*pow(Ze,3))/pow(r_j,5) + (16*phiphi_Der_f*c_gbs*Q*pow(Ze,3))/pow(r_j,4) + (128*pow(phi_Der_f,2)*pow(r_Der_Ze,2)*pow(c_gbs,2)*Q*pow(Ze,3))/pow(r_j,4) - (128*pow(phiphi_Der_f,2)*pow(c_gbs,2)*pow(Q,3)*pow(Ze,3))/pow(r_j,4) + (32*phi_Der_f*c_gbs*SE_LL_ThTh*pow(Ze,3))/pow(r_j,5) + (32*phiphi_Der_f*c_gbs*P*pow(Ze,4))/pow(r_j,4) - (256*pow(phiphi_Der_f,2)*pow(c_gbs,2)*P*pow(Q,2)*pow(Ze,4))/pow(r_j,4) + r_Der_Q*((-16*phi_Der_f*P_Der_SE_LL_TR*c_gbs*Ze)/(pow(r_j,2)*Al) - (128*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*Q*pow(Ze,3))/pow(r_j,4) - (256*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*P*pow(Ze,4))/pow(r_j,4)) + t_Der_P*((384*pow(phi_Der_f,2)*r_Der_Ze*pow(c_gbs,2)*pow(Ze,4))/(pow(r_j,4)*Al) + (384*pow(phi_Der_f,2)*r_Der_Al*pow(c_gbs,2)*pow(Ze,5))/(pow(r_j,4)*pow(Al,2))) + pow(r_Der_Al,2)*((-32*phi_Der_f*c_gbs*pow(Ze,3))/(pow(r_j,3)*pow(Al,2)) + (256*pow(phi_Der_f,2)*pow(c_gbs,2)*Q*pow(Ze,3))/(pow(r_j,4)*pow(Al,2)) + (512*pow(phi_Der_f,2)*pow(c_gbs,2)*P*pow(Ze,4))/(pow(r_j,4)*pow(Al,2)) + (256*pow(phi_Der_f,2)*pow(c_gbs,2)*Q*pow(Ze,5))/(pow(r_j,4)*pow(Al,2))) + r_Der_Ze*((-4*P_Der_SE_LL_TR)/(r_j*Al) + (32*phi_Der_f*P_Der_SE_LL_TR*c_gbs*Q)/(pow(r_j,2)*Al) + (16*phi_Der_f*P_Der_SE_LL_TR*c_gbs*P*Ze)/(pow(r_j,2)*Al) + (16*phi_Der_f*c_gbs*SE_LL_TR*Ze)/(pow(r_j,2)*Al) - (32*phiphi_Der_f*c_gbs*Q*pow(Ze,2))/pow(r_j,3) + (256*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*pow(Q,2)*pow(Ze,2))/pow(r_j,4) - (128*phiphi_Der_f*c_gbs*P*pow(Ze,3))/pow(r_j,3) + (1280*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*P*Q*pow(Ze,3))/pow(r_j,4) + (48*phi_Der_f*c_gbs*pow(Ze,4))/pow(r_j,4) + (1152*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*pow(P,2)*pow(Ze,4))/pow(r_j,4) + r_Der_P*((128*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,3))/pow(r_j,4) - (384*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,5))/pow(r_j,4))) + ((32*phi_Der_f*c_gbs*pow(Ze,4))/(pow(r_j,4)*Al) - (256*pow(phi_Der_f,2)*r_Der_Q*pow(c_gbs,2)*pow(Ze,4))/(pow(r_j,4)*Al) - (256*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*pow(Q,2)*pow(Ze,4))/(pow(r_j,4)*Al) + r_Der_Ze*((-128*phi_Der_f*c_gbs*pow(Ze,3))/(pow(r_j,3)*Al) + (1024*pow(phi_Der_f,2)*pow(c_gbs,2)*Q*pow(Ze,3))/(pow(r_j,4)*Al) + (768*pow(phi_Der_f,2)*pow(c_gbs,2)*P*pow(Ze,4))/(pow(r_j,4)*Al)) + r_Der_Al*((-128*phi_Der_f*c_gbs*pow(Ze,4))/(pow(r_j,3)*pow(Al,2)) + (1024*pow(phi_Der_f,2)*pow(c_gbs,2)*Q*pow(Ze,4))/(pow(r_j,4)*pow(Al,2)) + (768*pow(phi_Der_f,2)*pow(c_gbs,2)*P*pow(Ze,5))/(pow(r_j,4)*pow(Al,2))))/dt + r_Der_Al*((-4*P_Der_SE_LL_TR*Ze)/(r_j*pow(Al,2)) + (32*phi_Der_f*P_Der_SE_LL_TR*c_gbs*Q*Ze)/(pow(r_j,2)*pow(Al,2)) + (16*phi_Der_f*P_Der_SE_LL_TR*c_gbs*P*pow(Ze,2))/(pow(r_j,2)*pow(Al,2)) + (16*phi_Der_f*c_gbs*SE_LL_TR*pow(Ze,2))/(pow(r_j,2)*pow(Al,2)) - (32*phi_Der_f*c_gbs*pow(Ze,3))/(pow(r_j,4)*Al) + (256*pow(phi_Der_f,2)*r_Der_Q*pow(c_gbs,2)*pow(Ze,3))/(pow(r_j,4)*Al) - (96*phiphi_Der_f*c_gbs*Q*pow(Ze,3))/(pow(r_j,3)*Al) + (1024*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*pow(Q,2)*pow(Ze,3))/(pow(r_j,4)*Al) - (128*phiphi_Der_f*c_gbs*P*pow(Ze,4))/(pow(r_j,3)*Al) + (2304*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*P*Q*pow(Ze,4))/(pow(r_j,4)*Al) + (48*phi_Der_f*c_gbs*pow(Ze,5))/(pow(r_j,4)*Al) + (1152*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*pow(P,2)*pow(Ze,5))/(pow(r_j,4)*Al) + r_Der_Ze*((96*phi_Der_f*c_gbs*pow(Ze,2))/(pow(r_j,3)*Al) - (768*pow(phi_Der_f,2)*pow(c_gbs,2)*Q*pow(Ze,2))/(pow(r_j,4)*Al) - (512*pow(phi_Der_f,2)*pow(c_gbs,2)*P*pow(Ze,3))/(pow(r_j,4)*Al) + (384*pow(phi_Der_f,2)*pow(c_gbs,2)*Q*pow(Ze,4))/(pow(r_j,4)*Al)) + r_Der_P*((640*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,4))/(pow(r_j,4)*Al) - (384*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,6))/(pow(r_j,4)*Al)))
 	; 
 }
 /*==========================================================================*/
@@ -358,7 +353,7 @@ static double compute_iteration_Crank_Nicolson_PQ(
 	double lower_x = bbox[0] ;
 
 	int size = 0 ;
-	if (fabs(bbox[1]-s_L)<MACHINE_EPSILON) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
+	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
 	else size = Nx ;
 	double res_infty_norm = 0 ; /* returning this */
 
@@ -543,7 +538,7 @@ void advance_tStep_massless_scalar_EdGB(
 	Kreiss_Oliger_filter(Nx, P_n) ;
 	Kreiss_Oliger_filter(Nx, Q_n) ;
 
-	if (fabs(bbox[0])<MACHINE_EPSILON) {
+	if (fabs(bbox[0])<machine_epsilon) {
 		Kreiss_Oliger_filter_origin(P_n, "even") ;
 		Kreiss_Oliger_filter_origin(Q_n, "odd") ;
 	}

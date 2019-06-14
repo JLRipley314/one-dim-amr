@@ -7,7 +7,7 @@
 #include "evolution_routines_GR.h"
 #include "stencils.h"
 
-#define MACHINE_EPSILON ((double)1e-14)
+static const double machine_epsilon = 1e-14 ;
 
 /*==========================================================================*/
 /* 	Notations:
@@ -17,14 +17,9 @@
 /*==========================================================================*/
 
 /*==========================================================================*/
-inline double weighted_infty_norm(double weight, double val_1, double val_2)
+static inline double weighted_infty_norm(double weight, double val_1, double val_2)
 {
         return (fabs(val_2)>fabs(val_1)) ? fabs(weight*val_2) : fabs(weight*val_1) ;
-}
-/*==========================================================================*/
-static inline double max_fabs(double var_1, double var_2) 
-{
-	return (fabs(var_1)>fabs(var_2)) ? fabs(var_1) : fabs(var_2) ;
 }
 /*==========================================================================*/
 /* ODE solvers for lapse and shift */
@@ -44,7 +39,7 @@ static double compute_iteration_Al(
 	double*  P, 	double*  Q)
 {
 	int size = 0 ;
-	if (fabs(bbox[1]-s_L)<MACHINE_EPSILON) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
+	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
 	else size = Nx ;
         double res_infty_norm = 0 ; /* returning this */
  /* scalar field functions */
@@ -64,8 +59,8 @@ static double compute_iteration_Al(
 
                 double Jr_joh = - Q_joh * P_joh ;
 
-                if ((fabs(Jr_joh) < 10*MACHINE_EPSILON)
-                &&  (fabs(Ze_joh) < 10*MACHINE_EPSILON)
+                if ((fabs(Jr_joh) < 10*machine_epsilon)
+                &&  (fabs(Ze_joh) < 10*machine_epsilon)
                 ) {
                         Al[jC+1] = Al[jC] ;
                 } else {
@@ -83,7 +78,7 @@ static double compute_iteration_Al(
 			) {
 				printf("jC:%d\tres_Al:%.e\tjac_Al:%.e\n", jC, res_Al, jac_Al) ;
 				exit(EXIT_FAILURE) ;
-				}
+			}
 			res_infty_norm = weighted_infty_norm(1-x_joh/s_L, res_Al, res_infty_norm) ;
                 }
         }
@@ -102,7 +97,7 @@ static double compute_iteration_Ze(
 	double*  P, 	double*  Q)
 {
 	int size = 0 ;
-	if (fabs(bbox[1]-s_L)<MACHINE_EPSILON) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
+	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
 	else size = Nx ;
  /* scalar field functions */   
 
@@ -273,7 +268,7 @@ static double compute_iteration_Crank_Nicolson_PQ(
 	double lower_x = bbox[0] ;
 
 	int size = 0 ;
-	if (fabs(bbox[1]-s_L)<MACHINE_EPSILON) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
+	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
 	else size = Nx ;
 	double res_infty_norm = 0 ; /* returning this */
 /*--------------------------------------------------------------------------*/
@@ -458,7 +453,7 @@ void advance_tStep_massless_scalar(
 	Kreiss_Oliger_filter(Nx, P_n) ;
 	Kreiss_Oliger_filter(Nx, Q_n) ;
 
-	if (fabs(bbox[0])<MACHINE_EPSILON) {
+	if (fabs(bbox[0])<machine_epsilon) {
 		Kreiss_Oliger_filter_origin(P_n, "even") ;
 		Kreiss_Oliger_filter_origin(Q_n, "odd") ;
 	}

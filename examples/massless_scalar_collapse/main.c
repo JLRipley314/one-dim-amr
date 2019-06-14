@@ -13,6 +13,7 @@
 #include "amr_grid_hierarchy.h"
 #include "diagnostics_general.h"
 #include "diagnostics_GR.h"
+#include "diagnostics_EdGB.h"
 #include "free_initial_data.h"
 #include "evolution_routines_GR.h"
 #include "evolution_routines_EdGB.h"
@@ -369,18 +370,34 @@ void compute_diagnostics(amr_grid* grid)
 {
 	set_globals(grid) ;
 /*--------------------------------------------------------------------------*/
-	compute_diagnostics_massless_scalar_GR(
-		Nx, excised_jC, 
-		stereographic_L,
-		dt, dx,
-		Al_n, Al_nm1, Al_nm2,
-		Ze_n, Ze_nm1, Ze_nm2,
-		P_n, P_nm1, P_nm2,
-		Q_n, Q_nm1, Q_nm2,
-		eom_TR,
-		eom_ThTh,
-		eom_scalar)
-	;
+	if (strcmp(theory,"massless_scalar_GR")==0) {
+		compute_diagnostics_massless_scalar_GR(
+			Nx, excised_jC, 
+			stereographic_L,
+			dt, dx,
+			Al_n, Al_nm1, Al_nm2,
+			Ze_n, Ze_nm1, Ze_nm2,
+			P_n, P_nm1, P_nm2,
+			Q_n, Q_nm1, Q_nm2,
+			eom_TR,
+			eom_ThTh,
+			eom_scalar)
+		;
+	} else if (strcmp(theory,"EdGB")==0) {
+		compute_diagnostics_massless_scalar_EdGB(
+			Nx, excised_jC, 
+			stereographic_L,
+			coupling_gbs,
+			dt, dx,
+			Al_n, Al_nm1, Al_nm2,
+			Ze_n, Ze_nm1, Ze_nm2,
+			P_n, P_nm1, P_nm2,
+			Q_n, Q_nm1, Q_nm2,
+			eom_TR,
+			eom_ThTh,
+			eom_scalar)
+		;
+	} else {;}
 /*--------------------------------------------------------------------------*/
 /* ''_general: includes setting excised_jC */ 
 /*--------------------------------------------------------------------------*/
