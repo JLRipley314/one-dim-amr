@@ -416,7 +416,7 @@ void compute_diagnostics(amr_grid* grid)
 	;
 	if ((grid->level)==0) { 
 		grid->excised_jC = excised_jC ;
-		printf("t\t%f\tMA\t%f\texc_jC\t%d\n", (grid->tC)*dt, mass_aspect[Nx-1], excised_jC) ;
+		printf("t\t%f\tMA\t%f\texc_jC\t%d\n", (grid->time), mass_aspect[Nx-1], excised_jC) ;
 	}
 	return ;
 }

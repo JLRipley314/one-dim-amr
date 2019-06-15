@@ -64,36 +64,38 @@ static double compute_iteration_Al(
                 double r_Der_P_joh = (P[jC+1] - P[jC]) / dr ;
 
                 double Jr_joh = - Q_joh * P_joh ;
+		double Al_Der_Jr_joh = 0 ;
 
                 if ((fabs(Jr_joh) < 10*machine_epsilon)
                 &&  (fabs(Ze_joh) < 10*machine_epsilon)
                 ) {
                         Al[jC+1] = Al[jC] ;
                 } else {
-                        double res_Al = (
-				1.
-			-	8.*c_gbs*phi_Der_f_joh*(Ze_joh/r_joh)*P_joh
-			-	8.*c_gbs*phi_Der_f_joh*(Q_joh/r_joh)
-			)*Ze_joh*r_Der_Al_joh
-			-	(1./2.)*r_joh*Al_joh*Jr_joh
-			+	(4.*c_gbs*phi_Der_f_joh)*(Q_joh/r_joh)*Ze_joh*r_Der_Ze_joh
-			+	(4.*c_gbs*phi_Der_f_joh)*(Q_joh/r_joh)*pow(Ze_joh,2)*(r_Der_Al_joh/Al_joh)
-			+	4.*c_gbs*(Ze_joh/r_joh)*(
-				+	phiphi_Der_f_joh*Q_joh*P_joh
-				+	phi_Der_f_joh*r_Der_P_joh
-			)
+                        double res_Al = 			
+			-	(r_joh*Al_joh*Jr_joh)/(2.*Ze_joh) 
+			+ 	(4*phi_Der_f_joh*r_Der_P_joh*c_gbs*Al_joh*Ze_joh)/r_joh 
+			+ 	(4*phi_Der_f_joh*r_Der_Ze_joh*c_gbs*Al_joh*Q_joh*Ze_joh)/r_joh 
+			+ 	(4*phiphi_Der_f_joh*c_gbs*Al_joh*P_joh*Q_joh*Ze_joh)/r_joh 
+			+ 	(
+					1 
+				- 	(8*phi_Der_f_joh*c_gbs*Q_joh)/r_joh 
+				- 	(8*phi_Der_f_joh*c_gbs*P_joh*Ze_joh)/r_joh 
+				+ 	(4*phi_Der_f_joh*c_gbs*Q_joh*pow(Ze_joh,2))/r_joh
+			)*r_Der_Al_joh
 			;
-                        double jac_Al = (
-				1.
-			-	8.*c_gbs*phi_Der_f_joh*(Ze_joh/r_joh)*P_joh
-			-	8.*c_gbs*phi_Der_f_joh*(Q_joh/r_joh)
-			)*Ze_joh/dr
-			-	(1./4.)*r_joh*Jr_joh
-			+	(4.*c_gbs*phi_Der_f_joh)*(Q_joh/r_joh)*pow(Ze_joh,2)*(
-				+	(1/Al_joh)*(1/dr)
-				-	(r_Der_Al_joh)*pow(Al_joh,-2)*(1./2.)
-			)
-                        ;
+                        double jac_Al = 
+			-	(Al_Der_Jr_joh*r_joh*Al_joh)/(4.*Ze_joh) 
+			- 	(r_joh*Jr_joh)/(4.*Ze_joh) 
+			+ 	(2*phi_Der_f_joh*r_Der_P_joh*c_gbs*Ze_joh)/r_joh 
+			+ 	(2*phi_Der_f_joh*r_Der_Ze_joh*c_gbs*Q_joh*Ze_joh)/r_joh 
+			+ 	(2*phiphi_Der_f_joh*c_gbs*P_joh*Q_joh*Ze_joh)/r_joh 
+			+ 	(
+					1 
+				- 	(8*phi_Der_f_joh*c_gbs*Q_joh)/r_joh 
+				- 	(8*phi_Der_f_joh*c_gbs*P_joh*Ze_joh)/r_joh 
+				+ 	(4*phi_Der_f_joh*c_gbs*Q_joh*pow(Ze_joh,2))/r_joh
+			)/dr
+			;
                         Al[jC+1] -= res_Al / jac_Al ;
 			if ((isnan(res_Al) != 0)
 			||  (isnan(jac_Al) != 0)
@@ -143,12 +145,11 @@ static double compute_iteration_Ze(
 
                 double Al_joh = (Al[jC+1] + Al[jC]) / 2. ;
 
-                double Al_jp1 = Al[jC+1] ;
-                double Al_j   = Al[jC] ;
-
                 double Q_jp1 = Q[jC+1] ;
                 double Q_j   = Q[jC] ;
 
+                double Al_sqrd_jp1 = pow(Al[jC+1], 2) ;
+                double Al_sqrd_j   = pow(Al[jC+0], 2) ;
                 double Ze_sqrd_jp1 = pow(Ze[jC+1], 2) ;
                 double Ze_sqrd_j   = pow(Ze[jC+0], 2) ;
 
@@ -157,22 +158,32 @@ static double compute_iteration_Ze(
 
                 double rho_joh = (1./2) * (pow(Q_joh,2) + pow(P_joh,2)) ;
 /*---------------------------------------------------------------------------*/
-                double res_Ze_sqrd = ( 
-			(r_jp1-(8.*c_gbs*phi_Der_f_jp1*Q_jp1))*pow(Al_jp1,2)*Ze_sqrd_jp1
-		-	(r_j  -(8.*c_gbs*phi_Der_f_j*  Q_j  ))*pow(Al_j,2)  *Ze_sqrd_j
-		) / dr
-		-	8.*c_gbs*phi_Der_f_joh*(P_joh/Al_joh)*(
-				pow(Al_jp1,3)*pow(Ze_sqrd_jp1,3/2)
-			-	pow(Al_j  ,3)*pow(Ze_sqrd_j,3/2)
-		) / dr
-		-	pow(r_joh*Al_joh,2)*rho_joh	
-		; 
-                double jac_Ze_sqrd = ( 
-			(r_jp1-(8.*c_gbs*phi_Der_f_jp1*Q_jp1))*pow(Al_jp1,2)
-		-	8.*c_gbs*phi_Der_f_joh*(P_joh/Al_joh)*(
-				pow(Al_jp1,3)*(3./2.)*pow(Ze_sqrd_jp1,1/2)
-		)) / dr	
-                ;
+		double res_Ze_sqrd = 
+		( 
+			(	(r_jp1 - 8*c_gbs*phi_Der_f_jp1*Q_jp1)*Al_sqrd_jp1*Ze_sqrd_jp1
+			-	(r_j   - 8*c_gbs*phi_Der_f_j  *Q_j  )*Al_sqrd_j  *Ze_sqrd_j
+			)/dr
+		)
+		- (	
+			(8*c_gbs*phi_Der_f_joh*P_joh/Al_joh)*(
+				pow(Al_sqrd_jp1*Ze_sqrd_jp1,3./2.) 
+			- 	pow(Al_sqrd_j  *Ze_sqrd_j  ,3./2.)
+			)/dr
+		)	
+		-	pow(r_joh,2)*pow(Al_joh,2)*rho_joh
+		;
+		double jac_Ze_sqrd = 
+		(
+			(
+				(r_jp1 - 8*c_gbs*phi_Der_f_jp1*Q_jp1)*Al_sqrd_jp1
+			)/dr
+		)
+		-(	
+			(8*c_gbs*phi_Der_f_joh*P_joh/Al_joh)*(
+				(3./2.)*Al_sqrd_jp1*pow(Al_sqrd_jp1*Ze_sqrd_jp1,1./2.)
+			)/dr
+		)	
+		;
                 Ze_sqrd_jp1 -= res_Ze_sqrd/jac_Ze_sqrd ;
                 Ze[jC+1]  = sqrt(Ze_sqrd_jp1) ;
 /*---------------------------------------------------------------------------*/	
@@ -289,56 +300,47 @@ void solve_Al_Ze_EdGB(
 	} while (res>err_tolerance) ;
 	return ;
 }
-/*==========================================================================*/
-static double compute_res_Crank_Nicolson_Gauss_Bonnet_scalar(
-	double r_j,	double c_gbs,
-	double Al, 	double Ze,
-	double P,	double Q,
-	double t_Der_P,
-	double r_Der_Al,	double r_Der_Ze,
-	double r_Der_P,		double r_Der_Q,
-	double phi_Der_f,	double phiphi_Der_f,
-	double SE_LL_TR,	double SE_LL_ThTh)
+/*###########################################################################*/
+static double compute_res_P(
+	double c_gbs, double r_j,
+	double phi_Der_f, double phiphi_Der_f, 
+	double SE_LL_TR, double SE_LL_ThTh, 
+	double Al,       double Ze,       double Q,       double P,
+	double r_Der_Al, double r_Der_Ze, double r_Der_Q, double r_Der_P,
+                                                      double t_Der_P)
 {
-	return
-		(64*phi_Der_f*pow(r_Der_Al,2)*c_gbs*pow(Ze,3)*(P + Q*Ze)*(-r_j + 8*phi_Der_f*c_gbs*(Q + P*Ze)))/(pow(r_j,4)*pow(Al,2)) + (64*phi_Der_f*pow(r_Der_Ze,2)*c_gbs*Q*pow(Ze,2)*(-r_j + 4*phi_Der_f*c_gbs*(2*Q + P*Ze)))/pow(r_j,4) + r_Der_P*((256*pow(phi_Der_f,2)*r_Der_Q*pow(c_gbs,2)*pow(Ze,3)*(-1 + pow(Ze,2)))/pow(r_j,4) + (32*phi_Der_f*c_gbs*(-1 + 8*phiphi_Der_f*c_gbs*pow(Q,2))*pow(Ze,3)*(-1 + pow(Ze,2)))/pow(r_j,4)) + (32*phi_Der_f*r_Der_Q*c_gbs*Ze*(-(pow(r_j,2)*SE_LL_TR) + Al*pow(Ze,2)*(-Ze - 8*phiphi_Der_f*c_gbs*P*(Q + P*Ze))))/(pow(r_j,4)*Al) + t_Der_P*((-256*pow(phi_Der_f,2)*r_Der_Q*pow(c_gbs,2)*pow(Ze,4))/(pow(r_j,4)*Al) + (32*phi_Der_f*c_gbs*(1 - 8*phiphi_Der_f*c_gbs*pow(Q,2))*pow(Ze,4))/(pow(r_j,4)*Al) + (128*phi_Der_f*r_Der_Ze*c_gbs*pow(Ze,3)*(-r_j + 2*phi_Der_f*c_gbs*(4*Q + 3*P*Ze)))/(pow(r_j,4)*Al) + (128*phi_Der_f*r_Der_Al*c_gbs*pow(Ze,4)*(-r_j + 2*phi_Der_f*c_gbs*(4*Q + 3*P*Ze)))/(pow(r_j,4)*pow(Al,2))) + (4*Ze*(pow(r_j,3)*(1 - 8*phiphi_Der_f*c_gbs*pow(Q,2))*SE_LL_TR + Al*Ze*(2*SE_LL_ThTh*(-r_j + 8*phi_Der_f*c_gbs*(Q + P*Ze)) - r_j*(-1 + 8*phiphi_Der_f*c_gbs*pow(Q,2))*Ze*(Ze + 8*phiphi_Der_f*c_gbs*P*(Q + P*Ze)))))/(pow(r_j,5)*Al) + r_Der_Al*((64*phi_Der_f*r_Der_Q*c_gbs*pow(Ze,2)*(-r_j + 8*phi_Der_f*c_gbs*(Q + P*Ze)))/(pow(r_j,4)*Al) + (16*r_Der_Ze*Ze*(-pow(r_j,2) + 4*phi_Der_f*c_gbs*(P*Ze*(3*r_j - 8*phi_Der_f*c_gbs*P*Ze) - 2*Q*(r_j - 6*phi_Der_f*c_gbs*P*Ze)*(-2 + pow(Ze,2)) + 16*phi_Der_f*c_gbs*pow(Q,2)*(-1 + pow(Ze,2)))))/(pow(r_j,4)*Al) + (64*phi_Der_f*r_Der_P*c_gbs*pow(Ze,3)*(r_j*(-3 + 2*pow(Ze,2)) - 4*phi_Der_f*c_gbs*(P*Ze*(-5 + 3*pow(Ze,2)) + Q*(-6 + 4*pow(Ze,2)))))/(pow(r_j,4)*Al) + (8*Ze*(pow(r_j,2)*SE_LL_TR*(-r_j + 4*phi_Der_f*c_gbs*(2*Q + P*Ze)) + Al*Ze*(r_j - 8*phi_Der_f*c_gbs*Q - 2*r_j*pow(Ze,2) + 4*phi_Der_f*c_gbs*Ze*(4*Q*Ze + P*(-2 + 3*pow(Ze,2))) + 8*phiphi_Der_f*c_gbs*(Q + P*Ze)*(-(r_j*(Q + 2*P*Ze)) + 4*phi_Der_f*c_gbs*(2*pow(Q,2) + 6*P*Q*Ze + 3*pow(P,2)*pow(Ze,2))))))/(pow(r_j,4)*pow(Al,2))) + r_Der_Ze*((-256*pow(phi_Der_f,2)*r_Der_Q*pow(c_gbs,2)*Q*pow(Ze,3))/pow(r_j,4) + (64*phi_Der_f*r_Der_P*c_gbs*pow(Ze,2)*(r_j*(-1 + 2*pow(Ze,2)) + 4*phi_Der_f*c_gbs*(Q*(2 - 4*pow(Ze,2)) + P*Ze*(1 - 3*pow(Ze,2)))))/pow(r_j,4) + (8*(pow(r_j,2)*SE_LL_TR*(-r_j + 4*phi_Der_f*c_gbs*(2*Q + P*Ze)) + 2*Al*pow(Ze,2)*(Ze*(-r_j + 2*phi_Der_f*c_gbs*(5*Q + 3*P*Ze)) + 4*phiphi_Der_f*c_gbs*(-(r_j*P*(Q + 2*P*Ze)) + 4*phi_Der_f*c_gbs*(2*P*pow(Q,2) - Q*(-5*pow(P,2) + pow(Q,2))*Ze + 3*pow(P,3)*pow(Ze,2))))))/(pow(r_j,4)*Al))
-	; 
+	return 
+		(-2*Al*Q)/r_j + (32*phi_Der_f*c_gbs*Al*pow(Q,2))/pow(r_j,2) - (128*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(Q,3))/pow(r_j,3) - (2*Al*P*Ze)/r_j + (64*phi_Der_f*c_gbs*Al*P*Q*Ze)/pow(r_j,2) - (384*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*P*pow(Q,2)*Ze)/pow(r_j,3) + (32*phi_Der_f*c_gbs*Al*pow(P,2)*pow(Ze,2))/pow(r_j,2) - (384*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(P,2)*Q*pow(Ze,2))/pow(r_j,3) - (128*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(P,3)*pow(Ze,3))/pow(r_j,3) - (32*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*Al*P*Q*pow(Ze,3))/pow(r_j,4) + (256*pow(phiphi_Der_f,2)*phi_Der_f*pow(c_gbs,3)*Al*P*pow(Q,3)*pow(Ze,3))/pow(r_j,4) - (4*phi_Der_f*c_gbs*Al*pow(Ze,4))/pow(r_j,4) - (32*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*Al*pow(P,2)*pow(Ze,4))/pow(r_j,4) + (32*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*Al*pow(Q,2)*pow(Ze,4))/pow(r_j,4) + (256*pow(phiphi_Der_f,2)*phi_Der_f*pow(c_gbs,3)*Al*pow(P,2)*pow(Q,2)*pow(Ze,4))/pow(r_j,4) + SE_LL_TR*((-4*phi_Der_f*c_gbs*Ze)/pow(r_j,2) + (32*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*pow(Q,2)*Ze)/pow(r_j,2)) + SE_LL_ThTh*((8*phi_Der_f*c_gbs*Al*pow(Ze,2))/pow(r_j,4) - (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*Q*pow(Ze,2))/pow(r_j,5) - (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*P*pow(Ze,3))/pow(r_j,5)) + pow(r_Der_Ze,2)*((64*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*Q*pow(Ze,2))/pow(r_j,3) - (512*pow(phi_Der_f,3)*pow(c_gbs,3)*Al*pow(Q,2)*pow(Ze,2))/pow(r_j,4) - (256*pow(phi_Der_f,3)*pow(c_gbs,3)*Al*P*Q*pow(Ze,3))/pow(r_j,4)) + r_Der_Q*(-Al + (16*phi_Der_f*c_gbs*Al*Q)/r_j - (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(Q,2))/pow(r_j,2) + (16*phi_Der_f*c_gbs*Al*P*Ze)/r_j - (128*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*P*Q*Ze)/pow(r_j,2) + (32*pow(phi_Der_f,2)*pow(c_gbs,2)*SE_LL_TR*Ze)/pow(r_j,2) - (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(P,2)*pow(Ze,2))/pow(r_j,2) + (256*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*Al*P*Q*pow(Ze,3))/pow(r_j,4) + (32*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(Ze,4))/pow(r_j,4) + (256*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*Al*pow(P,2)*pow(Ze,4))/pow(r_j,4)) + pow(r_Der_Al,2)*((64*pow(phi_Der_f,2)*pow(c_gbs,2)*P*pow(Ze,3))/(pow(r_j,3)*Al) - (512*pow(phi_Der_f,3)*pow(c_gbs,3)*P*Q*pow(Ze,3))/(pow(r_j,4)*Al) - (512*pow(phi_Der_f,3)*pow(c_gbs,3)*pow(P,2)*pow(Ze,4))/(pow(r_j,4)*Al) + (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Q*pow(Ze,4))/(pow(r_j,3)*Al) - (512*pow(phi_Der_f,3)*pow(c_gbs,3)*pow(Q,2)*pow(Ze,4))/(pow(r_j,4)*Al) - (512*pow(phi_Der_f,3)*pow(c_gbs,3)*P*Q*pow(Ze,5))/(pow(r_j,4)*Al)) + r_Der_P*(-(Al*Ze) + (16*phi_Der_f*c_gbs*Al*Q*Ze)/r_j - (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(Q,2)*Ze)/pow(r_j,2) + (16*phi_Der_f*c_gbs*Al*P*pow(Ze,2))/r_j - (128*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*P*Q*pow(Ze,2))/pow(r_j,2) - (32*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(Ze,3))/pow(r_j,4) - (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(P,2)*pow(Ze,3))/pow(r_j,2) + (256*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*Al*pow(Q,2)*pow(Ze,3))/pow(r_j,4) + (32*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(Ze,5))/pow(r_j,4) - (256*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*Al*pow(Q,2)*pow(Ze,5))/pow(r_j,4) + r_Der_Q*((256*pow(phi_Der_f,3)*pow(c_gbs,3)*Al*pow(Ze,3))/pow(r_j,4) - (256*pow(phi_Der_f,3)*pow(c_gbs,3)*Al*pow(Ze,5))/pow(r_j,4))) + t_Der_P*(1 - (16*phi_Der_f*c_gbs*Q)/r_j + (64*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Q,2))/pow(r_j,2) - (16*phi_Der_f*c_gbs*P*Ze)/r_j + (128*pow(phi_Der_f,2)*pow(c_gbs,2)*P*Q*Ze)/pow(r_j,2) + (64*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(P,2)*pow(Ze,2))/pow(r_j,2) - (32*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,4))/pow(r_j,4) + (256*pow(phi_Der_f,3)*r_Der_Q*pow(c_gbs,3)*pow(Ze,4))/pow(r_j,4) + (256*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*pow(Q,2)*pow(Ze,4))/pow(r_j,4) + r_Der_Ze*((128*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,3))/pow(r_j,3) - (1024*pow(phi_Der_f,3)*pow(c_gbs,3)*Q*pow(Ze,3))/pow(r_j,4) - (768*pow(phi_Der_f,3)*pow(c_gbs,3)*P*pow(Ze,4))/pow(r_j,4)) + r_Der_Al*((128*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,4))/(pow(r_j,3)*Al) - (1024*pow(phi_Der_f,3)*pow(c_gbs,3)*Q*pow(Ze,4))/(pow(r_j,4)*Al) - (768*pow(phi_Der_f,3)*pow(c_gbs,3)*P*pow(Ze,5))/(pow(r_j,4)*Al))) + r_Der_Ze*(-(Al*P) + (16*phi_Der_f*c_gbs*Al*P*Q)/r_j - (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*P*pow(Q,2))/pow(r_j,2) + (16*phi_Der_f*c_gbs*Al*pow(P,2)*Ze)/r_j - (128*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(P,2)*Q*Ze)/pow(r_j,2) - (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(P,3)*pow(Ze,2))/pow(r_j,2) + (64*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*Al*P*Q*pow(Ze,2))/pow(r_j,3) - (512*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*Al*P*pow(Q,2)*pow(Ze,2))/pow(r_j,4) + (16*phi_Der_f*c_gbs*Al*pow(Ze,3))/pow(r_j,3) + (128*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*Al*pow(P,2)*pow(Ze,3))/pow(r_j,3) - (160*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*Q*pow(Ze,3))/pow(r_j,4) + (256*pow(phi_Der_f,3)*r_Der_Q*pow(c_gbs,3)*Al*Q*pow(Ze,3))/pow(r_j,4) - (1280*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*Al*pow(P,2)*Q*pow(Ze,3))/pow(r_j,4) + (256*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*Al*pow(Q,3)*pow(Ze,3))/pow(r_j,4) - (96*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*P*pow(Ze,4))/pow(r_j,4) - (768*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*Al*pow(P,3)*pow(Ze,4))/pow(r_j,4) + SE_LL_TR*((8*phi_Der_f*c_gbs)/r_j - (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Q)/pow(r_j,2) - (32*pow(phi_Der_f,2)*pow(c_gbs,2)*P*Ze)/pow(r_j,2)) + r_Der_P*((64*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(Ze,2))/pow(r_j,3) - (512*pow(phi_Der_f,3)*pow(c_gbs,3)*Al*Q*pow(Ze,2))/pow(r_j,4) - (256*pow(phi_Der_f,3)*pow(c_gbs,3)*Al*P*pow(Ze,3))/pow(r_j,4) - (128*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(Ze,4))/pow(r_j,3) + (1024*pow(phi_Der_f,3)*pow(c_gbs,3)*Al*Q*pow(Ze,4))/pow(r_j,4) + (768*pow(phi_Der_f,3)*pow(c_gbs,3)*Al*P*pow(Ze,5))/pow(r_j,4))) + r_Der_Al*(-Q + (16*phi_Der_f*c_gbs*pow(Q,2))/r_j - (64*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Q,3))/pow(r_j,2) - P*Ze + (32*phi_Der_f*c_gbs*P*Q*Ze)/r_j - (192*pow(phi_Der_f,2)*pow(c_gbs,2)*P*pow(Q,2)*Ze)/pow(r_j,2) - (8*phi_Der_f*c_gbs*pow(Ze,2))/pow(r_j,3) + (16*phi_Der_f*c_gbs*pow(P,2)*pow(Ze,2))/r_j + (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Q*pow(Ze,2))/pow(r_j,4) - (192*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(P,2)*Q*pow(Ze,2))/pow(r_j,2) + (64*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*pow(Q,2)*pow(Ze,2))/pow(r_j,3) - (512*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*pow(Q,3)*pow(Ze,2))/pow(r_j,4) + (64*pow(phi_Der_f,2)*pow(c_gbs,2)*P*pow(Ze,3))/pow(r_j,4) - (64*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(P,3)*pow(Ze,3))/pow(r_j,2) + (192*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*P*Q*pow(Ze,3))/pow(r_j,3) - (2048*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*P*pow(Q,2)*pow(Ze,3))/pow(r_j,4) + (16*phi_Der_f*c_gbs*pow(Ze,4))/pow(r_j,3) + (128*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*pow(P,2)*pow(Ze,4))/pow(r_j,3) - (128*pow(phi_Der_f,2)*pow(c_gbs,2)*Q*pow(Ze,4))/pow(r_j,4) - (2304*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*pow(P,2)*Q*pow(Ze,4))/pow(r_j,4) - (96*pow(phi_Der_f,2)*pow(c_gbs,2)*P*pow(Ze,5))/pow(r_j,4) - (768*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*pow(P,3)*pow(Ze,5))/pow(r_j,4) + SE_LL_TR*((8*phi_Der_f*c_gbs*Ze)/(r_j*Al) - (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Q*Ze)/(pow(r_j,2)*Al) - (32*pow(phi_Der_f,2)*pow(c_gbs,2)*P*pow(Ze,2))/(pow(r_j,2)*Al)) + r_Der_Q*((64*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,2))/pow(r_j,3) - (512*pow(phi_Der_f,3)*pow(c_gbs,3)*Q*pow(Ze,2))/pow(r_j,4) - (512*pow(phi_Der_f,3)*pow(c_gbs,3)*P*pow(Ze,3))/pow(r_j,4)) + r_Der_Ze*((16*phi_Der_f*c_gbs*Ze)/pow(r_j,2) - (256*pow(phi_Der_f,2)*pow(c_gbs,2)*Q*Ze)/pow(r_j,3) + (1024*pow(phi_Der_f,3)*pow(c_gbs,3)*pow(Q,2)*Ze)/pow(r_j,4) - (192*pow(phi_Der_f,2)*pow(c_gbs,2)*P*pow(Ze,2))/pow(r_j,3) + (1536*pow(phi_Der_f,3)*pow(c_gbs,3)*P*Q*pow(Ze,2))/pow(r_j,4) + (512*pow(phi_Der_f,3)*pow(c_gbs,3)*pow(P,2)*pow(Ze,3))/pow(r_j,4) + (128*pow(phi_Der_f,2)*pow(c_gbs,2)*Q*pow(Ze,3))/pow(r_j,3) - (1024*pow(phi_Der_f,3)*pow(c_gbs,3)*pow(Q,2)*pow(Ze,3))/pow(r_j,4) - (768*pow(phi_Der_f,3)*pow(c_gbs,3)*P*Q*pow(Ze,4))/pow(r_j,4)) + r_Der_P*((192*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,3))/pow(r_j,3) - (1536*pow(phi_Der_f,3)*pow(c_gbs,3)*Q*pow(Ze,3))/pow(r_j,4) - (1280*pow(phi_Der_f,3)*pow(c_gbs,3)*P*pow(Ze,4))/pow(r_j,4) - (128*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,5))/pow(r_j,3) + (1024*pow(phi_Der_f,3)*pow(c_gbs,3)*Q*pow(Ze,5))/pow(r_j,4) + (768*pow(phi_Der_f,3)*pow(c_gbs,3)*P*pow(Ze,6))/pow(r_j,4)))
+	;
 }
-/*==========================================================================*/
-static double compute_jac_Crank_Nicolson_Gauss_Bonnet_scalar(
-	double dt,	double dr,
-	double r_j,	double c_gbs,
-	double Al, 	double Ze,
-	double P,	double Q,
-	double t_Der_P,
-	double r_Der_Al,	double r_Der_Ze,
-	double r_Der_P,		double r_Der_Q,
-	double phi_Der_f,	double phiphi_Der_f,
-	double SE_LL_TR,	double SE_LL_ThTh,
-	double P_Der_SE_LL_TR,	double P_Der_SE_LL_ThTh)
+/*###########################################################################*/
+static double compute_jac_center_P(
+	double c_gbs, double r_j, double dr, double dt,
+	double phi_Der_f, double phiphi_Der_f, 
+	double SE_LL_TR,       double SE_LL_ThTh, 
+	double P_Der_SE_LL_TR, double P_Der_SE_LL_ThTh, 
+	double Al,       double Ze,       double Q,       double P,
+	double r_Der_Al, double r_Der_Ze, double r_Der_Q, double r_Der_P,
+                                                      double t_Der_P)
 {
-	return
-		(2*P_Der_SE_LL_TR*Ze)/(pow(r_j,2)*Al) - (16*phiphi_Der_f*P_Der_SE_LL_TR*c_gbs*pow(Q,2)*Ze)/(pow(r_j,2)*Al) - (4*P_Der_SE_LL_ThTh*pow(Ze,2))/pow(r_j,4) + (32*phi_Der_f*P_Der_SE_LL_ThTh*c_gbs*Q*pow(Ze,2))/pow(r_j,5) + (32*phi_Der_f*P_Der_SE_LL_ThTh*c_gbs*P*pow(Ze,3))/pow(r_j,5) + (16*phiphi_Der_f*c_gbs*Q*pow(Ze,3))/pow(r_j,4) + (128*pow(phi_Der_f,2)*pow(r_Der_Ze,2)*pow(c_gbs,2)*Q*pow(Ze,3))/pow(r_j,4) - (128*pow(phiphi_Der_f,2)*pow(c_gbs,2)*pow(Q,3)*pow(Ze,3))/pow(r_j,4) + (32*phi_Der_f*c_gbs*SE_LL_ThTh*pow(Ze,3))/pow(r_j,5) + (32*phiphi_Der_f*c_gbs*P*pow(Ze,4))/pow(r_j,4) - (256*pow(phiphi_Der_f,2)*pow(c_gbs,2)*P*pow(Q,2)*pow(Ze,4))/pow(r_j,4) + r_Der_Q*((-16*phi_Der_f*P_Der_SE_LL_TR*c_gbs*Ze)/(pow(r_j,2)*Al) - (128*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*Q*pow(Ze,3))/pow(r_j,4) - (256*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*P*pow(Ze,4))/pow(r_j,4)) + t_Der_P*((384*pow(phi_Der_f,2)*r_Der_Ze*pow(c_gbs,2)*pow(Ze,4))/(pow(r_j,4)*Al) + (384*pow(phi_Der_f,2)*r_Der_Al*pow(c_gbs,2)*pow(Ze,5))/(pow(r_j,4)*pow(Al,2))) + pow(r_Der_Al,2)*((-32*phi_Der_f*c_gbs*pow(Ze,3))/(pow(r_j,3)*pow(Al,2)) + (256*pow(phi_Der_f,2)*pow(c_gbs,2)*Q*pow(Ze,3))/(pow(r_j,4)*pow(Al,2)) + (512*pow(phi_Der_f,2)*pow(c_gbs,2)*P*pow(Ze,4))/(pow(r_j,4)*pow(Al,2)) + (256*pow(phi_Der_f,2)*pow(c_gbs,2)*Q*pow(Ze,5))/(pow(r_j,4)*pow(Al,2))) + r_Der_Ze*((-4*P_Der_SE_LL_TR)/(r_j*Al) + (32*phi_Der_f*P_Der_SE_LL_TR*c_gbs*Q)/(pow(r_j,2)*Al) + (16*phi_Der_f*P_Der_SE_LL_TR*c_gbs*P*Ze)/(pow(r_j,2)*Al) + (16*phi_Der_f*c_gbs*SE_LL_TR*Ze)/(pow(r_j,2)*Al) - (32*phiphi_Der_f*c_gbs*Q*pow(Ze,2))/pow(r_j,3) + (256*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*pow(Q,2)*pow(Ze,2))/pow(r_j,4) - (128*phiphi_Der_f*c_gbs*P*pow(Ze,3))/pow(r_j,3) + (1280*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*P*Q*pow(Ze,3))/pow(r_j,4) + (48*phi_Der_f*c_gbs*pow(Ze,4))/pow(r_j,4) + (1152*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*pow(P,2)*pow(Ze,4))/pow(r_j,4) + r_Der_P*((128*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,3))/pow(r_j,4) - (384*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,5))/pow(r_j,4))) + ((32*phi_Der_f*c_gbs*pow(Ze,4))/(pow(r_j,4)*Al) - (256*pow(phi_Der_f,2)*r_Der_Q*pow(c_gbs,2)*pow(Ze,4))/(pow(r_j,4)*Al) - (256*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*pow(Q,2)*pow(Ze,4))/(pow(r_j,4)*Al) + r_Der_Ze*((-128*phi_Der_f*c_gbs*pow(Ze,3))/(pow(r_j,3)*Al) + (1024*pow(phi_Der_f,2)*pow(c_gbs,2)*Q*pow(Ze,3))/(pow(r_j,4)*Al) + (768*pow(phi_Der_f,2)*pow(c_gbs,2)*P*pow(Ze,4))/(pow(r_j,4)*Al)) + r_Der_Al*((-128*phi_Der_f*c_gbs*pow(Ze,4))/(pow(r_j,3)*pow(Al,2)) + (1024*pow(phi_Der_f,2)*pow(c_gbs,2)*Q*pow(Ze,4))/(pow(r_j,4)*pow(Al,2)) + (768*pow(phi_Der_f,2)*pow(c_gbs,2)*P*pow(Ze,5))/(pow(r_j,4)*pow(Al,2))))/dt + r_Der_Al*((-4*P_Der_SE_LL_TR*Ze)/(r_j*pow(Al,2)) + (32*phi_Der_f*P_Der_SE_LL_TR*c_gbs*Q*Ze)/(pow(r_j,2)*pow(Al,2)) + (16*phi_Der_f*P_Der_SE_LL_TR*c_gbs*P*pow(Ze,2))/(pow(r_j,2)*pow(Al,2)) + (16*phi_Der_f*c_gbs*SE_LL_TR*pow(Ze,2))/(pow(r_j,2)*pow(Al,2)) - (32*phi_Der_f*c_gbs*pow(Ze,3))/(pow(r_j,4)*Al) + (256*pow(phi_Der_f,2)*r_Der_Q*pow(c_gbs,2)*pow(Ze,3))/(pow(r_j,4)*Al) - (96*phiphi_Der_f*c_gbs*Q*pow(Ze,3))/(pow(r_j,3)*Al) + (1024*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*pow(Q,2)*pow(Ze,3))/(pow(r_j,4)*Al) - (128*phiphi_Der_f*c_gbs*P*pow(Ze,4))/(pow(r_j,3)*Al) + (2304*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*P*Q*pow(Ze,4))/(pow(r_j,4)*Al) + (48*phi_Der_f*c_gbs*pow(Ze,5))/(pow(r_j,4)*Al) + (1152*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*pow(P,2)*pow(Ze,5))/(pow(r_j,4)*Al) + r_Der_Ze*((96*phi_Der_f*c_gbs*pow(Ze,2))/(pow(r_j,3)*Al) - (768*pow(phi_Der_f,2)*pow(c_gbs,2)*Q*pow(Ze,2))/(pow(r_j,4)*Al) - (512*pow(phi_Der_f,2)*pow(c_gbs,2)*P*pow(Ze,3))/(pow(r_j,4)*Al) + (384*pow(phi_Der_f,2)*pow(c_gbs,2)*Q*pow(Ze,4))/(pow(r_j,4)*Al)) + r_Der_P*((640*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,4))/(pow(r_j,4)*Al) - (384*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,6))/(pow(r_j,4)*Al)))
-	; 
+	return 
+		(-2*phi_Der_f*P_Der_SE_LL_TR*c_gbs*Ze)/pow(r_j,2) - (Al*Ze)/r_j + (32*phi_Der_f*c_gbs*Al*Q*Ze)/pow(r_j,2) + (16*phiphi_Der_f*phi_Der_f*P_Der_SE_LL_TR*pow(c_gbs,2)*pow(Q,2)*Ze)/pow(r_j,2) - (192*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(Q,2)*Ze)/pow(r_j,3) + (4*phi_Der_f*P_Der_SE_LL_ThTh*c_gbs*Al*pow(Ze,2))/pow(r_j,4) + (32*phi_Der_f*c_gbs*Al*P*pow(Ze,2))/pow(r_j,2) - (32*pow(phi_Der_f,2)*P_Der_SE_LL_ThTh*pow(c_gbs,2)*Al*Q*pow(Ze,2))/pow(r_j,5) - (384*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*P*Q*pow(Ze,2))/pow(r_j,3) - (32*pow(phi_Der_f,2)*P_Der_SE_LL_ThTh*pow(c_gbs,2)*Al*P*pow(Ze,3))/pow(r_j,5) - (192*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(P,2)*pow(Ze,3))/pow(r_j,3) - (16*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*Al*Q*pow(Ze,3))/pow(r_j,4) - (128*pow(phi_Der_f,3)*pow(r_Der_Ze,2)*pow(c_gbs,3)*Al*Q*pow(Ze,3))/pow(r_j,4) + (128*pow(phiphi_Der_f,2)*phi_Der_f*pow(c_gbs,3)*Al*pow(Q,3)*pow(Ze,3))/pow(r_j,4) - (32*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*SE_LL_ThTh*pow(Ze,3))/pow(r_j,5) - (32*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*Al*P*pow(Ze,4))/pow(r_j,4) + (256*pow(phiphi_Der_f,2)*phi_Der_f*pow(c_gbs,3)*Al*P*pow(Q,2)*pow(Ze,4))/pow(r_j,4) + r_Der_P*((8*phi_Der_f*c_gbs*Al*pow(Ze,2))/r_j - (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*Q*pow(Ze,2))/pow(r_j,2) - (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*P*pow(Ze,3))/pow(r_j,2)) + r_Der_Q*((16*pow(phi_Der_f,2)*P_Der_SE_LL_TR*pow(c_gbs,2)*Ze)/pow(r_j,2) + (8*phi_Der_f*c_gbs*Al*Ze)/r_j - (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*Q*Ze)/pow(r_j,2) - (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*P*pow(Ze,2))/pow(r_j,2) + (128*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*Al*Q*pow(Ze,3))/pow(r_j,4) + (256*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*Al*P*pow(Ze,4))/pow(r_j,4)) + t_Der_P*((-8*phi_Der_f*c_gbs*Ze)/r_j + (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Q*Ze)/pow(r_j,2) + (64*pow(phi_Der_f,2)*pow(c_gbs,2)*P*pow(Ze,2))/pow(r_j,2) - (384*pow(phi_Der_f,3)*r_Der_Ze*pow(c_gbs,3)*pow(Ze,4))/pow(r_j,4) - (384*pow(phi_Der_f,3)*r_Der_Al*pow(c_gbs,3)*pow(Ze,5))/(pow(r_j,4)*Al)) + pow(r_Der_Al,2)*((32*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,3))/(pow(r_j,3)*Al) - (256*pow(phi_Der_f,3)*pow(c_gbs,3)*Q*pow(Ze,3))/(pow(r_j,4)*Al) - (512*pow(phi_Der_f,3)*pow(c_gbs,3)*P*pow(Ze,4))/(pow(r_j,4)*Al) - (256*pow(phi_Der_f,3)*pow(c_gbs,3)*Q*pow(Ze,5))/(pow(r_j,4)*Al)) + r_Der_Ze*((4*phi_Der_f*P_Der_SE_LL_TR*c_gbs)/r_j - Al/2. - (32*pow(phi_Der_f,2)*P_Der_SE_LL_TR*pow(c_gbs,2)*Q)/pow(r_j,2) + (8*phi_Der_f*c_gbs*Al*Q)/r_j - (32*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(Q,2))/pow(r_j,2) - (16*pow(phi_Der_f,2)*P_Der_SE_LL_TR*pow(c_gbs,2)*P*Ze)/pow(r_j,2) + (16*phi_Der_f*c_gbs*Al*P*Ze)/r_j - (128*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*P*Q*Ze)/pow(r_j,2) - (16*pow(phi_Der_f,2)*pow(c_gbs,2)*SE_LL_TR*Ze)/pow(r_j,2) - (96*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(P,2)*pow(Ze,2))/pow(r_j,2) + (32*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*Al*Q*pow(Ze,2))/pow(r_j,3) - (256*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*Al*pow(Q,2)*pow(Ze,2))/pow(r_j,4) + (128*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*Al*P*pow(Ze,3))/pow(r_j,3) - (1280*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*Al*P*Q*pow(Ze,3))/pow(r_j,4) - (48*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(Ze,4))/pow(r_j,4) - (1152*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*Al*pow(P,2)*pow(Ze,4))/pow(r_j,4) + r_Der_P*((-128*pow(phi_Der_f,3)*pow(c_gbs,3)*Al*pow(Ze,3))/pow(r_j,4) + (384*pow(phi_Der_f,3)*pow(c_gbs,3)*Al*pow(Ze,5))/pow(r_j,4))) + (1 - (16*phi_Der_f*c_gbs*Q)/r_j + (64*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Q,2))/pow(r_j,2) - (16*phi_Der_f*c_gbs*P*Ze)/r_j + (128*pow(phi_Der_f,2)*pow(c_gbs,2)*P*Q*Ze)/pow(r_j,2) + (64*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(P,2)*pow(Ze,2))/pow(r_j,2) - (32*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,4))/pow(r_j,4) + (256*pow(phi_Der_f,3)*r_Der_Q*pow(c_gbs,3)*pow(Ze,4))/pow(r_j,4) + (256*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*pow(Q,2)*pow(Ze,4))/pow(r_j,4) + r_Der_Ze*((128*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,3))/pow(r_j,3) - (1024*pow(phi_Der_f,3)*pow(c_gbs,3)*Q*pow(Ze,3))/pow(r_j,4) - (768*pow(phi_Der_f,3)*pow(c_gbs,3)*P*pow(Ze,4))/pow(r_j,4)) + r_Der_Al*((128*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,4))/(pow(r_j,3)*Al) - (1024*pow(phi_Der_f,3)*pow(c_gbs,3)*Q*pow(Ze,4))/(pow(r_j,4)*Al) - (768*pow(phi_Der_f,3)*pow(c_gbs,3)*P*pow(Ze,5))/(pow(r_j,4)*Al)))/dt + r_Der_Al*(-Ze/2. + (4*phi_Der_f*P_Der_SE_LL_TR*c_gbs*Ze)/(r_j*Al) + (16*phi_Der_f*c_gbs*Q*Ze)/r_j - (32*pow(phi_Der_f,2)*P_Der_SE_LL_TR*pow(c_gbs,2)*Q*Ze)/(pow(r_j,2)*Al) - (96*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Q,2)*Ze)/pow(r_j,2) + (16*phi_Der_f*c_gbs*P*pow(Ze,2))/r_j - (16*pow(phi_Der_f,2)*P_Der_SE_LL_TR*pow(c_gbs,2)*P*pow(Ze,2))/(pow(r_j,2)*Al) - (192*pow(phi_Der_f,2)*pow(c_gbs,2)*P*Q*pow(Ze,2))/pow(r_j,2) - (16*pow(phi_Der_f,2)*pow(c_gbs,2)*SE_LL_TR*pow(Ze,2))/(pow(r_j,2)*Al) + (32*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,3))/pow(r_j,4) - (256*pow(phi_Der_f,3)*r_Der_Q*pow(c_gbs,3)*pow(Ze,3))/pow(r_j,4) - (96*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(P,2)*pow(Ze,3))/pow(r_j,2) + (96*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*Q*pow(Ze,3))/pow(r_j,3) - (1024*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*pow(Q,2)*pow(Ze,3))/pow(r_j,4) + (128*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*P*pow(Ze,4))/pow(r_j,3) - (2304*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*P*Q*pow(Ze,4))/pow(r_j,4) - (48*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,5))/pow(r_j,4) - (1152*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*pow(P,2)*pow(Ze,5))/pow(r_j,4) + r_Der_Ze*((-96*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,2))/pow(r_j,3) + (768*pow(phi_Der_f,3)*pow(c_gbs,3)*Q*pow(Ze,2))/pow(r_j,4) + (512*pow(phi_Der_f,3)*pow(c_gbs,3)*P*pow(Ze,3))/pow(r_j,4) - (384*pow(phi_Der_f,3)*pow(c_gbs,3)*Q*pow(Ze,4))/pow(r_j,4)) + r_Der_P*((-640*pow(phi_Der_f,3)*pow(c_gbs,3)*pow(Ze,4))/pow(r_j,4) + (384*pow(phi_Der_f,3)*pow(c_gbs,3)*pow(Ze,6))/pow(r_j,4)))
+	;
 }
-/*==========================================================================*/
-static double compute_jac_Crank_Nicolson_upwind_Gauss_Bonnet_scalar(
-	double dt,	double dr,
-	double r_j,	double c_gbs,
-	double Al, 	double Ze,
-	double P,	double Q,
-	double t_Der_P,
-	double r_Der_Al,	double r_Der_Ze,
-	double r_Der_P,		double r_Der_Q,
-	double phi_Der_f,	double phiphi_Der_f,
-	double SE_LL_TR,	double SE_LL_ThTh,
-	double P_Der_SE_LL_TR,	double P_Der_SE_LL_ThTh)
+/*###########################################################################*/
+static double compute_jac_forward_P(
+	double c_gbs, double r_j, double dr, double dt,
+	double phi_Der_f, double phiphi_Der_f, 
+	double SE_LL_TR,       double SE_LL_ThTh, 
+	double P_Der_SE_LL_TR, double P_Der_SE_LL_ThTh, 
+	double Al,       double Ze,       double Q,       double P,
+	double r_Der_Al, double r_Der_Ze, double r_Der_Q, double r_Der_P,
+                                                      double t_Der_P)
 {
-	return
-	0
-	; 
-}
-/*==========================================================================*/
+	return 
+		(-2*phi_Der_f*P_Der_SE_LL_TR*c_gbs*Ze)/pow(r_j,2) - (Al*Ze)/r_j + (32*phi_Der_f*c_gbs*Al*Q*Ze)/pow(r_j,2) + (16*phiphi_Der_f*phi_Der_f*P_Der_SE_LL_TR*pow(c_gbs,2)*pow(Q,2)*Ze)/pow(r_j,2) - (192*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(Q,2)*Ze)/pow(r_j,3) + (4*phi_Der_f*P_Der_SE_LL_ThTh*c_gbs*Al*pow(Ze,2))/pow(r_j,4) + (32*phi_Der_f*c_gbs*Al*P*pow(Ze,2))/pow(r_j,2) - (32*pow(phi_Der_f,2)*P_Der_SE_LL_ThTh*pow(c_gbs,2)*Al*Q*pow(Ze,2))/pow(r_j,5) - (384*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*P*Q*pow(Ze,2))/pow(r_j,3) - (32*pow(phi_Der_f,2)*P_Der_SE_LL_ThTh*pow(c_gbs,2)*Al*P*pow(Ze,3))/pow(r_j,5) - (192*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(P,2)*pow(Ze,3))/pow(r_j,3) - (16*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*Al*Q*pow(Ze,3))/pow(r_j,4) - (128*pow(phi_Der_f,3)*pow(r_Der_Ze,2)*pow(c_gbs,3)*Al*Q*pow(Ze,3))/pow(r_j,4) + (128*pow(phiphi_Der_f,2)*phi_Der_f*pow(c_gbs,3)*Al*pow(Q,3)*pow(Ze,3))/pow(r_j,4) - (32*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*SE_LL_ThTh*pow(Ze,3))/pow(r_j,5) - (32*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*Al*P*pow(Ze,4))/pow(r_j,4) + (256*pow(phiphi_Der_f,2)*phi_Der_f*pow(c_gbs,3)*Al*P*pow(Q,2)*pow(Ze,4))/pow(r_j,4) + r_Der_P*((8*phi_Der_f*c_gbs*Al*pow(Ze,2))/r_j - (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*Q*pow(Ze,2))/pow(r_j,2) - (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*P*pow(Ze,3))/pow(r_j,2)) + r_Der_Q*((16*pow(phi_Der_f,2)*P_Der_SE_LL_TR*pow(c_gbs,2)*Ze)/pow(r_j,2) + (8*phi_Der_f*c_gbs*Al*Ze)/r_j - (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*Q*Ze)/pow(r_j,2) - (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*P*pow(Ze,2))/pow(r_j,2) + (128*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*Al*Q*pow(Ze,3))/pow(r_j,4) + (256*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*Al*P*pow(Ze,4))/pow(r_j,4)) + t_Der_P*((-8*phi_Der_f*c_gbs*Ze)/r_j + (64*pow(phi_Der_f,2)*pow(c_gbs,2)*Q*Ze)/pow(r_j,2) + (64*pow(phi_Der_f,2)*pow(c_gbs,2)*P*pow(Ze,2))/pow(r_j,2) - (384*pow(phi_Der_f,3)*r_Der_Ze*pow(c_gbs,3)*pow(Ze,4))/pow(r_j,4) - (384*pow(phi_Der_f,3)*r_Der_Al*pow(c_gbs,3)*pow(Ze,5))/(pow(r_j,4)*Al)) + pow(r_Der_Al,2)*((32*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,3))/(pow(r_j,3)*Al) - (256*pow(phi_Der_f,3)*pow(c_gbs,3)*Q*pow(Ze,3))/(pow(r_j,4)*Al) - (512*pow(phi_Der_f,3)*pow(c_gbs,3)*P*pow(Ze,4))/(pow(r_j,4)*Al) - (256*pow(phi_Der_f,3)*pow(c_gbs,3)*Q*pow(Ze,5))/(pow(r_j,4)*Al)) + r_Der_Ze*((4*phi_Der_f*P_Der_SE_LL_TR*c_gbs)/r_j - Al/2. - (32*pow(phi_Der_f,2)*P_Der_SE_LL_TR*pow(c_gbs,2)*Q)/pow(r_j,2) + (8*phi_Der_f*c_gbs*Al*Q)/r_j - (32*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(Q,2))/pow(r_j,2) - (16*pow(phi_Der_f,2)*P_Der_SE_LL_TR*pow(c_gbs,2)*P*Ze)/pow(r_j,2) + (16*phi_Der_f*c_gbs*Al*P*Ze)/r_j - (128*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*P*Q*Ze)/pow(r_j,2) - (16*pow(phi_Der_f,2)*pow(c_gbs,2)*SE_LL_TR*Ze)/pow(r_j,2) - (96*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(P,2)*pow(Ze,2))/pow(r_j,2) + (32*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*Al*Q*pow(Ze,2))/pow(r_j,3) - (256*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*Al*pow(Q,2)*pow(Ze,2))/pow(r_j,4) + (128*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*Al*P*pow(Ze,3))/pow(r_j,3) - (1280*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*Al*P*Q*pow(Ze,3))/pow(r_j,4) - (48*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(Ze,4))/pow(r_j,4) - (1152*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*Al*pow(P,2)*pow(Ze,4))/pow(r_j,4) + r_Der_P*((-128*pow(phi_Der_f,3)*pow(c_gbs,3)*Al*pow(Ze,3))/pow(r_j,4) + (384*pow(phi_Der_f,3)*pow(c_gbs,3)*Al*pow(Ze,5))/pow(r_j,4))) + (1 - (16*phi_Der_f*c_gbs*Q)/r_j + (64*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Q,2))/pow(r_j,2) - (16*phi_Der_f*c_gbs*P*Ze)/r_j + (128*pow(phi_Der_f,2)*pow(c_gbs,2)*P*Q*Ze)/pow(r_j,2) + (64*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(P,2)*pow(Ze,2))/pow(r_j,2) - (32*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,4))/pow(r_j,4) + (256*pow(phi_Der_f,3)*r_Der_Q*pow(c_gbs,3)*pow(Ze,4))/pow(r_j,4) + (256*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*pow(Q,2)*pow(Ze,4))/pow(r_j,4) + r_Der_Ze*((128*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,3))/pow(r_j,3) - (1024*pow(phi_Der_f,3)*pow(c_gbs,3)*Q*pow(Ze,3))/pow(r_j,4) - (768*pow(phi_Der_f,3)*pow(c_gbs,3)*P*pow(Ze,4))/pow(r_j,4)) + r_Der_Al*((128*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,4))/(pow(r_j,3)*Al) - (1024*pow(phi_Der_f,3)*pow(c_gbs,3)*Q*pow(Ze,4))/(pow(r_j,4)*Al) - (768*pow(phi_Der_f,3)*pow(c_gbs,3)*P*pow(Ze,5))/(pow(r_j,4)*Al)))/dt + r_Der_Al*(-Ze/2. + (4*phi_Der_f*P_Der_SE_LL_TR*c_gbs*Ze)/(r_j*Al) + (16*phi_Der_f*c_gbs*Q*Ze)/r_j - (32*pow(phi_Der_f,2)*P_Der_SE_LL_TR*pow(c_gbs,2)*Q*Ze)/(pow(r_j,2)*Al) - (96*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Q,2)*Ze)/pow(r_j,2) + (16*phi_Der_f*c_gbs*P*pow(Ze,2))/r_j - (16*pow(phi_Der_f,2)*P_Der_SE_LL_TR*pow(c_gbs,2)*P*pow(Ze,2))/(pow(r_j,2)*Al) - (192*pow(phi_Der_f,2)*pow(c_gbs,2)*P*Q*pow(Ze,2))/pow(r_j,2) - (16*pow(phi_Der_f,2)*pow(c_gbs,2)*SE_LL_TR*pow(Ze,2))/(pow(r_j,2)*Al) + (32*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,3))/pow(r_j,4) - (256*pow(phi_Der_f,3)*r_Der_Q*pow(c_gbs,3)*pow(Ze,3))/pow(r_j,4) - (96*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(P,2)*pow(Ze,3))/pow(r_j,2) + (96*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*Q*pow(Ze,3))/pow(r_j,3) - (1024*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*pow(Q,2)*pow(Ze,3))/pow(r_j,4) + (128*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*P*pow(Ze,4))/pow(r_j,3) - (2304*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*P*Q*pow(Ze,4))/pow(r_j,4) - (48*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,5))/pow(r_j,4) - (1152*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*pow(P,2)*pow(Ze,5))/pow(r_j,4) + r_Der_Ze*((-96*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,2))/pow(r_j,3) + (768*pow(phi_Der_f,3)*pow(c_gbs,3)*Q*pow(Ze,2))/pow(r_j,4) + (512*pow(phi_Der_f,3)*pow(c_gbs,3)*P*pow(Ze,3))/pow(r_j,4) - (384*pow(phi_Der_f,3)*pow(c_gbs,3)*Q*pow(Ze,4))/pow(r_j,4)) + r_Der_P*((-640*pow(phi_Der_f,3)*pow(c_gbs,3)*pow(Ze,4))/pow(r_j,4) + (384*pow(phi_Der_f,3)*pow(c_gbs,3)*pow(Ze,6))/pow(r_j,4)))
+	;
+}/*==========================================================================*/
 static double compute_iteration_Crank_Nicolson_PQ(
 	double s_L,	double c_gbs,
 	int Nx,
@@ -411,35 +413,22 @@ static double compute_iteration_Crank_Nicolson_PQ(
 		double jac_Q = (1./dt) ;
 	/* P field 
 	*/
-		double res_P = t_Der_P  
-		-	pow(r_j,-2)*D1_center_2ndOrder(
-				pow(r_jp1,2)*Al_jp1*(Q_jp1 + Ze_jp1*P_jp1),
-				pow(r_jm1,2)*Al_jm1*(Q_jm1 + Ze_jm1*P_jm1),
-				dr)
-		+	c_gbs*phi_Der_f*
-			compute_res_Crank_Nicolson_Gauss_Bonnet_scalar(
-				r_j,	c_gbs,
-				Al, 	Ze,
-				P,	Q,
-				t_Der_P,
-				r_Der_Al,	r_Der_Ze,
-				r_Der_P,	r_Der_Q,
-				phi_Der_f,	phiphi_Der_f,
-				SE_LL_TR,	SE_LL_ThTh)
+		double res_P = compute_res_P(
+			c_gbs, r_j,
+			phi_Der_f, phiphi_Der_f, 
+			SE_LL_TR, SE_LL_ThTh, 
+			Al,       Ze,       Q,       P,
+			r_Der_Al, r_Der_Ze, r_Der_Q, r_Der_P,
+			t_Der_P)
 		;
-		double jac_P = (1./dt) 
-		+	c_gbs*phi_Der_f*
-			compute_jac_Crank_Nicolson_Gauss_Bonnet_scalar(
-				dt,	dr,
-				r_j,	c_gbs,
-				Al, 	Ze,
-				P,	Q,
-				t_Der_P,
-				r_Der_Al,	r_Der_Ze,
-				r_Der_P,	r_Der_Q,
-				phi_Der_f,	phiphi_Der_f,
-				SE_LL_TR,	SE_LL_ThTh,
-				P_Der_SE_LL_TR,	P_Der_SE_LL_ThTh)
+		double jac_P = compute_jac_forward_P(
+			c_gbs, r_j, dr, dt,
+			phi_Der_f, phiphi_Der_f, 
+			SE_LL_TR,       SE_LL_ThTh, 
+			P_Der_SE_LL_TR, P_Der_SE_LL_ThTh, 
+			Al,       Ze,       Q,       P,
+			r_Der_Al, r_Der_Ze, r_Der_Q, r_Der_P,
+			t_Der_P)	
 		;
 	/* one iteration 
 	*/
@@ -482,21 +471,37 @@ static double compute_iteration_Crank_Nicolson_PQ(
 
 		double dr = stereographic_dr(s_L, x_j, dx) ;
 
-		double Al_j   = (Al_n[exc_jC+0]+Al_nm1[exc_jC+0])/2 ;
+		double Al     = (Al_n[exc_jC+0]+Al_nm1[exc_jC+0])/2 ;
 		double Al_jp1 = (Al_n[exc_jC+1]+Al_nm1[exc_jC+1])/2 ;
 		double Al_jp2 = (Al_n[exc_jC+2]+Al_nm1[exc_jC+2])/2 ;
 
-		double Ze_j   = (Ze_n[exc_jC+0]+Ze_nm1[exc_jC+0])/2 ;
+		double Ze     = (Ze_n[exc_jC+0]+Ze_nm1[exc_jC+0])/2 ;
 		double Ze_jp1 = (Ze_n[exc_jC+1]+Ze_nm1[exc_jC+1])/2 ;
 		double Ze_jp2 = (Ze_n[exc_jC+2]+Ze_nm1[exc_jC+2])/2 ;
 
-		double P_j   = (P_n[exc_jC+0]+P_nm1[exc_jC+0])/2 ;
+		double P     = (P_n[exc_jC+0]+P_nm1[exc_jC+0])/2 ;
 		double P_jp1 = (P_n[exc_jC+1]+P_nm1[exc_jC+1])/2 ;
 		double P_jp2 = (P_n[exc_jC+2]+P_nm1[exc_jC+2])/2 ;
 
-		double Q_j   = (Q_n[exc_jC+0]+Q_nm1[exc_jC+0])/2 ;
+		double Q     = (Q_n[exc_jC+0]+Q_nm1[exc_jC+0])/2 ;
 		double Q_jp1 = (Q_n[exc_jC+1]+Q_nm1[exc_jC+1])/2 ;
 		double Q_jp2 = (Q_n[exc_jC+2]+Q_nm1[exc_jC+2])/2 ;
+
+		double t_Der_P = D1_CrankNicolson_2ndOrder(P_n[exc_jC], P_nm1[exc_jC], dt) ;
+
+		double r_Der_Al = D1_forward_2ndOrder(Al_jp2, Al_jp1, Al, dr) ;
+		double r_Der_Ze = D1_forward_2ndOrder(Ze_jp2, Ze_jp1, Ze, dr) ;
+		double r_Der_P  = D1_forward_2ndOrder( P_jp2,  P_jp1,  P, dr) ;
+		double r_Der_Q  = D1_forward_2ndOrder( Q_jp2,  Q_jp1,  Q, dr) ;
+
+		double phi_Der_f = 1 ;
+		double phiphi_Der_f = 0 ;
+
+		double SE_LL_TR = (Al*(2*P*Q + (pow(P,2) + pow(Q,2))*Ze))/2. ;
+		double SE_LL_ThTh = (pow(r_j,2)*(pow(P,2) - pow(Q,2)))/2. ;
+
+		double P_Der_SE_LL_TR = (Al*(Q + P*Ze))/2. ;
+		double P_Der_SE_LL_ThTh = (pow(r_j,2)*P)/2. ;
 	/* Q field 
 	*/
 		double res_Q = D1_CrankNicolson_2ndOrder(
@@ -506,26 +511,30 @@ static double compute_iteration_Crank_Nicolson_PQ(
 		-	D1_forward_2ndOrder(
 				Al_jp2*(P_jp2 + Ze_jp2*Q_jp2),
 				Al_jp1*(P_jp1 + Ze_jp1*Q_jp1),
-				Al_j  *(P_j   + Ze_j*  Q_j  ),
+				Al    *(P     + Ze*    Q    ),
 				dr)
 		;
 		double jac_Q =	1/dt 
-		- 	(1./2.)*(-3./(2*dr))*Al_j*Ze_j 
+		- 	(1./2.)*(-3./(2*dr))*Al*Ze 
 		;
 	/* P field 
 	*/
-		double res_P = D1_CrankNicolson_2ndOrder(
-				P_n[exc_jC], 
-				P_nm1[exc_jC], 
-				dt)
-		-	 pow(r_j,-2)*D1_forward_2ndOrder(
-				pow(r_jp2,2)*Al_jp2*(Q_jp2 + Ze_jp2*P_jp2),
-				pow(r_jp1,2)*Al_jp1*(Q_jp1 + Ze_jp1*P_jp1),
-				pow(r_j,  2)*Al_j  *(Q_j   + Ze_j  *P_j  ),
-				dr)
+		double res_P = compute_res_P(
+			c_gbs, r_j,
+			phi_Der_f, phiphi_Der_f, 
+			SE_LL_TR, SE_LL_ThTh, 
+			Al,       Ze,       Q,       P,
+			r_Der_Al, r_Der_Ze, r_Der_Q, r_Der_P,
+			t_Der_P)
 		;
-		double jac_P = 1./dt
-		-	(1./2.)*(-3./(2*dr))*Al_j*Ze_j
+		double jac_P = compute_jac_center_P(
+			c_gbs, r_j, dr, dt,
+			phi_Der_f, phiphi_Der_f, 
+			SE_LL_TR,       SE_LL_ThTh, 
+			P_Der_SE_LL_TR, P_Der_SE_LL_ThTh, 
+			Al,       Ze,       Q,       P,
+			r_Der_Al, r_Der_Ze, r_Der_Q, r_Der_P,
+			t_Der_P)	
 		;
 	/****/
 		Q_n[exc_jC] -= res_Q / jac_Q ;
