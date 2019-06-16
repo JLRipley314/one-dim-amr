@@ -151,41 +151,167 @@ static void compute_eom_scalar(
 	double* Q_n, 
 	double* eom_scalar)
 {
-	double x_j, r_j,
-		Al, Ze, P, Q, 
-		r_Der_Al, r_Der_Ze, r_Der_P, r_Der_Q,  
-		t_Der_P
-	;
-	for (int jC=exc_jC+1; jC<Nx-1; jC++) {
-		x_j = jC * dx ;
-                r_j = stereographic_r(s_L, x_j) ; 
+	return ;
+}
 
-		Al = Al_n[jC] ;
-		Ze = Ze_n[jC] ;
+/*===========================================================================*/
+/* compute characteristics */
+/*===========================================================================*/
+static double compute_element_P_eom_tDer_P(
+	double c_gbs,     double r_j, 
+	double phi_Der_f, double phiphi_Der_f, 
+	double rho,       
+	double Al,       double Ze,       double Q,       double P,
+	double r_Der_Q)	
+{
+	return 
+		(768*pow(phi_Der_f,3)*r_Der_Q*pow(c_gbs,3)*pow(Ze,4)*(r_j - 8*phi_Der_f*c_gbs*Q - 8*phi_Der_f*c_gbs*P*Ze))/(pow(r_j,4)*(r_j - 8*phi_Der_f*c_gbs*Q - 12*phi_Der_f*c_gbs*P*Ze)) + (pow(r_j,5) + 64*pow(phi_Der_f,2)*rho*pow(r_j,3)*pow(c_gbs,2)*pow(Ze,2) + 256*pow(phi_Der_f,2)*pow(r_j,3)*pow(c_gbs,2)*pow(P,2)*pow(Ze,2) - 768*pow(phi_Der_f,3)*pow(r_j,2)*pow(c_gbs,3)*pow(P,3)*pow(Ze,3) - 96*pow(phi_Der_f,2)*r_j*pow(c_gbs,2)*pow(Ze,4) - 512*pow(phi_Der_f,3)*pow(c_gbs,3)*pow(Q,3)*(pow(r_j,2) + 12*phiphi_Der_f*c_gbs*pow(Ze,4)) - 8*phi_Der_f*c_gbs*Q*(3*pow(r_j,4) - 56*phi_Der_f*pow(r_j,3)*c_gbs*P*Ze + 64*pow(phi_Der_f,2)*rho*pow(r_j,2)*pow(c_gbs,2)*pow(Ze,2) + 256*pow(phi_Der_f,2)*pow(r_j,2)*pow(c_gbs,2)*pow(P,2)*pow(Ze,2) - 96*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,4)) - 4*P*(7*phi_Der_f*pow(r_j,4)*c_gbs*Ze + 96*pow(phi_Der_f,3)*rho*pow(r_j,2)*pow(c_gbs,3)*pow(Ze,3) - 192*pow(phi_Der_f,3)*pow(c_gbs,3)*pow(Ze,5)) + 64*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Q,2)*(-4*phi_Der_f*c_gbs*P*Ze*(7*pow(r_j,2) + 24*phiphi_Der_f*c_gbs*pow(Ze,4)) + 3*(pow(r_j,3) + 4*phiphi_Der_f*r_j*c_gbs*pow(Ze,4))))/(pow(r_j,4)*(r_j - 8*phi_Der_f*c_gbs*Q - 12*phi_Der_f*c_gbs*P*Ze))
+	; 
+}
+/*===========================================================================*/
+static double compute_element_P_eom_tDer_Q(void)
+{
+	return 0 ; 
+}
+/*===========================================================================*/
+static double compute_element_Q_eom_tDer_P(void)
+{
+	return 0 ; 
+}
+/*===========================================================================*/
+static double compute_element_Q_eom_tDer_Q(void)
+{
+	return 1. ; 
+}
+/*===========================================================================*/
+static double compute_element_P_eom_rDer_P(
+	double c_gbs,     double r_j, 
+	double phi_Der_f, double phiphi_Der_f, 
+	double rho,       double Jr,       
+	double Al,        double Ze,       double Q,       double P,
+	double r_Der_P,   double r_Der_Q)	
+{
+	return
+		(-1536*pow(phi_Der_f,3)*r_Der_P*pow(c_gbs,3)*Al*pow(Ze,4))/pow(r_j,4) - (768*pow(phi_Der_f,3)*r_Der_Q*pow(c_gbs,3)*Al*pow(Ze,5)*(r_j - 4*phi_Der_f*c_gbs*Q - 8*phi_Der_f*c_gbs*P*Ze))/(pow(r_j,4)*(r_j - 8*phi_Der_f*c_gbs*Q - 12*phi_Der_f*c_gbs*P*Ze)) - (Al*Ze*(6144*pow(phi_Der_f,4)*pow(c_gbs,4)*pow(Q,4)*(pow(r_j,2) + 4*phiphi_Der_f*c_gbs*pow(Ze,4)) + 32*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Q,2)*(15*pow(r_j,4) - 256*pow(phi_Der_f,2)*pow(r_j,2)*pow(c_gbs,2)*Jr*Ze + 24*phiphi_Der_f*pow(r_j,2)*c_gbs*pow(Ze,4) - 96*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,4) - 16*phi_Der_f*r_j*c_gbs*P*Ze*(17*pow(r_j,2) + 48*phiphi_Der_f*c_gbs*pow(Ze,2) + 24*phiphi_Der_f*c_gbs*pow(Ze,4)) + 64*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(P,2)*pow(Ze,2)*(19*pow(r_j,2) + 120*phiphi_Der_f*c_gbs*pow(Ze,2) + 24*phiphi_Der_f*c_gbs*pow(Ze,4))) - 256*pow(phi_Der_f,3)*pow(c_gbs,3)*pow(Q,3)*(11*pow(r_j,3) + 36*phiphi_Der_f*r_j*c_gbs*pow(Ze,4) - 4*phi_Der_f*c_gbs*P*Ze*(25*pow(r_j,2) + 96*phiphi_Der_f*c_gbs*pow(Ze,2) + 72*phiphi_Der_f*c_gbs*pow(Ze,4))) + (r_j - 8*phi_Der_f*c_gbs*P*Ze)*(pow(r_j,5) - 128*pow(phi_Der_f,2)*pow(r_j,3)*pow(c_gbs,2)*Jr*Ze + 64*pow(phi_Der_f,2)*rho*pow(r_j,3)*pow(c_gbs,2)*pow(Ze,2) + 256*pow(phi_Der_f,2)*pow(r_j,3)*pow(c_gbs,2)*pow(P,2)*pow(Ze,2) - 768*pow(phi_Der_f,3)*pow(r_j,2)*pow(c_gbs,3)*pow(P,3)*pow(Ze,3) - 96*pow(phi_Der_f,2)*r_j*pow(c_gbs,2)*pow(Ze,4) + 4*phi_Der_f*c_gbs*P*Ze*(-7*pow(r_j,4) + 384*pow(phi_Der_f,2)*pow(r_j,2)*pow(c_gbs,2)*Jr*Ze - 96*pow(phi_Der_f,2)*rho*pow(r_j,2)*pow(c_gbs,2)*pow(Ze,2) + 192*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,4))) - 4*phi_Der_f*c_gbs*Q*(9*pow(r_j,5) - 512*pow(phi_Der_f,2)*pow(r_j,3)*pow(c_gbs,2)*Jr*Ze + 128*pow(phi_Der_f,2)*rho*pow(r_j,3)*pow(c_gbs,2)*pow(Ze,2) - 288*pow(phi_Der_f,2)*r_j*pow(c_gbs,2)*pow(Ze,4) + 128*pow(phi_Der_f,2)*r_j*pow(c_gbs,2)*pow(P,2)*pow(Ze,2)*(17*pow(r_j,2) + 60*phiphi_Der_f*c_gbs*pow(Ze,2)) - 256*pow(phi_Der_f,3)*pow(c_gbs,3)*pow(P,3)*pow(Ze,3)*(25*pow(r_j,2) + 144*phiphi_Der_f*c_gbs*pow(Ze,2)) + 4*phi_Der_f*c_gbs*P*Ze*(-61*pow(r_j,4) + 1280*pow(phi_Der_f,2)*pow(r_j,2)*pow(c_gbs,2)*Jr*Ze - 32*pow(r_j,2)*c_gbs*(3*phiphi_Der_f + 5*pow(phi_Der_f,2)*rho*c_gbs)*pow(Ze,2) + 576*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,4)))))/(pow(r_j,4)*(r_j - 8*phi_Der_f*c_gbs*Q - 12*phi_Der_f*c_gbs*P*Ze)*(r_j - 8*phi_Der_f*c_gbs*Q - 8*phi_Der_f*c_gbs*P*Ze))
+	; 
+}
+/*===========================================================================*/
+static double compute_element_P_eom_rDer_Q(
+	double c_gbs,     double r_j, 
+	double phi_Der_f, double phiphi_Der_f, 
+	double rho,       double Jr,       double SE_LL_TR,       
+	double Al,        double Ze,       double Q,       double P,
+	double r_Der_P,   double t_Der_P)	
+{
+	return
+		(768*pow(phi_Der_f,3)*t_Der_P*pow(c_gbs,3)*pow(Ze,4)*(r_j - 8*phi_Der_f*c_gbs*Q - 8*phi_Der_f*c_gbs*P*Ze))/(pow(r_j,4)*(r_j - 8*phi_Der_f*c_gbs*Q - 12*phi_Der_f*c_gbs*P*Ze)) - (768*pow(phi_Der_f,3)*r_Der_P*pow(c_gbs,3)*Al*pow(Ze,5)*(r_j - 4*phi_Der_f*c_gbs*Q - 8*phi_Der_f*c_gbs*P*Ze))/(pow(r_j,4)*(r_j - 8*phi_Der_f*c_gbs*Q - 12*phi_Der_f*c_gbs*P*Ze)) + (64*pow(phi_Der_f,2)*pow(r_j,2)*pow(c_gbs,2)*SE_LL_TR*Ze*pow(r_j - 8*phi_Der_f*c_gbs*Q - 8*phi_Der_f*c_gbs*P*Ze,2) + Al*(1024*pow(phi_Der_f,4)*pow(r_j,2)*pow(c_gbs,4)*pow(Q,4)*(-4 + pow(Ze,2)) + 256*pow(phi_Der_f,3)*pow(c_gbs,3)*pow(Q,3)*(8*pow(r_j,3) - 64*phi_Der_f*pow(r_j,2)*c_gbs*P*Ze - pow(r_j,3)*pow(Ze,2) + 8*phi_Der_f*pow(r_j,2)*c_gbs*P*pow(Ze,3) + 96*phiphi_Der_f*phi_Der_f*pow(c_gbs,2)*P*pow(Ze,5)) + 16*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Q,2)*(-24*pow(r_j,4) + 128*phi_Der_f*pow(r_j,2)*c_gbs*(2*phi_Der_f*c_gbs*Jr + 3*r_j*P)*Ze + (pow(r_j,4) - 1536*pow(phi_Der_f,2)*pow(r_j,2)*pow(c_gbs,2)*pow(P,2))*pow(Ze,2) - 16*phi_Der_f*pow(r_j,2)*c_gbs*(4*phi_Der_f*c_gbs*Jr + r_j*P)*pow(Ze,3) + 32*pow(phi_Der_f,2)*pow(c_gbs,2)*(12 - rho*pow(r_j,2) + 2*(pow(r_j,2) + 48*phiphi_Der_f*c_gbs)*pow(P,2))*pow(Ze,4) - 192*phiphi_Der_f*phi_Der_f*r_j*pow(c_gbs,2)*P*pow(Ze,5) + 1536*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*pow(P,2)*pow(Ze,6)) - pow(r_j - 8*phi_Der_f*c_gbs*P*Ze,2)*(pow(r_j,4) - 64*pow(phi_Der_f,2)*pow(r_j,2)*pow(c_gbs,2)*Jr*Ze - 16*phi_Der_f*pow(r_j,3)*c_gbs*P*Ze - 96*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,4) + 64*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(P,2)*pow(Ze,2)*(pow(r_j,2) - 12*phiphi_Der_f*c_gbs*pow(Ze,2))) + 32*phi_Der_f*c_gbs*Q*(r_j - 8*phi_Der_f*c_gbs*P*Ze)*(pow(r_j,4) - 16*phi_Der_f*pow(r_j,3)*c_gbs*P*Ze - 48*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,4) + 4*pow(phi_Der_f,2)*pow(r_j,2)*pow(c_gbs,2)*Jr*Ze*(-8 + pow(Ze,2)) + 64*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(P,2)*pow(Ze,2)*(pow(r_j,2) - 6*phiphi_Der_f*c_gbs*pow(Ze,2)))))/(pow(r_j,4)*(r_j - 8*phi_Der_f*c_gbs*Q - 12*phi_Der_f*c_gbs*P*Ze)*(r_j - 8*phi_Der_f*c_gbs*Q - 8*phi_Der_f*c_gbs*P*Ze))
+	; 
+}
+/*===========================================================================*/
+static double compute_element_Q_eom_rDer_P(double Al)
+{
+	return 
+		- Al 
+	; 
+}
+/*===========================================================================*/
+static double compute_element_Q_eom_rDer_Q(double Al, double Ze)
+{
+	return 
+		- Al*Ze
+	; 
+}
+/*===========================================================================*/
+static void computeArray_center_EdGB_characteristics(void)
+{
+	double phi_Der_f = 1. ;
+	double phiphi_Der_f = 0. ; 
 
-		P = P_n[jC] ;
-		Q = Q_n[jC] ;
+	double rho, Jr, SE_LL_TR ;
 
-		r_Der_Al = D1_stereographic_center_2ndOrder(s_L, x_j, Al_n[jC+1], Al_n[jC-1], dx) ; 
-		r_Der_Ze = D1_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1], Ze_n[jC-1], dx) ;
+	bool is_elliptic = false ;
 
-		r_Der_P = D1_stereographic_center_2ndOrder(s_L, x_j, P_n[jC+1], P_n[jC-1], dx) ; 
-		r_Der_Q = D1_stereographic_center_2ndOrder(s_L, x_j, Q_n[jC+1], Q_n[jC-1], dx) ;
+	double matrix_A[2][2] ;
+	double matrix_B[2][2] ;
 
-		t_Der_P = (P_n[jC]-P_nm2[jC])/(2.*dt) ;
-		t_Der_P = D1_forward_2ndOrder(P_n[jC], P_nm1[jC], P_nm2[jC], dt) ;
-		t_Der_P = D1_backward_2ndOrder(P_n[jC], P_nm1[jC], P_nm2[jC], dt) ;
+	double matrix_inv_A[2][2] ;
+	double matrix_inv_A_B[2][2] ;
 
-		eom_scalar[jC] = 
-		-	t_Der_P/Al
-		+	P*r_Der_Ze
-		+	r_Der_Q
-		+	Ze*r_Der_P
-		+	(Q+P*Ze)*r_Der_Al/Al
-		+	2*(Q/r_j+P*(Ze/r_j))
+	for (int jC=exc_jC+1; jC<Ny-1; jC++) {
+		double x_j = dy * jC ;
+
+		double r_j = stereographic_r( s_L, y_j) ;
+		double dr  = stereographic_dr(s_L, y_j, dy) ;
+
+		double Al = Al_n[jC] ;
+		double Ze = Ze_n[jC] ;
+		double P  = P_n[jC] ;
+		double Q  = Q_n[jC] ;
+
+		double r_Der_P = D1_center_2ndOrder(P_n[jC+1], P_n[jC-1], dr) ;
+		double r_Der_Q = D1_center_2ndOrder(Q_n[jC+1], Q_n[jC-1], dr) ;
+
+		double t_Der_P = D1_backward_2ndOrder(P_n[jC], P_nm1[jC], P_nm2[jC], dt) ;
+
+		double rho = 0 ;
+		double Jr = 0 ;
+		double SE_LL_TR = 0 ;
+
+		/****/
+		double matrix_A[2][2] = {0} ;
+		matrix_A[0][0] = compute_element_P_eom_tDer_P(
+			c_gbs,     r_j, 
+			phi_Der_f, phiphi_Der_f, 
+			rho,       
+			Al,       Ze,       Q,       P,
+			r_Der_Q)	
 		;
-		eom_scalar[jC] *= r_j ; 
+		matrix_A[0][1] = compute_element_P_eom_tDer_Q()	
+		;
+		matrix_A[1][0] = compute_element_Q_eom_tDer_P()	
+		;
+		matrix_A[1][1] = compute_element_Q_eom_tDer_Q()	
+		;
+		double matrix_B[2][2] = {0} ;
+		matrix_B[0][0] = compute_element_P_eom_rDer_P(
+			c_gbs,     r_j, 
+			phi_Der_f, phiphi_Der_f, 
+			rho,       Jr,       
+			Al,        Ze,       Q,       P,
+			r_Der_P,   r_Der_Q)	
+		;
+		matrix_B[0][1] = compute_element_P_eom_rDer_Q(
+			c_gbs,     r_j, 
+			phi_Der_f, phiphi_Der_f, 
+			rho,       Jr,       SE_LL_TR,       
+			Al,        Ze,       Q,       P,
+			r_Der_P,   t_Der_P)	
+		;
+		matrix_B[1][0] = compute_element_Q_eom_rDer_P(Al)
+		;
+		matrix_B[1][1] = compute_element_Q_eom_rDer_Q(Al, Ze)
+		;
+		/****/
+		double matrix_inv_A[2][2] = {0} ;
+		compute_2dMatrix_inverse(matrix_A, matrix_inv_A) ;
+		
+		double matrix_inv_AB[2][2] = {0} ;
+		compute_2dMatrix_multiply(matrix_inv_A, matrix_B, matrix_inv_AB) ;
+
+		bool is_elliptic =  
+			compute_2dMatrix_eigenvalues(matrix_inv_A_B, eigenvalues) 
+		;
+		if (is_elliptic == true) {
+			elliptic_pts += 1 ;
+		}
+			outgoing[jC] =
+				eigenvalues[0] 
+			;
+			ingoing[jC] =
+				eigenvalues[1] 
+			;
 	}
+
 	return ;
 }
 /*==========================================================================*/
