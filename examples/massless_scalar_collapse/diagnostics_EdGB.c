@@ -5,6 +5,7 @@
 
 #include "stencils.h"
 #include "diagnostics_EdGB.h"
+#include "basic_matrix_computations.h"
 
 /*==========================================================================*/
 static void set_array_val(int start, int end, double val, double* array) 
@@ -222,26 +223,30 @@ static double compute_element_Q_eom_rDer_Q(double Al, double Ze)
 	; 
 }
 /*===========================================================================*/
-static void computeArray_center_EdGB_characteristics(void)
+static void computeArray_center_EdGB_characteristics(
+	int Nx, 
+	double dt, double dx,
+	double s_L, double c_gbs,
+	int exc_jC, 
+	double* Al_n, double* Al_nm1, double* Al_nm2,
+	double* Ze_n, double* Ze_nm1, double* Ze_nm2,
+	double*  P_n, double*  P_nm1, double*  P_nm2,
+	double*  Q_n,
+	double* SE_LL_TR,
+	double* SE_LL_ThTh,
+	int* elliptic_pts,
+	double* ingoing, double* outgoing)
 {
 	double phi_Der_f = 1. ;
 	double phiphi_Der_f = 0. ; 
 
-	double rho, Jr, SE_LL_TR ;
-
 	bool is_elliptic = false ;
 
-	double matrix_A[2][2] ;
-	double matrix_B[2][2] ;
+	for (int jC=exc_jC+1; jC<Nx-1; jC++) {
+		double x_j = dx * jC ;
 
-	double matrix_inv_A[2][2] ;
-	double matrix_inv_A_B[2][2] ;
-
-	for (int jC=exc_jC+1; jC<Ny-1; jC++) {
-		double x_j = dy * jC ;
-
-		double r_j = stereographic_r( s_L, y_j) ;
-		double dr  = stereographic_dr(s_L, y_j, dy) ;
+		double r_j = stereographic_r( s_L, x_j) ;
+		double dr  = stereographic_dr(s_L, x_j, dx) ;
 
 		double Al = Al_n[jC] ;
 		double Ze = Ze_n[jC] ;
@@ -255,9 +260,7 @@ static void computeArray_center_EdGB_characteristics(void)
 
 		double rho = 0 ;
 		double Jr = 0 ;
-		double SE_LL_TR = 0 ;
 
-		/****/
 		double matrix_A[2][2] = {0} ;
 		matrix_A[0][0] = compute_element_P_eom_tDer_P(
 			c_gbs,     r_j, 
@@ -283,35 +286,32 @@ static void computeArray_center_EdGB_characteristics(void)
 		matrix_B[0][1] = compute_element_P_eom_rDer_Q(
 			c_gbs,     r_j, 
 			phi_Der_f, phiphi_Der_f, 
-			rho,       Jr,       SE_LL_TR,       
+			rho,       Jr,       SE_LL_TR[jC],
 			Al,        Ze,       Q,       P,
 			r_Der_P,   t_Der_P)	
 		;
-		matrix_B[1][0] = compute_element_Q_eom_rDer_P(Al)
-		;
-		matrix_B[1][1] = compute_element_Q_eom_rDer_Q(Al, Ze)
-		;
+		matrix_B[1][0] = compute_element_Q_eom_rDer_P(Al) ;
+		matrix_B[1][1] = compute_element_Q_eom_rDer_Q(Al, Ze) ;
 		/****/
 		double matrix_inv_A[2][2] = {0} ;
-		compute_2dMatrix_inverse(matrix_A, matrix_inv_A) ;
+//		compute_2dMatrix_inverse(matrix_A, matrix_inv_A) ;
 		
 		double matrix_inv_AB[2][2] = {0} ;
-		compute_2dMatrix_multiply(matrix_inv_A, matrix_B, matrix_inv_AB) ;
-
-		bool is_elliptic =  
-			compute_2dMatrix_eigenvalues(matrix_inv_A_B, eigenvalues) 
+//		compute_2dMatrix_multiply(matrix_inv_A, matrix_B, matrix_inv_AB) ;
+		double eigenvalues[2] = {0} ;
+		bool is_elliptic = false 
+//			compute_2dMatrix_eigenvalues(matrix_inv_AB, eigenvalues) 
 		;
 		if (is_elliptic == true) {
-			elliptic_pts += 1 ;
+			*elliptic_pts += 1 ;
 		}
-			outgoing[jC] =
-				eigenvalues[0] 
-			;
-			ingoing[jC] =
-				eigenvalues[1] 
-			;
+		outgoing[jC] =
+			eigenvalues[0] 
+		;
+		ingoing[jC] =
+			eigenvalues[1] 
+		;
 	}
-
 	return ;
 }
 /*==========================================================================*/

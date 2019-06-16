@@ -14,7 +14,8 @@ OBJECTS = main.o \
 	diagnostics_EdGB.o \
 	diagnostics_general.o \
 	file_io.o \
-	stencils.o
+	stencils.o \
+	basic_matrix_computations.o
 
 DEPS_MAIN = evolution_routines_GR.h \
 	evolution_routines_EdGB.h \
@@ -39,7 +40,8 @@ DEPS_DIAGNOSTICS_GR = diagnostics_GR.h \
 	stencils.h
 
 DEPS_DIAGNOSTICS_EDGB = diagnostics_EdGB.h \
-	stencils.h
+	stencils.h \
+	basic_matrix_computations.h
 
 DEPS_FILE_IO = file_io.h
 
@@ -47,6 +49,9 @@ DEPS_STENCILS = stencils.h
 
 sim: $(OBJECTS)
 	$(CC) -o sim $(OBJECTS) $(LIBS) $(LDFLAGS) $(CFLAGS)
+
+compileTest: $(OBJECTS)
+	$(CC) -o compileTest $(OBJECTS) $(LIBS) $(LDFLAGS) $(CFLAGS)
 
 main.o: main.c $(DEPS_MAIN)
 	$(CC) -c main.c $(LIBS) $(LDFLAGS) $(CFLAGS)
@@ -65,6 +70,9 @@ diagnostics_general.o: diagnostics_general.c $(DEPS_DIAGNOSTICS_GENERAL)
 
 diagnostics_GR.o: diagnostics_GR.c $(DEPS_DIAGNOSTICS_GR)
 	$(CC) -c diagnostics_GR.c $(LIBS) $(LDFLAGS) $(CFLAGS)
+
+diagnostics_EdGB.o: diagnostics_EdGB.c $(DEPS_DIAGNOSTICS_EDGB)
+	$(CC) -c diagnostics_EdGB.c $(LIBS) $(LDFLAGS) $(CFLAGS)
 
 stencils.o: stencils.c $(DEPS_STENCILS)
 	$(CC) -c stencils.c $(LIBS) $(LDFLAGS) $(CFLAGS)
