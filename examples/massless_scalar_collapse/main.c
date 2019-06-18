@@ -494,6 +494,8 @@ void save_to_file(amr_grid* grid)
 	gft_out_bbox(output_name_eom_TR, time, &Nx, 1, bbox, eom_TR) ;
 	gft_out_bbox(output_name_eom_ThTh, time, &Nx, 1, bbox, eom_ThTh) ;
 	gft_out_bbox(output_name_eom_scalar, time, &Nx, 1, bbox, eom_scalar) ;
+
+	fflush(NULL) ;
 	
 	return ;
 }

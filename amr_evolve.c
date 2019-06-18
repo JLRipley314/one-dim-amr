@@ -578,9 +578,27 @@ static void set_initial_data(
 	void (*solve_ode)(amr_grid*))
 {
 	set_free_initial_data(gh, free_initial_data) ;
+	set_past_t_data_first_order(gh) ;	
+	for (int iC=0; iC<1; iC++) {
+		evolve_grid(
+			gh->fields, 
+			gh->grids,
+			2,
+			evolve_hyperbolic_pde,
+			solve_ode) 
+		;
+		flip_dt(gh->fields,gh->grids) ;
+		evolve_grid(
+			gh->fields, 
+			gh->grids,
+			2,
+			evolve_hyperbolic_pde,
+			solve_ode) 
+		;
+		flip_dt(gh->fields,gh->grids) ;
+	}
 	solve_ode_initial_data(gh, solve_ode) ; 	
-	set_past_t_data_first_order(gh) ;
-	
+	set_past_t_data_first_order(gh) ;	
 	for (int iC=0; iC<1; iC++) {
 		evolve_grid(
 			gh->fields, 
