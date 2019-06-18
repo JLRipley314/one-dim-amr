@@ -36,7 +36,7 @@ run_data = {
 ###
 ###	EdGB: coupling for Gauss-Bonnet scalar (gbs)
 ###
-	"coupling_gbs"	: 2.0,
+	"coupling_gbs"	: 5.0,
 
 	"stereographic_L" : 100,
 	
@@ -52,8 +52,8 @@ run_data = {
 ###	Nx, Nt should be of the form 2**n + 1 with n an integer
 ###	cfl_num: Courant Friedrichs Lewy number (for hyperbolics)
 ###
-	"Nx"		: 2**8+1,
-	"Nt"		: 2**9+1,
+	"Nx"		: 2**9+1,
+	"Nt"		: 2**8+1,
 	"t_step_save"	: 2**0,
 	"cfl_num"	: 0.25,  
 	"err_tolerance"	: 1.0e-10, 
@@ -63,8 +63,8 @@ run_data = {
 ###	if initial_data is r4Exp
 ###
 	"amp"		: 0.000006,#2,
-	"width"		: 5.0,
-	"center"	: 10.0,
+	"width"		: 4.0,
+	"center"	: 5.0,
 	"direction"	: "stationary",#"ingoing",#"outgoing",#
 ###
 ###	if initial_data is initial_black_hole

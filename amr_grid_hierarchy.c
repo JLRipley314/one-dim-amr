@@ -318,7 +318,7 @@ int amr_compute_truncation_error(int field_index, amr_grid* parent, amr_grid* gr
 	return 0 ;
 }
 /*============================================================================*/
-int regrid_finer_levels(amr_grid* grid)
+void regrid_finer_levels(amr_grid* grid)
 {
 	amr_grid* tail = grid ;
 	amr_set_to_tail(&tail) ;
@@ -328,7 +328,7 @@ int regrid_finer_levels(amr_grid* grid)
 	for (amr_grid* iter=tail; iter!=grid->parent; iter=iter->parent)  {
 		amr_compute_truncation_error(field_index, iter->parent, iter) ; 	
 	}	
-	return 0 ;
+	return ;
 }
 /*============================================================================*/
 /* starting from level 1 grid, add self similar grid hierarchy from origin */

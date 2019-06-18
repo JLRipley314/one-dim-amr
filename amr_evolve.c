@@ -620,7 +620,7 @@ void amr_main(
 	add_initial...: for the fixed amr grid hierarchy 
 */
 	int grid_size_ratio = 2 ;
-	int grid_levels = 0 ;
+	int grid_levels = 2 ;
 	add_self_similar_initial_grids(gh, grid_size_ratio, grid_levels) ;
 
 	set_initial_data(
