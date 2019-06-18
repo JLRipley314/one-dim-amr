@@ -41,6 +41,7 @@ double  *Q_n,  *Q_nm1,  *Q_nm2 ;
 /*---------------------------------------------------------------------------*/
 double *mass_aspect ;
 double *ingoing_null_characteristic, *outgoing_null_characteristic ;
+double *ingoing_scalar_characteristic, *outgoing_scalar_characteristic ;
 double *Ricci_scalar, *Gauss_Bonnet_scalar ;
 double *eom_TR, *eom_ThTh, *eom_scalar ;
 /*---------------------------------------------------------------------------*/
@@ -77,6 +78,7 @@ int 	Al_n_index, Al_nm1_index, Al_nm2_index, Al_extr_m1_index, Al_extr_m2_index,
 
 	mass_aspect_index,
 	ingoing_null_characteristic_index, outgoing_null_characteristic_index,
+	ingoing_scalar_characteristic_index, outgoing_scalar_characteristic_index,
 	Ricci_scalar_index, Gauss_Bonnet_scalar_index,
 	eom_TR_index, eom_ThTh_index, eom_scalar_index
 ;
@@ -89,6 +91,9 @@ char output_name_Q[MAX_NAME_LEN+1] ;
 
 char output_name_ingoing_null_characteristic[MAX_NAME_LEN+1] ;
 char output_name_outgoing_null_characteristic[MAX_NAME_LEN+1] ;
+
+char output_name_ingoing_scalar_characteristic[MAX_NAME_LEN+1] ;
+char output_name_outgoing_scalar_characteristic[MAX_NAME_LEN+1] ;
 
 char output_name_Ricci_scalar[MAX_NAME_LEN+1] ;
 char output_name_Gauss_Bonnet_scalar[MAX_NAME_LEN+1] ;
@@ -127,6 +132,9 @@ amr_field* set_fields(void)
 	amr_add_field(fields, "ingoing_null_characteristic",  "diagnostic", 1, 0) ;
 	amr_add_field(fields, "outgoing_null_characteristic", "diagnostic", 1, 0) ;
 
+	amr_add_field(fields, "ingoing_scalar_characteristic",  "diagnostic", 1, 0) ;
+	amr_add_field(fields, "outgoing_scalar_characteristic", "diagnostic", 1, 0) ;
+
 	amr_add_field(fields, "Ricci_scalar",        "diagnostic", 1, 0) ;
 	amr_add_field(fields, "Gauss_Bonnet_scalar", "diagnostic", 1, 0) ;
 
@@ -162,6 +170,9 @@ void find_field_indices(amr_field* fields)
 
 	ingoing_null_characteristic_index  = amr_return_field_index(fields, "ingoing_null_characteristic")  ;
 	outgoing_null_characteristic_index = amr_return_field_index(fields, "outgoing_null_characteristic") ;
+
+	ingoing_scalar_characteristic_index  = amr_return_field_index(fields, "ingoing_scalar_characteristic")  ;
+	outgoing_scalar_characteristic_index = amr_return_field_index(fields, "outgoing_scalar_characteristic") ;
 
 	Ricci_scalar_index = amr_return_field_index(fields, "Ricci_scalar")  ;
 	Gauss_Bonnet_scalar_index = amr_return_field_index(fields, "Gauss_Bonnet_scalar") ;
@@ -207,6 +218,9 @@ void set_globals(amr_grid* grid)
 
 	ingoing_null_characteristic  = grid->grid_funcs[ingoing_null_characteristic_index] ;
 	outgoing_null_characteristic = grid->grid_funcs[outgoing_null_characteristic_index] ;
+
+	ingoing_scalar_characteristic  = grid->grid_funcs[ingoing_scalar_characteristic_index] ;
+	outgoing_scalar_characteristic = grid->grid_funcs[outgoing_scalar_characteristic_index] ;
 
 	Ricci_scalar = grid->grid_funcs[Ricci_scalar_index] ;
 	Gauss_Bonnet_scalar = grid->grid_funcs[Gauss_Bonnet_scalar_index] ;
@@ -395,7 +409,9 @@ void compute_diagnostics(amr_grid* grid)
 			Q_n, Q_nm1, Q_nm2,
 			eom_TR,
 			eom_ThTh,
-			eom_scalar)
+			eom_scalar,
+			ingoing_scalar_characteristic,
+			outgoing_scalar_characteristic)
 		;
 	} else {;}
 /*--------------------------------------------------------------------------*/
@@ -452,6 +468,8 @@ void save_to_file(amr_grid* grid)
 
 		snprintf(output_name_ingoing_null_characteristic,  MAX_NAME_LEN, "%singoing_null_characteristic.sdf", output_dir) ;
 		snprintf(output_name_outgoing_null_characteristic, MAX_NAME_LEN, "%soutgoing_null_characteristic.sdf",  output_dir) ;
+		snprintf(output_name_ingoing_scalar_characteristic,  MAX_NAME_LEN, "%singoing_scalar_characteristic.sdf", output_dir) ;
+		snprintf(output_name_outgoing_scalar_characteristic, MAX_NAME_LEN, "%soutgoing_scalar_characteristic.sdf",  output_dir) ;
 		snprintf(output_name_Ricci_scalar,        MAX_NAME_LEN, "%sRicci_scalar.sdf",        output_dir) ;
 		snprintf(output_name_Gauss_Bonnet_scalar, MAX_NAME_LEN, "%sGauss_Bonnet_scalar.sdf", output_dir) ;
 
@@ -488,6 +506,8 @@ void save_to_file(amr_grid* grid)
 
 	gft_out_bbox(output_name_ingoing_null_characteristic,  time, &Nx, 1, bbox, ingoing_null_characteristic) ;
 	gft_out_bbox(output_name_outgoing_null_characteristic, time, &Nx, 1, bbox, outgoing_null_characteristic) ;
+	gft_out_bbox(output_name_ingoing_scalar_characteristic,  time, &Nx, 1, bbox, ingoing_scalar_characteristic) ;
+	gft_out_bbox(output_name_outgoing_scalar_characteristic, time, &Nx, 1, bbox, outgoing_scalar_characteristic) ;
 	gft_out_bbox(output_name_Ricci_scalar,        time, &Nx, 1, bbox,  Ricci_scalar) ;
 	gft_out_bbox(output_name_Gauss_Bonnet_scalar, time, &Nx, 1, bbox,  Gauss_Bonnet_scalar) ;
 

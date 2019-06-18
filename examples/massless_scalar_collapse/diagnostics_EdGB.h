@@ -11,7 +11,9 @@ void compute_diagnostics_massless_scalar_EdGB(
 	double* Q_n, double* Q_nm1, double* Q_nm2,
 	double* eom_TR,
 	double* eom_ThTh,
-	double* eom_scalar)
+	double* eom_scalar,
+	double* ingoing_characteristic,
+	double* outgoing_characteristic)
 ;
 
 #endif /* _DIAGNOSTICS_EDGB_H_ */

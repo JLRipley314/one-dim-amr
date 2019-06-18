@@ -7,6 +7,7 @@
 #include "diagnostics_EdGB.h"
 #include "basic_matrix_computations.h"
 
+
 /*==========================================================================*/
 static void set_array_val(int start, int end, double val, double* array) 
 {
@@ -75,14 +76,7 @@ static void compute_eom_TR(
 		double phiphi_Der_f = 0. ;
 
 		eom_TR[jC] = 
-		-	SE_LL_TR[jC] 
-		- 	(8*phiphi_Der_f*c_gbs*Al*P*Q*pow(Ze,2))/pow(r_j,2) 
-		- 	(8*phi_Der_f*t_Der_P*c_gbs*pow(Ze,3))/pow(r_j,2) 
-		- 	(Al*pow(Ze,3))/pow(r_j,2) 
-		- 	(8*phiphi_Der_f*c_gbs*Al*pow(P,2)*pow(Ze,3))/pow(r_j,2) 
-		+ 	t_Der_Ze*((2*Ze)/r_j - (16*phi_Der_f*c_gbs*Q*Ze)/pow(r_j,2) - (16*phi_Der_f*c_gbs*P*pow(Ze,2))/pow(r_j,2)) 
-		+ 	r_Der_Ze*((-2*Al*pow(Ze,2))/r_j + (8*phi_Der_f*c_gbs*Al*Q*pow(Ze,2))/pow(r_j,2) + (16*phi_Der_f*c_gbs*Al*P*pow(Ze,3))/pow(r_j,2)) 
-		+ 	r_Der_P*((-8*phi_Der_f*c_gbs*Al*pow(Ze,2))/pow(r_j,2) + (8*phi_Der_f*c_gbs*Al*pow(Ze,4))/pow(r_j,2))
+		- SE_LL_TR[jC] - (8*phiphi_Der_f*c_gbs*Al*P*Q*pow(Ze,2))/pow(r_j,2) - (8*phi_Der_f*t_Der_P*c_gbs*pow(Ze,3))/pow(r_j,2) - (Al*pow(Ze,3))/pow(r_j,2) - (8*phiphi_Der_f*c_gbs*Al*pow(P,2)*pow(Ze,3))/pow(r_j,2) + t_Der_Ze*((2*Ze)/r_j - (16*phi_Der_f*c_gbs*Q*Ze)/pow(r_j,2) - (16*phi_Der_f*c_gbs*P*pow(Ze,2))/pow(r_j,2)) + r_Der_Ze*((-2*Al*pow(Ze,2))/r_j + (8*phi_Der_f*c_gbs*Al*Q*pow(Ze,2))/pow(r_j,2) + (16*phi_Der_f*c_gbs*Al*P*pow(Ze,3))/pow(r_j,2)) + r_Der_P*((-8*phi_Der_f*c_gbs*Al*pow(Ze,2))/pow(r_j,2) + (8*phi_Der_f*c_gbs*Al*pow(Ze,4))/pow(r_j,2))
 		;
 	}
 	return ;
@@ -136,7 +130,7 @@ static void compute_eom_ThTh(
 		double phi_Der_f = 1. ;
 		double phiphi_Der_f = 0. ;
 		eom_ThTh[jC] = 
-			-SE_LL_ThTh[jC] + (r_j*tr_Der_Ze*(r_j - 8*phi_Der_f*c_gbs*Q - 8*phi_Der_f*c_gbs*P*Ze))/Al + (r_j*tr_Der_Al*Ze*(r_j - 8*phi_Der_f*c_gbs*Q - 8*phi_Der_f*c_gbs*P*Ze))/pow(Al,2) + r_j*rr_Der_Ze*Ze*(-r_j + 8*phi_Der_f*c_gbs*Q + 8*phi_Der_f*c_gbs*P*Ze) + (r_j*r_Der_Al*t_Der_Al*Ze*(-r_j + 8*phi_Der_f*c_gbs*Q + 8*phi_Der_f*c_gbs*P*Ze))/pow(Al,3) + r_j*pow(r_Der_Ze,2)*(-r_j + 8*phi_Der_f*c_gbs*Q + 16*phi_Der_f*c_gbs*P*Ze) - (8*phi_Der_f*r_j*pow(r_Der_Al,2)*c_gbs*Ze*(P + Q*Ze))/pow(Al,2) + (r_j*rr_Der_Al*(-r_j + 8*phi_Der_f*c_gbs*Q + 8*phi_Der_f*c_gbs*P*Ze)*(-1 + pow(Ze,2)))/Al + r_Der_Ze*(8*phi_Der_f*r_j*r_Der_Q*c_gbs*Ze - 2*r_j*(1 + 4*phiphi_Der_f*c_gbs*pow(P,2) - 4*phiphi_Der_f*c_gbs*pow(Q,2))*Ze + 8*phi_Der_f*r_j*r_Der_P*c_gbs*pow(Ze,2)) + t_Der_P*((-8*phi_Der_f*r_j*r_Der_Ze*c_gbs*Ze)/Al - (8*phi_Der_f*r_j*r_Der_Al*c_gbs*pow(Ze,2))/pow(Al,2)) + t_Der_Ze*((-8*phi_Der_f*r_j*r_Der_Q*c_gbs)/Al - (8*phi_Der_f*r_j*r_Der_Ze*c_gbs*P)/Al + (r_j - 8*phiphi_Der_f*r_j*c_gbs*pow(Q,2))/Al + (r_j*r_Der_Al*(r_j - 8*phi_Der_f*c_gbs*Q - 16*phi_Der_f*c_gbs*P*Ze))/pow(Al,2)) + r_Der_Al*((-8*phi_Der_f*r_j*r_Der_Q*c_gbs)/Al + (8*phi_Der_f*r_j*r_Der_P*c_gbs*Ze*(-2 + pow(Ze,2)))/Al + (r_j*r_Der_Ze*(-8*phi_Der_f*c_gbs*P + (-3*r_j + 16*phi_Der_f*c_gbs*Q)*Ze + 32*phi_Der_f*c_gbs*P*pow(Ze,2)))/Al - (r_j*(-1 + 8*phiphi_Der_f*c_gbs*pow(Q,2) + 16*phiphi_Der_f*c_gbs*P*Q*Ze + (1 + 8*phiphi_Der_f*c_gbs*pow(P,2))*pow(Ze,2)))/Al)
+		- SE_LL_ThTh[jC] + (r_j*tr_Der_Ze*(r_j - 8*phi_Der_f*c_gbs*Q - 8*phi_Der_f*c_gbs*P*Ze))/Al + (r_j*tr_Der_Al*Ze*(r_j - 8*phi_Der_f*c_gbs*Q - 8*phi_Der_f*c_gbs*P*Ze))/pow(Al,2) + r_j*rr_Der_Ze*Ze*(-r_j + 8*phi_Der_f*c_gbs*Q + 8*phi_Der_f*c_gbs*P*Ze) + (r_j*r_Der_Al*t_Der_Al*Ze*(-r_j + 8*phi_Der_f*c_gbs*Q + 8*phi_Der_f*c_gbs*P*Ze))/pow(Al,3) + r_j*pow(r_Der_Ze,2)*(-r_j + 8*phi_Der_f*c_gbs*Q + 16*phi_Der_f*c_gbs*P*Ze) - (8*phi_Der_f*r_j*pow(r_Der_Al,2)*c_gbs*Ze*(P + Q*Ze))/pow(Al,2) + (r_j*rr_Der_Al*(-r_j + 8*phi_Der_f*c_gbs*Q + 8*phi_Der_f*c_gbs*P*Ze)*(-1 + pow(Ze,2)))/Al + r_Der_Ze*(8*phi_Der_f*r_j*r_Der_Q*c_gbs*Ze - 2*r_j*(1 + 4*phiphi_Der_f*c_gbs*pow(P,2) - 4*phiphi_Der_f*c_gbs*pow(Q,2))*Ze + 8*phi_Der_f*r_j*r_Der_P*c_gbs*pow(Ze,2)) + t_Der_P*((-8*phi_Der_f*r_j*r_Der_Ze*c_gbs*Ze)/Al - (8*phi_Der_f*r_j*r_Der_Al*c_gbs*pow(Ze,2))/pow(Al,2)) + t_Der_Ze*((-8*phi_Der_f*r_j*r_Der_Q*c_gbs)/Al - (8*phi_Der_f*r_j*r_Der_Ze*c_gbs*P)/Al + (r_j - 8*phiphi_Der_f*r_j*c_gbs*pow(Q,2))/Al + (r_j*r_Der_Al*(r_j - 8*phi_Der_f*c_gbs*Q - 16*phi_Der_f*c_gbs*P*Ze))/pow(Al,2)) + r_Der_Al*((-8*phi_Der_f*r_j*r_Der_Q*c_gbs)/Al + (8*phi_Der_f*r_j*r_Der_P*c_gbs*Ze*(-2 + pow(Ze,2)))/Al + (r_j*r_Der_Ze*(-8*phi_Der_f*c_gbs*P + (-3*r_j + 16*phi_Der_f*c_gbs*Q)*Ze + 32*phi_Der_f*c_gbs*P*pow(Ze,2)))/Al - (r_j*(-1 + 8*phiphi_Der_f*c_gbs*pow(Q,2) + 16*phiphi_Der_f*c_gbs*P*Q*Ze + (1 + 8*phiphi_Der_f*c_gbs*pow(P,2))*pow(Ze,2)))/Al)
 		;
 	}
 	return ;
@@ -240,8 +234,6 @@ static void computeArray_center_EdGB_characteristics(
 	double phi_Der_f = 1. ;
 	double phiphi_Der_f = 0. ; 
 
-	bool is_elliptic = false ;
-
 	for (int jC=exc_jC+1; jC<Nx-1; jC++) {
 		double x_j = dx * jC ;
 
@@ -269,12 +261,10 @@ static void computeArray_center_EdGB_characteristics(
 			Al,       Ze,       Q,       P,
 			r_Der_Q)	
 		;
-		matrix_A[0][1] = compute_element_P_eom_tDer_Q()	
-		;
-		matrix_A[1][0] = compute_element_Q_eom_tDer_P()	
-		;
-		matrix_A[1][1] = compute_element_Q_eom_tDer_Q()	
-		;
+		matrix_A[0][1] = compute_element_P_eom_tDer_Q()	;
+		matrix_A[1][0] = compute_element_Q_eom_tDer_P()	;
+		matrix_A[1][1] = compute_element_Q_eom_tDer_Q()	;
+
 		double matrix_B[2][2] = {0} ;
 		matrix_B[0][0] = compute_element_P_eom_rDer_P(
 			c_gbs,     r_j, 
@@ -292,15 +282,16 @@ static void computeArray_center_EdGB_characteristics(
 		;
 		matrix_B[1][0] = compute_element_Q_eom_rDer_P(Al) ;
 		matrix_B[1][1] = compute_element_Q_eom_rDer_Q(Al, Ze) ;
-		/****/
+
 		double matrix_inv_A[2][2] = {0} ;
-//		compute_2dMatrix_inverse(matrix_A, matrix_inv_A) ;
+		compute_2dMatrix_inverse(matrix_A, matrix_inv_A) ;
 		
 		double matrix_inv_AB[2][2] = {0} ;
-//		compute_2dMatrix_multiply(matrix_inv_A, matrix_B, matrix_inv_AB) ;
+		compute_2dMatrix_multiply(matrix_inv_A, matrix_B, matrix_inv_AB) ;
+
 		double eigenvalues[2] = {0} ;
-		bool is_elliptic = false 
-//			compute_2dMatrix_eigenvalues(matrix_inv_AB, eigenvalues) 
+		bool is_elliptic = 
+			compute_2dMatrix_eigenvalues(matrix_inv_AB, eigenvalues) 
 		;
 		if (is_elliptic == true) {
 			*elliptic_pts += 1 ;
@@ -325,7 +316,9 @@ void compute_diagnostics_massless_scalar_EdGB(
 	double* Q_n, double* Q_nm1, double* Q_nm2,
 	double* eom_TR,
 	double* eom_ThTh,
-	double* eom_scalar)
+	double* eom_scalar,
+	double* ingoing_characteristic,
+	double* outgoing_characteristic)
 {
 	double* SE_LL_TR   = calloc(Nx, sizeof(double)) ;
 	double* SE_LL_ThTh = calloc(Nx, sizeof(double)) ;
@@ -372,11 +365,29 @@ void compute_diagnostics_massless_scalar_EdGB(
 		Q_n, 
 		eom_scalar)
 	;
+	int elliptic_pts = 0 ;
+	computeArray_center_EdGB_characteristics(
+		Nx, 
+		dt, dx,
+		s_L, c_gbs,
+		exc_jC, 
+		Al_n, Al_nm1, Al_nm2,
+		Ze_n, Ze_nm1, Ze_nm2,
+		P_n,   P_nm1,  P_nm2,
+		Q_n,
+		SE_LL_TR,
+		SE_LL_ThTh,
+		&elliptic_pts,
+		ingoing_characteristic, 
+		outgoing_characteristic)
+	;
 	set_array_val(0, exc_jC-1, 0, P_n) ;
 	set_array_val(0, exc_jC-1, 0, Q_n) ;
 	set_array_val(0, exc_jC-1, 0, eom_TR) ;
 	set_array_val(0, exc_jC-1, 0, eom_ThTh) ;
 	set_array_val(0, exc_jC-1, 0, eom_scalar) ;
+	set_array_val(0, exc_jC-1, 0, ingoing_characteristic) ;
+	set_array_val(0, exc_jC-1, 0, outgoing_characteristic) ;
 
 	free(SE_LL_TR) ;
 	free(SE_LL_ThTh) ;

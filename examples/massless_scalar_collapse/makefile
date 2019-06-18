@@ -43,6 +43,8 @@ DEPS_DIAGNOSTICS_EDGB = diagnostics_EdGB.h \
 	stencils.h \
 	basic_matrix_computations.h
 
+DEPS_BASIC_MATRIX_COMPUTATIONS = basic_matrix_computations.h 
+
 DEPS_FILE_IO = file_io.h
 
 DEPS_STENCILS = stencils.h 
@@ -73,6 +75,9 @@ diagnostics_GR.o: diagnostics_GR.c $(DEPS_DIAGNOSTICS_GR)
 
 diagnostics_EdGB.o: diagnostics_EdGB.c $(DEPS_DIAGNOSTICS_EDGB)
 	$(CC) -c diagnostics_EdGB.c $(LIBS) $(LDFLAGS) $(CFLAGS)
+
+basic_matrix_computations.o: basic_matrix_computations.c $(DEPS_BASIC_MATRIX_COMPUTATIONS)
+	$(CC) -c basic_matrix_computations.c $(LIBS) $(LDFLAGS) $(CFLAGS)
 
 stencils.o: stencils.c $(DEPS_STENCILS)
 	$(CC) -c stencils.c $(LIBS) $(LDFLAGS) $(CFLAGS)
