@@ -322,9 +322,11 @@ static void solve_ode_fields(
 	} else {
 		int temp_jC = grid->excised_jC ;
 		(grid->excision_on)=false ;
+
 		(grid->excised_jC)=(grid->child->perim_coords[1]) ;
 		set_ode_initial_condition(fields, grid) ;
 		solve_ode(grid) ;
+
 		grid->excised_jC = temp_jC ;
 		(grid->excision_on) = true ;
 	}
@@ -578,25 +580,6 @@ static void set_initial_data(
 	void (*solve_ode)(amr_grid*))
 {
 	set_free_initial_data(gh, free_initial_data) ;
-	set_past_t_data_first_order(gh) ;	
-	for (int iC=0; iC<1; iC++) {
-		evolve_grid(
-			gh->fields, 
-			gh->grids,
-			2,
-			evolve_hyperbolic_pde,
-			solve_ode) 
-		;
-		flip_dt(gh->fields,gh->grids) ;
-		evolve_grid(
-			gh->fields, 
-			gh->grids,
-			2,
-			evolve_hyperbolic_pde,
-			solve_ode) 
-		;
-		flip_dt(gh->fields,gh->grids) ;
-	}
 	solve_ode_initial_data(gh, solve_ode) ; 	
 	set_past_t_data_first_order(gh) ;	
 	for (int iC=0; iC<1; iC++) {
@@ -638,7 +621,7 @@ void amr_main(
 	add_initial...: for the fixed amr grid hierarchy 
 */
 	int grid_size_ratio = 2 ;
-	int grid_levels = 2 ;
+	int grid_levels = 0 ;
 	add_self_similar_initial_grids(gh, grid_size_ratio, grid_levels) ;
 
 	set_initial_data(
