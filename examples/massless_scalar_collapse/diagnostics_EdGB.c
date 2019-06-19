@@ -19,23 +19,22 @@ static void set_array_val(int start, int end, double val, double* array)
 }
 /*==========================================================================*/
 static void compute_SE_LL_components_massless_scalar(
-	int Nx, double dx,
+	int Nx,       double dx,
 	double s_L,   int exc_jC,
 	double* Al_n, double* Ze_n,
 	double* P_n,  double* Q_n,
 	double* SE_LL_TR,
 	double* SE_LL_ThTh)
 {
-	double r_j, Al, Ze, P, Q ;
-
 	for (int jC=exc_jC; jC<Nx; jC++) {
-		r_j = stereographic_r(s_L, dx*jC) ;
+		double x_j = dx*jC ;
+		double r_j = stereographic_r(s_L, x_j) ;
 
-		Al = Al_n[jC] ;
-		Ze = Ze_n[jC] ;
+		double Al = Al_n[jC] ;
+		double Ze = Ze_n[jC] ;
 
-		P = P_n[jC] ;
-		Q = Q_n[jC] ;
+		double P = P_n[jC] ;
+		double Q = Q_n[jC] ;
 
 		SE_LL_TR[jC] =  (Al*(2*P*Q + (pow(P,2) + pow(Q,2))*Ze))/2. ;
 
@@ -118,7 +117,7 @@ static void compute_eom_ThTh(
 		double tr_Der_Al = D1_backward_2ndOrder(
 				D1_stereographic_center_2ndOrder(s_L, x_j, Al_n[jC+1],   Al_n[jC-1],   dx),
 				D1_stereographic_center_2ndOrder(s_L, x_j, Al_nm1[jC+1], Al_nm1[jC-1], dx), 
-				D1_stereographic_center_2ndOrder(x_j, s_L, Al_nm2[jC+1], Al_nm2[jC-1], dx),
+				D1_stereographic_center_2ndOrder(s_L, x_j, Al_nm2[jC+1], Al_nm2[jC-1], dx),
 			dt)
 		;
 		double tr_Der_Ze = D1_backward_2ndOrder(
@@ -394,5 +393,3 @@ void compute_diagnostics_massless_scalar_EdGB(
 
 	return ;
 }
-
-

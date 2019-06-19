@@ -25,16 +25,15 @@ static void compute_SE_LL_components_massless_scalar(
 	double* SE_LL_TR,
 	double* SE_LL_ThTh)
 {
-	double r_j, Al, Ze, P, Q ;
-
 	for (int jC=exc_jC; jC<Nx; jC++) {
-		r_j = stereographic_r(s_L, dx*jC) ;
+		double x_j = dx*jC ;
+		double r_j = stereographic_r(s_L, x_j) ;
 
-		Al = Al_n[jC] ;
-		Ze = Ze_n[jC] ;
+		double Al = Al_n[jC] ;
+		double Ze = Ze_n[jC] ;
 
-		P = P_n[jC] ;
-		Q = Q_n[jC] ;
+		double P = P_n[jC] ;
+		double Q = Q_n[jC] ;
 
 		SE_LL_TR[jC] =  (Al*(2*P*Q + (pow(P,2) + pow(Q,2))*Ze))/2. ;
 
@@ -52,19 +51,16 @@ static void compute_eom_TR(
 	double* SE_LL_TR,
 	double* eom_TR)
 {
-	double x_j, r_j,
-		Al, Ze, r_Der_Ze, t_Der_Ze 
-	;
 	for (int jC=exc_jC+1; jC<Nx-1; jC++) {
-		x_j = jC * dx ;
-                r_j = stereographic_r(s_L, x_j) ; 
+		double x_j = jC * dx ;
+                double r_j = stereographic_r(s_L, x_j) ; 
 
-		Al = Al_n[jC] ;
-		Ze = Ze_n[jC] ;
+		double Al = Al_n[jC] ;
+		double Ze = Ze_n[jC] ;
 
-		r_Der_Ze = D1_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1], Ze_n[jC-1], dx) ;
+		double r_Der_Ze = D1_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1], Ze_n[jC-1], dx) ;
 
-		t_Der_Ze = D1_backward_2ndOrder(Ze_n[jC], Ze_nm1[jC], Ze_nm2[jC], dt) ;
+		double t_Der_Ze = D1_backward_2ndOrder(Ze_n[jC], Ze_nm1[jC], Ze_nm2[jC], dt) ;
 
 		eom_TR[jC] = 
 		+ 	(2*t_Der_Ze*Ze)/r_j 
@@ -84,42 +80,32 @@ static void compute_eom_ThTh(
 	double* SE_LL_ThTh,
 	double* eom_ThTh)
 {
-	double x_j, r_j,
-		Al, Ze, r_Der_Al, r_Der_Ze, rr_Der_Al, rr_Der_Ze,
-		t_Der_Al, t_Der_Ze, tr_Der_Al, tr_Der_Ze 
-	;
 	for (int jC=exc_jC+1; jC<Nx-1; jC++) {
-		x_j = jC * dx ;
-                r_j = stereographic_r(s_L, x_j) ; 
+		double x_j = jC * dx ;
+                double r_j = stereographic_r(s_L, x_j) ; 
 
-		Al = Al_n[jC] ;
-		Ze = Ze_n[jC] ;
+		double Al = Al_n[jC] ;
+		double Ze = Ze_n[jC] ;
 
-		r_Der_Al = D1_stereographic_center_2ndOrder(s_L, x_j, Al_n[jC+1], Al_n[jC-1], dx) ; 
-		r_Der_Ze = D1_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1], Ze_n[jC-1], dx) ;
+		double r_Der_Al = D1_stereographic_center_2ndOrder(s_L, x_j, Al_n[jC+1], Al_n[jC-1], dx) ; 
+		double r_Der_Ze = D1_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1], Ze_n[jC-1], dx) ;
 
-		rr_Der_Al = D2_stereographic_center_2ndOrder(s_L, x_j, Al_n[jC+1], Al_n[jC], Al_n[jC-1], dx) ;
-		rr_Der_Ze = D2_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1], Ze_n[jC], Ze_n[jC-1], dx) ;
+		double rr_Der_Al = D2_stereographic_center_2ndOrder(s_L, x_j, Al_n[jC+1], Al_n[jC], Al_n[jC-1], dx) ;
+		double rr_Der_Ze = D2_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1], Ze_n[jC], Ze_n[jC-1], dx) ;
 
-		t_Der_Al = D1_backward_2ndOrder(Al_n[jC], Al_nm1[jC], Al_nm2[jC], dt) ;
-		t_Der_Ze = D1_backward_2ndOrder(Ze_n[jC], Ze_nm1[jC], Ze_nm2[jC], dt) ;
+		double t_Der_Al = D1_backward_2ndOrder(Al_n[jC], Al_nm1[jC], Al_nm2[jC], dt) ;
+		double t_Der_Ze = D1_backward_2ndOrder(Ze_n[jC], Ze_nm1[jC], Ze_nm2[jC], dt) ;
 
-		tr_Der_Al = D1_backward_2ndOrder(
+		double tr_Der_Al = D1_backward_2ndOrder(
 				D1_stereographic_center_2ndOrder(s_L, x_j, Al_n[jC+1],   Al_n[jC-1],   dx),
 				D1_stereographic_center_2ndOrder(s_L, x_j, Al_nm1[jC+1], Al_nm1[jC-1], dx), 
-				D1_stereographic_center_2ndOrder(x_j, s_L, Al_nm2[jC+1], Al_nm2[jC-1], dx),
+				D1_stereographic_center_2ndOrder(s_L, x_j, Al_nm2[jC+1], Al_nm2[jC-1], dx),
 			dt)
 		;
-		tr_Der_Ze = D1_backward_2ndOrder(
+		double tr_Der_Ze = D1_backward_2ndOrder(
 				D1_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1],   Ze_n[jC-1],   dx),
 				D1_stereographic_center_2ndOrder(s_L, x_j, Ze_nm1[jC+1], Ze_nm1[jC-1], dx), 
 				D1_stereographic_center_2ndOrder(s_L, x_j, Ze_nm2[jC+1], Ze_nm2[jC-1], dx),
-			dt)
-		;
-		tr_Der_Ze = D1_backward_2ndOrder(
-				D1_center_2ndOrder(Ze_n[jC+1],   Ze_n[jC-1],   dx),
-				D1_center_2ndOrder(Ze_nm1[jC+1], Ze_nm1[jC-1], dx), 
-				D1_center_2ndOrder(Ze_nm2[jC+1], Ze_nm2[jC-1], dx),
 			dt)
 		;
 		eom_ThTh[jC] = 
@@ -134,7 +120,7 @@ static void compute_eom_ThTh(
 		+ 	r_Der_Al*((-3*pow(r_j,2)*r_Der_Ze*Ze)/Al + (r_j - r_j*pow(Ze,2))/Al) 
 		- 	SE_LL_ThTh[jC] 
 		;
-		eom_ThTh[jC] = tr_Der_Ze ; 
+		eom_ThTh[jC] /= pow(r_j,2) ; 
 	}
 	return ;
 }
@@ -149,30 +135,23 @@ static void compute_eom_scalar(
 	double* Q_n, 
 	double* eom_scalar)
 {
-	double x_j, r_j,
-		Al, Ze, P, Q, 
-		r_Der_Al, r_Der_Ze, r_Der_P, r_Der_Q,  
-		t_Der_P
-	;
 	for (int jC=exc_jC+1; jC<Nx-1; jC++) {
-		x_j = jC * dx ;
-                r_j = stereographic_r(s_L, x_j) ; 
+		double x_j = jC * dx ;
+                double r_j = stereographic_r(s_L, x_j) ; 
 
-		Al = Al_n[jC] ;
-		Ze = Ze_n[jC] ;
+		double Al = Al_n[jC] ;
+		double Ze = Ze_n[jC] ;
 
-		P = P_n[jC] ;
-		Q = Q_n[jC] ;
+		double P = P_n[jC] ;
+		double Q = Q_n[jC] ;
 
-		r_Der_Al = D1_stereographic_center_2ndOrder(s_L, x_j, Al_n[jC+1], Al_n[jC-1], dx) ; 
-		r_Der_Ze = D1_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1], Ze_n[jC-1], dx) ;
+		double r_Der_Al = D1_stereographic_center_2ndOrder(s_L, x_j, Al_n[jC+1], Al_n[jC-1], dx) ; 
+		double r_Der_Ze = D1_stereographic_center_2ndOrder(s_L, x_j, Ze_n[jC+1], Ze_n[jC-1], dx) ;
 
-		r_Der_P = D1_stereographic_center_2ndOrder(s_L, x_j, P_n[jC+1], P_n[jC-1], dx) ; 
-		r_Der_Q = D1_stereographic_center_2ndOrder(s_L, x_j, Q_n[jC+1], Q_n[jC-1], dx) ;
+		double r_Der_P = D1_stereographic_center_2ndOrder(s_L, x_j, P_n[jC+1], P_n[jC-1], dx) ; 
+		double r_Der_Q = D1_stereographic_center_2ndOrder(s_L, x_j, Q_n[jC+1], Q_n[jC-1], dx) ;
 
-		t_Der_P = (P_n[jC]-P_nm2[jC])/(2.*dt) ;
-		t_Der_P = D1_forward_2ndOrder(P_n[jC], P_nm1[jC], P_nm2[jC], dt) ;
-		t_Der_P = D1_backward_2ndOrder(P_n[jC], P_nm1[jC], P_nm2[jC], dt) ;
+		double t_Der_P = D1_backward_2ndOrder(P_n[jC], P_nm1[jC], P_nm2[jC], dt) ;
 
 		eom_scalar[jC] = 
 		-	t_Der_P/Al

@@ -10,7 +10,7 @@
 /*==========================================================================*/
 /* routines for copying time steps to next level */
 /*==========================================================================*/
-static void copy_to_2nd_array(int Nx, double* field_1, double* field_2) 
+static void copy_to_2nd_array(int Nx, double *field_1, double *field_2) 
 {
 	for (int iC=0; iC<Nx; iC++) {
 		field_2[iC] = field_1[iC] ;
@@ -20,7 +20,7 @@ static void copy_to_2nd_array(int Nx, double* field_1, double* field_2)
 /*==========================================================================*/
 /* shifting fields from farthest back in time to most recent in time */
 /*==========================================================================*/
-static void shift_field(int field_index, int time_levels, amr_grid* grid)
+static void shift_field(int field_index, int time_levels, amr_grid *grid)
 {
 	int Nx = grid->Nx ;
 	for (int iC=field_index+time_levels-1; iC>field_index; iC--) {
@@ -29,11 +29,11 @@ static void shift_field(int field_index, int time_levels, amr_grid* grid)
 }
 /*==========================================================================*/
 static void shift_fields_one_time_level(
-	amr_field* fields,
-	amr_grid* grid)
+	amr_field *fields,
+	amr_grid *grid)
 {
 	int index, time_levels ;
-	for (amr_field* field=fields; field!=NULL; field=field->next) {
+	for (amr_field *field=fields; field!=NULL; field=field->next) {
 		index = field->index ;
 		time_levels = field->time_levels ;
 		shift_field(index,time_levels,grid) ;
@@ -41,9 +41,9 @@ static void shift_fields_one_time_level(
 	return ;
 }
 /*==========================================================================*/
-static void shift_grids_one_time_level(amr_grid_hierarchy* gh)
+static void shift_grids_one_time_level(amr_grid_hierarchy *gh)
 {
-	for (amr_grid* grid=gh->grids; grid!=NULL; grid=grid->child) {
+	for (amr_grid *grid=gh->grids; grid!=NULL; grid=grid->child) {
 		shift_fields_one_time_level(gh->fields, grid) ;
 	}
 }
@@ -51,7 +51,7 @@ static void shift_grids_one_time_level(amr_grid_hierarchy* gh)
 /* for now its linear prolongation */
 /*==========================================================================*/
 /*static*/ void prolong_grid_func(
-	int Nx, int perim_coord_left, double* gf, double* gf_child)
+	int Nx, int perim_coord_left, double  gf, double *gf_child)
 {
 	double coef_0 = 0 ;
 	double coef_1 = 0 ;
@@ -75,7 +75,7 @@ static void shift_grids_one_time_level(amr_grid_hierarchy* gh)
 /* compute truncation error for given grid function*/
 /*==========================================================================*/
 /*static*/ void compute_truncation_error_grid_func(
-	int Nx, int perim_coord_left, double* gf_parent, double* gf, int* trunc_err_flags)
+	int Nx, int perim_coord_left, double *gf_parent, double *gf, int *trunc_err_flags)
 {
 	trunc_err_flags[0] = -1 ;
 	trunc_err_flags[1] = -1 ;
@@ -102,7 +102,7 @@ static void shift_grids_one_time_level(amr_grid_hierarchy* gh)
 /* restriction along shared grid points */
 /*==========================================================================*/
 static void inject_grid_func(
-	int Nx, int perim_coord_left, double* gf_parent, double* gf)
+	int Nx, int perim_coord_left, double *gf_parent, double *gf)
 {
 	for (int iC=0; iC<Nx; iC++) {
 		if (iC%REFINEMENT==0) {
@@ -113,10 +113,10 @@ static void inject_grid_func(
 }
 /*==========================================================================*/
 static void inject_overlaping_fields(
-		amr_field* fields, amr_grid* parent, amr_grid* grid)
+		amr_field *fields, amr_grid *parent, amr_grid *grid)
 {
 	int index = 0 ;
-	for (amr_field* field=fields; field!=NULL; field=field->next) {
+	for (amr_field *field=fields; field!=NULL; field=field->next) {
 		index = field->index ;
 		inject_grid_func(
 			grid->Nx, 

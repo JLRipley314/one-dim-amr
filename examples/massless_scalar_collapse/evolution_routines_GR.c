@@ -280,7 +280,6 @@ static double compute_iteration_Crank_Nicolson_PQ(
 		double x_jp1 = lower_x + (dx * (jC+1)) ;
 		double x_jm1 = lower_x + (dx * (jC-1)) ;
 
-		double r_j   = stereographic_r(s_L, x_j  ) ;
 		double r_jp1 = stereographic_r(s_L, x_jp1) ;
 		double r_jm1 = stereographic_r(s_L, x_jm1) ;
 
@@ -315,10 +314,9 @@ static double compute_iteration_Crank_Nicolson_PQ(
 				P_n[jC], 
 				P_nm1[jC], 
 				dt)
-		-	pow(r_j,-2)*D1_center_2ndOrder(
-				pow(r_jp1,2)*Al_jp1*(Q_jp1 + Ze_jp1*P_jp1),
-				pow(r_jm1,2)*Al_jm1*(Q_jm1 + Ze_jm1*P_jm1),
-				dr)
+		-	3*(	pow(r_jp1,2)*Al_jp1*(Q_jp1 + Ze_jp1*P_jp1)
+			-	pow(r_jm1,2)*Al_jm1*(Q_jm1 + Ze_jm1*P_jm1)
+			)/(pow(r_jp1,3)-pow(r_jm1,3))
 		;
 		double jac_P = (1./dt) ;
 	/* one iteration 
