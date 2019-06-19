@@ -32,7 +32,7 @@ run_data = {
 
 	"param_search"	: "no",#"yes",#
 
-	"theory"	: "massless_scalar_GR",#"EdGB",#"massless_scalar",#"GR",#"EdGB_decoupled",#
+	"theory"	: "EdGB",#"massless_scalar_GR",#"massless_scalar",#"GR",#"EdGB_decoupled",#
 ###
 ###	EdGB: coupling for Gauss-Bonnet scalar (gbs)
 ###

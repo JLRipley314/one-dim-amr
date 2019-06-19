@@ -131,6 +131,7 @@ static void compute_eom_ThTh(
 		eom_ThTh[jC] = 
 		- SE_LL_ThTh[jC] + (r_j*tr_Der_Ze*(r_j - 8*phi_Der_f*c_gbs*Q - 8*phi_Der_f*c_gbs*P*Ze))/Al + (r_j*tr_Der_Al*Ze*(r_j - 8*phi_Der_f*c_gbs*Q - 8*phi_Der_f*c_gbs*P*Ze))/pow(Al,2) + r_j*rr_Der_Ze*Ze*(-r_j + 8*phi_Der_f*c_gbs*Q + 8*phi_Der_f*c_gbs*P*Ze) + (r_j*r_Der_Al*t_Der_Al*Ze*(-r_j + 8*phi_Der_f*c_gbs*Q + 8*phi_Der_f*c_gbs*P*Ze))/pow(Al,3) + r_j*pow(r_Der_Ze,2)*(-r_j + 8*phi_Der_f*c_gbs*Q + 16*phi_Der_f*c_gbs*P*Ze) - (8*phi_Der_f*r_j*pow(r_Der_Al,2)*c_gbs*Ze*(P + Q*Ze))/pow(Al,2) + (r_j*rr_Der_Al*(-r_j + 8*phi_Der_f*c_gbs*Q + 8*phi_Der_f*c_gbs*P*Ze)*(-1 + pow(Ze,2)))/Al + r_Der_Ze*(8*phi_Der_f*r_j*r_Der_Q*c_gbs*Ze - 2*r_j*(1 + 4*phiphi_Der_f*c_gbs*pow(P,2) - 4*phiphi_Der_f*c_gbs*pow(Q,2))*Ze + 8*phi_Der_f*r_j*r_Der_P*c_gbs*pow(Ze,2)) + t_Der_P*((-8*phi_Der_f*r_j*r_Der_Ze*c_gbs*Ze)/Al - (8*phi_Der_f*r_j*r_Der_Al*c_gbs*pow(Ze,2))/pow(Al,2)) + t_Der_Ze*((-8*phi_Der_f*r_j*r_Der_Q*c_gbs)/Al - (8*phi_Der_f*r_j*r_Der_Ze*c_gbs*P)/Al + (r_j - 8*phiphi_Der_f*r_j*c_gbs*pow(Q,2))/Al + (r_j*r_Der_Al*(r_j - 8*phi_Der_f*c_gbs*Q - 16*phi_Der_f*c_gbs*P*Ze))/pow(Al,2)) + r_Der_Al*((-8*phi_Der_f*r_j*r_Der_Q*c_gbs)/Al + (8*phi_Der_f*r_j*r_Der_P*c_gbs*Ze*(-2 + pow(Ze,2)))/Al + (r_j*r_Der_Ze*(-8*phi_Der_f*c_gbs*P + (-3*r_j + 16*phi_Der_f*c_gbs*Q)*Ze + 32*phi_Der_f*c_gbs*P*pow(Ze,2)))/Al - (r_j*(-1 + 8*phiphi_Der_f*c_gbs*pow(Q,2) + 16*phiphi_Der_f*c_gbs*P*Q*Ze + (1 + 8*phiphi_Der_f*c_gbs*pow(P,2))*pow(Ze,2)))/Al)
 		;
+		eom_ThTh[jC] /= pow(0.1+r_j,2) ; 
 	}
 	return ;
 }

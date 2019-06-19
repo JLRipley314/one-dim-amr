@@ -131,9 +131,7 @@ static void inject_overlaping_fields(
 /* {ordered field_n, field_nm1, ...} */
 /*==========================================================================*/
 /*static*/ void set_interior_hyperbolic_boundary_linear_interp(
-	amr_field* field,
-	amr_grid* parent,
-	amr_grid* grid)
+	amr_field* field, amr_grid* parent, amr_grid* grid)
 {
 	double coef_0, coef_1 ; 
 
@@ -174,9 +172,7 @@ static void inject_overlaping_fields(
    We need at least three time levels for this to work */
 /*==========================================================================*/
 static void set_interior_hyperbolic_boundary_quad_interp(
-	amr_field* field, 
-	amr_grid* parent,
-	amr_grid* grid)
+	amr_field* field, amr_grid* parent, amr_grid* grid)
 {
 	double coef_0, coef_1, coef_2 ; 
 

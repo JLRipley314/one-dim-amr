@@ -120,7 +120,7 @@ static void compute_eom_ThTh(
 		+ 	r_Der_Al*((-3*pow(r_j,2)*r_Der_Ze*Ze)/Al + (r_j - r_j*pow(Ze,2))/Al) 
 		- 	SE_LL_ThTh[jC] 
 		;
-		eom_ThTh[jC] /= pow(r_j,2) ; 
+		eom_ThTh[jC] /= pow(0.1+r_j,2) ; 
 	}
 	return ;
 }
