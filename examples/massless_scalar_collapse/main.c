@@ -114,7 +114,7 @@ bool made_output_files  = false ;
 /*number of time steps for evolution fields: 3.
  * Two extrapolation levels for linear extrapolation of ode variables */
 /*==========================================================================*/
-amr_field* set_fields(void) 
+amr_field *set_fields(void) 
 {
 	int time_levels = 3 ;
 	int ode_extrap_levels = 2 ;
@@ -191,7 +191,7 @@ void find_field_indices(amr_field* fields)
 /*===========================================================================*/
 /* call to set global variables for field evolution */
 /*===========================================================================*/
-void set_globals(amr_grid* grid)
+void set_globals(amr_grid *grid)
 {	
 
 	P_n   = grid->grid_funcs[P_n_index  ] ;
@@ -293,7 +293,7 @@ void set_free_initial_data(amr_grid* grid)
 /* rescale Al to be unity at spatial infinity at the coarsest level, then
  * synchronize all higher levels to this value */
 /*===========================================================================*/
-void rescale_Al(amr_grid* grid)
+void rescale_Al(amr_grid *grid)
 {
 	if ((grid->level)==0) {
 		double rescale_param = grid->grid_funcs[Al_n_index][Nx-1] ;
@@ -313,7 +313,7 @@ void rescale_Al(amr_grid* grid)
 }
 /*===========================================================================*/
 /*===========================================================================*/
-void solve_ode(amr_grid* grid)
+void solve_ode(amr_grid *grid)
 {
 	set_globals(grid) ;
 	if (strcmp(theory, "massless_scalar_GR") == 0) {
@@ -346,7 +346,7 @@ void solve_ode(amr_grid* grid)
 /*===========================================================================*/
 /* computes one time step (to tolerance) of wave equation */
 /*===========================================================================*/
-void evolve_hyperbolic_pde(amr_grid* grid)
+void evolve_hyperbolic_pde(amr_grid *grid)
 {
 	set_globals(grid) ;
 	rescale_Al(grid) ;
@@ -380,7 +380,7 @@ void evolve_hyperbolic_pde(amr_grid* grid)
 /*===========================================================================*/
 /* independent residuals, curvature scalars, etc */
 /*===========================================================================*/
-void compute_diagnostics(amr_grid* grid)
+void compute_diagnostics(amr_grid *grid)
 {
 	set_globals(grid) ;
 /*--------------------------------------------------------------------------*/
@@ -439,7 +439,7 @@ void compute_diagnostics(amr_grid* grid)
 /*===========================================================================*/
 /* computes one time step (to tolerance) of wave equation */
 /*===========================================================================*/
-void save_to_file(amr_grid* grid)
+void save_to_file(amr_grid *grid)
 {
 	set_globals(grid) ;
 
@@ -488,8 +488,8 @@ void save_to_file(amr_grid* grid)
 	gft_out_bbox(output_name_P,  time, &Nx, 1, bbox,  P_n) ;
 	gft_out_bbox(output_name_Q,  time, &Nx, 1, bbox,  Q_n) ;
 
-	double* test_1 = calloc(Nx,sizeof(double)) ;
-	double* test_2 = calloc(Nx,sizeof(double)) ;
+	double *test_1 = calloc(Nx,sizeof(double)) ;
+	double *test_2 = calloc(Nx,sizeof(double)) ;
 
 	for (int jC=0; jC<Nx; jC++) {
 		test_1[jC] = Ze_extr_m1[jC] ;
@@ -523,7 +523,7 @@ void save_to_file(amr_grid* grid)
 /* call amr evolution */
 /*===========================================================================*/
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
 	get_run_data(
 		&theory,
@@ -540,10 +540,10 @@ int main(int argc, char* argv[])
 		&initial_data, &direction, &amp, &width, &center, 
 		&initial_black_hole_mass) 
 	; 
-	amr_field* fields = set_fields() ; 
+	amr_field *fields = set_fields() ; 
 	find_field_indices(fields) ; 
 
-	amr_grid_hierarchy* gh 
+	amr_grid_hierarchy *gh 
 	= amr_init_grid_hierarchy(
 		fields,
         	Nt, Nx, t_step_save,

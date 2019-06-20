@@ -222,7 +222,9 @@ void compute_diagnostics_general(
 	set_array_val(0, *exc_jC-1, 0, Ricci_scalar) ;
 	set_array_val(0, *exc_jC-1, 0, Gauss_Bonnet_scalar) ;
 
-	int buffer_size = (2*mass_aspect[Nx-5]*0.2)/dx ; 
+	double asymptotic_mass = mass_aspect[Nx-5] ;
+	double outer_trapped_ratio = 0.2 ;
+	int buffer_size = (2*asymptotic_mass*outer_trapped_ratio)/dx ; 
 
 	*exc_jC = compute_excision_point(Nx, *exc_jC, buffer_size, outgoing_null_characteristic)
 	;
