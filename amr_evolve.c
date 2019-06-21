@@ -504,7 +504,6 @@ void set_excision_point(amr_grid* grid)
 	if (((grid->level) > 0)
 	&&  ((grid->parent->excised_jC) > (grid->perim_coords[0]))
 	) {
-		printf("grid->parent->excised_jC %d\tgrid->perim_coords[1] %d\n", (grid->parent->excised_jC), (grid->perim_coords[1])) ;
 		if ((grid->parent->excised_jC) < (grid->perim_coords[1])) {
 			grid->excised_jC = REFINEMENT * (
 				grid->parent->excised_jC - grid->perim_coords[0]
@@ -617,7 +616,7 @@ void amr_main(
 	add_initial...: for the fixed amr grid hierarchy 
 */
 	int grid_size_ratio = 2 ;
-	int grid_levels = 1 ;
+	int grid_levels = 0 ;
 	add_self_similar_initial_grids(gh, grid_size_ratio, grid_levels) ;
 
 	set_initial_data(
