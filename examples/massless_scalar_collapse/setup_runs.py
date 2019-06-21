@@ -62,7 +62,7 @@ run_data = {
 ###
 ###	if initial_data is r4Exp
 ###
-	"amp"		: 0.00004,
+	"amp"		: 0.00001,
 	"width"		: 4.0,
 	"center"	: 10.0,
 	"direction"	: "stationary",#"ingoing",#"outgoing",#
