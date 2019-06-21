@@ -36,7 +36,7 @@ run_data = {
 ###
 ###	EdGB: coupling for Gauss-Bonnet scalar (gbs)
 ###
-	"coupling_gbs"	: 0.0,
+	"coupling_gbs"	: 0.5,
 
 	"stereographic_L" : 100,
 	
@@ -54,7 +54,7 @@ run_data = {
 ###
 	"Nx"		: 2**8+1,
 	"Nt"		: 2**8+1,
-	"t_step_save"	: 2**3,
+	"t_step_save"	: 2**0,
 	"cfl_num"	: 0.25,  
 	"err_tolerance"	: 1.0e-10, 
 	
