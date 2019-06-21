@@ -51,7 +51,7 @@ static void shift_grids_one_time_level(amr_grid_hierarchy *gh)
 /* for now its linear prolongation */
 /*==========================================================================*/
 /*static*/ void prolong_grid_func(
-	int Nx, int perim_coord_left, double  gf, double *gf_child)
+	int Nx, int perim_coord_left, double *gf, double *gf_child)
 {
 	double coef_0 = 0 ;
 	double coef_1 = 0 ;
@@ -617,7 +617,7 @@ void amr_main(
 	add_initial...: for the fixed amr grid hierarchy 
 */
 	int grid_size_ratio = 2 ;
-	int grid_levels = 0 ;
+	int grid_levels = 1 ;
 	add_self_similar_initial_grids(gh, grid_size_ratio, grid_levels) ;
 
 	set_initial_data(
