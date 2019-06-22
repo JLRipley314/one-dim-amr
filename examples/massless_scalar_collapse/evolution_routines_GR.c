@@ -38,9 +38,8 @@ static double compute_iteration_Al(
 	double* Al, 	double* Ze, 
 	double*  P, 	double*  Q)
 {
-	int size = 0 ;
+	int size = Nx ;
 	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
-	else size = Nx ;
         double res_infty_norm = 0 ; /* returning this */
  /* scalar field functions */
         for (int jC=start_jC; jC<Nx-1; jC++) {
@@ -96,9 +95,8 @@ static double compute_iteration_Ze(
 	double* Al, 	double* Ze, 
 	double*  P, 	double*  Q)
 {
-	int size = 0 ;
+	int size = Nx ;
 	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
-	else size = Nx ;
  /* scalar field functions */   
 
         double res_infty_norm = 0 ; /* returning this */
@@ -202,7 +200,7 @@ static double compute_iteration_excision_boundary_condition_Ze(
         return fabs(res_Ze) ;
 }
 /*==========================================================================*/
-void solve_Al_Ze(
+void solve_Al_Ze_GR(
 	double s_L,
 	int Nx,
 	double dt, 	double dx,
@@ -254,6 +252,93 @@ void solve_Al_Ze(
 	return ;
 }
 /*==========================================================================*/
+static double compute_iteration_Crank_Nicolson_Ze(
+	double s_L,
+	int Nx,
+	double dt, 	double dx,
+	bool excision_on,
+	int exc_jC,
+	double bbox[2],
+	bool perim_interior[2],
+	double* Al_n,  double* Al_nm1, double* Ze_n, double* Ze_nm1,
+	double* P_n,   double* P_nm1,  double* Q_n,  double* Q_nm1)
+{
+	double lower_x = bbox[0] ;
+
+	int size = Nx ;
+	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
+	double res_infty_norm = 0 ; /* returning this */
+
+	for (int jC=exc_jC+1;jC<size-1;jC++) {
+		double x_j = lower_x + (dx * jC) ;
+		double r_j = stereographic_r( s_L, x_j) ;
+		double dr  = stereographic_dr(s_L, x_j, dx) ;
+
+		double Al = (Al_n[jC] + Al_nm1[jC]) / 2. ;
+
+		double Ze     = (Ze_n[jC]   + Ze_nm1[jC]  ) / 2. ;
+		double Ze_jp1 = (Ze_n[jC+1] + Ze_nm1[jC+1]) / 2. ;
+		double Ze_jm1 = (Ze_n[jC-1] + Ze_nm1[jC-1]) / 2. ;
+
+		double P  = (P_n[jC] + P_nm1[jC])  / 2. ;
+		double Q  = (Q_n[jC] + Q_nm1[jC])  / 2. ;
+
+		double t_Der_Ze = D1_CrankNicolson_2ndOrder(Ze_n[jC], Ze_nm1[jC], dt) ;
+
+		double r_Der_Ze = D1_center_2ndOrder(Ze_jp1, Ze_jm1, dr) ;
+
+		double SE_LL_TR        = (Al*(2*P*Q + (pow(P,2) + pow(Q,2))*Ze))/2. ;
+		double Ze_Der_SE_LL_TR = (Al*(0     + (pow(P,2) + pow(Q,2))*1 ))/2. ;
+		double res_Ze = 
+			t_Der_Ze
+		-       r_Der_Ze*Al*Ze
+		-       (r_j*SE_LL_TR)/(2.*Ze)
+		-       (Al*pow(Ze,2))/(2.*r_j)
+
+		;
+		double jac_Ze = 
+			1/dt
+		-       (r_Der_Ze*Al)/2.
+		+       (
+				pow(r_j,2)*SE_LL_TR
+			-       pow(r_j,2)*Ze_Der_SE_LL_TR*Ze
+			-       2*Al*pow(Ze,3)
+		)/(4.*r_j*pow(Ze,2))
+		;
+		res_infty_norm = weighted_infty_norm(1-x_j/s_L, res_Ze, res_infty_norm) ;
+
+        	Ze_n[jC] -= res_Ze/jac_Ze ;
+	}	
+/*--------------------------------------------------------------------------*/
+/* lower boundary */
+/*--------------------------------------------------------------------------*/
+	if ((exc_jC == 0) 
+	&&  (perim_interior[0] == false)
+	) {
+		/* Ze[0] = 0, so do not change anything. */	
+	}
+	if ((exc_jC > 0) 
+	&&  (excision_on==true)
+	) {
+		double norm = compute_iteration_excision_boundary_condition_Ze(
+			s_L,
+			Nx,
+			dt, 	dx,
+			exc_jC,
+			bbox,
+			Al_n, Al_nm1, Ze_n, Ze_nm1,
+			 P_n,  P_nm1,  Q_n,  Q_nm1)
+		;
+		double x_j = dx * exc_jC ;
+		res_infty_norm = weighted_infty_norm(1-x_j/s_L, norm, res_infty_norm) ;
+	}
+/*--------------------------------------------------------------------------*/
+/* dirichlet outer boundary conditions if outermost level;
+ * otherwise do not evolve outer boundary anyways (it is interpolated) */
+/*--------------------------------------------------------------------------*/
+	return res_infty_norm ;
+}
+/*==========================================================================*/
 static double compute_iteration_Crank_Nicolson_PQ(
 	double s_L,
 	int Nx,
@@ -267,9 +352,8 @@ static double compute_iteration_Crank_Nicolson_PQ(
 {
 	double lower_x = bbox[0] ;
 
-	int size = 0 ;
+	int size = Nx ;
 	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
-	else size = Nx ;
 	double res_infty_norm = 0 ; /* returning this */
 /*--------------------------------------------------------------------------*/
 /* interior: we go to Nx-2 as we do not want to actually include the point
@@ -418,7 +502,7 @@ static double compute_iteration_Crank_Nicolson_PQ(
 	return res_infty_norm ;
 } 
 /*===========================================================================*/
-void advance_tStep_massless_scalar(
+void advance_tStep_PQ_massless_scalar_GR(
 	double s_L,
 	int Nx, 
 	double dt, double dx, 
@@ -454,6 +538,59 @@ void advance_tStep_massless_scalar(
 	if (fabs(bbox[0])<machine_epsilon) {
 		Kreiss_Oliger_filter_origin(P_n, "even") ;
 		Kreiss_Oliger_filter_origin(Q_n, "odd") ;
+	}
+	return ;
+}	
+/*===========================================================================*/
+void advance_tStep_PQZe_massless_scalar_GR(
+	double s_L,
+	int Nx, 
+	double dt, double dx, 
+	double err_tolerance,
+	bool excision_on,
+	int exc_jC,
+	double bbox[2], 
+	bool perim_interior[2],
+	double* Al_n, double* Al_nm1, double* Ze_n, double* Ze_nm1,
+	double*  P_n, double*  P_nm1, double*  Q_n, double*  Q_nm1)
+{ 
+	if (exc_jC==Nx-1) {
+		return ;
+	}
+	double res = 0 ;
+	do {
+		res= compute_iteration_Crank_Nicolson_PQ(
+			s_L,
+			Nx,
+			dt, 	dx,
+			excision_on,
+			exc_jC,
+			bbox,
+			perim_interior,
+			Al_n, 	Al_nm1, Ze_n, Ze_nm1,
+			 P_n, 	 P_nm1,  Q_n,  Q_nm1)
+		;
+		res+= compute_iteration_Crank_Nicolson_Ze(
+			s_L,
+			Nx,
+			dt, 	dx,
+			excision_on,
+			exc_jC,
+			bbox,
+			perim_interior,
+			Al_n,  Al_nm1, Ze_n, Ze_nm1,
+			 P_n,   P_nm1,  Q_n,  Q_nm1)
+		;
+	} while (res>err_tolerance) ;
+
+	Kreiss_Oliger_filter(Nx,  P_n) ;
+	Kreiss_Oliger_filter(Nx,  Q_n) ;
+	Kreiss_Oliger_filter(Nx, Ze_n) ;
+
+	if (fabs(bbox[0])<machine_epsilon) {
+		Kreiss_Oliger_filter_origin(P_n,  "even") ;
+		Kreiss_Oliger_filter_origin(Q_n,  "odd") ;
+		Kreiss_Oliger_filter_origin(Ze_n, "odd") ;
 	}
 	return ;
 }	

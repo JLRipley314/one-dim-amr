@@ -44,7 +44,7 @@ run_data = {
 
 	"solver_QP"	: "", 
 	"solver_Al"	: "",
-	"solver_Ze"	: "constrained_evolution",#"free_evolution",# 
+	"solver_Ze"	: "constrained",#"free",# 
 	"solver_Ps"	: "",
 
 	"characteristics_calculator" : "",
@@ -53,7 +53,7 @@ run_data = {
 ###	cfl_num: Courant Friedrichs Lewy number (for hyperbolics)
 ###
 	"Nx"		: 2**8+1,
-	"Nt"		: 2**7+1,
+	"Nt"		: 2**8+1,
 	"t_step_save"	: 2**0,
 	"cfl_num"	: 0.25,  
 	"err_tolerance"	: 1.0e-10, 

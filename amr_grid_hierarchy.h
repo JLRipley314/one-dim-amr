@@ -125,7 +125,7 @@ void add_self_similar_initial_grids(amr_grid_hierarchy* gh, int grid_size_ratio,
 
 int amr_destroy_grid_hierarchy(amr_grid_hierarchy* gh) ;
 
-int amr_add_field(amr_field* field, char* name, char* pde_type, int time_levels, int extrap_levels) ;
+void amr_add_field(amr_field* field, char* name, char* pde_type, int time_levels, int extrap_levels) ;
 
 amr_field* amr_init_fields(char* name, char* pde_type, int time_levels, int extrap_levels) ;
 

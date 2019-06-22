@@ -48,6 +48,7 @@ double *eom_TR, *eom_ThTh, *eom_scalar ;
 /* run data */
 /*---------------------------------------------------------------------------*/
 char *theory, *output_dir ;
+char *solver_Ze ;
 
 double cfl_num ;
 double bbox[2] ;
@@ -268,7 +269,8 @@ void set_free_initial_data(amr_grid* grid)
 			Al_n, Ze_n, 
 			P_n, Q_n)
 		;
-	} else if (strcmp(initial_data,"initial_black_hole")==0) {
+	} else 
+	if (strcmp(initial_data,"initial_black_hole")==0) {
 		if ((grid->level)==0) {
 			(grid->excised_jC) = (int)round(initial_black_hole_mass/(2.*dx)) ;
 		} else {
@@ -317,7 +319,7 @@ void solve_ode(amr_grid *grid)
 {
 	set_globals(grid) ;
 	if (strcmp(theory, "massless_scalar_GR") == 0) {
-		solve_Al_Ze(
+		solve_Al_Ze_GR(
 			stereographic_L,
 			Nx,
 			dt, 	dx,
@@ -328,7 +330,8 @@ void solve_ode(amr_grid *grid)
 			Al_n, 	Al_nm1, Ze_n, Ze_nm1,
 			 P_n, 	 P_nm1,  Q_n,  Q_nm1)
 		;
-	} else if (strcmp(theory,"EdGB")==0) { 
+	} else 
+	if (strcmp(theory,"EdGB")==0) { 
 		solve_Al_Ze_EdGB(
 			stereographic_L, coupling_gbs,
 			Nx,
@@ -351,29 +354,66 @@ void evolve_hyperbolic_pde(amr_grid *grid)
 	set_globals(grid) ;
 	rescale_Al(grid) ;
 	if (strcmp(theory,"massless_scalar_GR")==0) {
-		advance_tStep_massless_scalar(
-			stereographic_L,
-			Nx, dt, dx, 
-			err_tolerance,
-			excision_on,
-			excised_jC,
-			bbox, perim_interior,
-			Al_n, Al_nm1, Ze_n, Ze_nm1,
-			 P_n,  P_nm1,  Q_n,  Q_nm1
-		) ;	
-	} else if (strcmp(theory,"EdGB")==0) {
-		advance_tStep_massless_scalar_EdGB(
-			stereographic_L, coupling_gbs,
-			Nx, 
-			dt, dx, 
-			err_tolerance, 
-			excision_on,
-			excised_jC,
-			bbox, 
-			perim_interior,
-			Al_n, Al_nm1, Ze_n, Ze_nm1,
-			 P_n,  P_nm1,  Q_n,  Q_nm1)
-		;
+		if (strcmp(solver_Ze,"constrained")==0) {
+			advance_tStep_PQ_massless_scalar_GR(
+				stereographic_L,
+				Nx, dt, dx, 
+				err_tolerance,
+				excision_on,
+				excised_jC,
+				bbox, perim_interior,
+				Al_n, Al_nm1, Ze_n, Ze_nm1,
+				 P_n,  P_nm1,  Q_n,  Q_nm1
+			) ;	
+		} else
+		if (strcmp(solver_Ze,"free")==0) {
+			advance_tStep_PQZe_massless_scalar_GR(
+				stereographic_L,
+				Nx, dt, dx, 
+				err_tolerance,
+				excision_on,
+				excised_jC,
+				bbox, perim_interior,
+				Al_n, Al_nm1, Ze_n, Ze_nm1,
+				 P_n,  P_nm1,  Q_n,  Q_nm1)
+			;
+		} else {
+			fprintf(stderr,"ERROR(main.c): solverZe=%s",solver_Ze) ;
+			exit(EXIT_FAILURE) ;
+		}
+	} else 
+	if (strcmp(theory,"EdGB")==0) {
+		if (strcmp(solver_Ze,"constrained")==0) {
+			advance_tStep_PQ_massless_scalar_EdGB(
+				stereographic_L, coupling_gbs,
+				Nx, 
+				dt, dx, 
+				err_tolerance, 
+				excision_on,
+				excised_jC,
+				bbox, 
+				perim_interior,
+				Al_n, Al_nm1, Ze_n, Ze_nm1,
+				 P_n,  P_nm1,  Q_n,  Q_nm1)
+			;
+		} else
+		if (strcmp(solver_Ze,"free")==0) {
+			advance_tStep_PQZe_massless_scalar_EdGB(
+				stereographic_L, coupling_gbs,
+				Nx, 
+				dt, dx, 
+				err_tolerance, 
+				excision_on,
+				excised_jC,
+				bbox, 
+				perim_interior,
+				Al_n, Al_nm1, Ze_n, Ze_nm1,
+				 P_n,  P_nm1,  Q_n,  Q_nm1)
+			;
+		} else {
+			fprintf(stderr,"ERROR(main.c): solver_Ze=%s",solver_Ze) ;
+			exit(EXIT_FAILURE) ;
+		}
 	}
 	return ;
 }
@@ -397,7 +437,8 @@ void compute_diagnostics(amr_grid *grid)
 			eom_ThTh,
 			eom_scalar)
 		;
-	} else if (strcmp(theory,"EdGB")==0) {
+	} else 
+	if (strcmp(theory,"EdGB")==0) {
 		compute_diagnostics_massless_scalar_EdGB(
 			Nx, excised_jC, 
 			stereographic_L,
@@ -413,7 +454,10 @@ void compute_diagnostics(amr_grid *grid)
 			ingoing_scalar_characteristic,
 			outgoing_scalar_characteristic)
 		;
-	} else {;}
+	} else {
+		fprintf(stderr,"ERROR(main.c): theory=%s",solver_Ze) ;
+		exit(EXIT_FAILURE) ;
+	}
 /*--------------------------------------------------------------------------*/
 /* ''_general: includes setting excised_jC */ 
 /*--------------------------------------------------------------------------*/
@@ -449,7 +493,8 @@ void save_to_file(amr_grid *grid)
 		DIR* dir = opendir(output_dir) ;
 		if (dir!=NULL) {
 			closedir(dir) ;
-		} else if (ENOENT==errno) {
+		} else 
+		if (ENOENT==errno) {
 			printf("ERROR(main.c): unable to open %s\n", output_dir) ;
 			printf("directory does not exist?\n") ;
 			exit(EXIT_FAILURE) ;
@@ -528,6 +573,7 @@ int main(int argc, char *argv[])
 	get_run_data(
 		&theory,
 		&output_dir,
+		&solver_Ze,
 		&Nx, &Nt, &t_step_save,
 		&cfl_num, 
 		&bbox[0], &bbox[1],
@@ -567,6 +613,5 @@ int main(int argc, char *argv[])
 	free(theory) ;
 	free(initial_data) ;
 /*--------------------------------------------------------------------------*/
-
 	return EXIT_SUCCESS ;
 }

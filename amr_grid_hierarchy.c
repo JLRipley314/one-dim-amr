@@ -55,7 +55,7 @@ amr_field* amr_init_fields(char* name, char* pde_type, int time_levels, int extr
 /*============================================================================*/
 /* add new field to end of fields list */
 /*============================================================================*/
-int amr_add_field(amr_field* fields, char* name, char* pde_type, int time_levels, int extrap_levels)
+void amr_add_field(amr_field* fields, char* name, char* pde_type, int time_levels, int extrap_levels)
 {
 	amr_field* current = fields ;
 
@@ -73,7 +73,26 @@ int amr_add_field(amr_field* fields, char* name, char* pde_type, int time_levels
 	current->next->prev = current ;
 	current->next->next = NULL ;
 
-	return 0 ;
+	return ;
+}
+/*============================================================================*/
+void amr_reset_field_pde_type(amr_field *fields, char *name, char *new_pde_type)
+{
+	amr_field *current = fields ;
+	bool found_name = false ;
+	while (current->next != NULL) {
+		if (strcmp(current->name,name)==0) {
+			found_name = true ;
+			break ;
+		}
+	}
+	if (found_name==false) {
+		fprintf(stderr,"ERROR(amr_grid_hierarchy). amr_reset_field_pde_type: name %s not found\n",name) ;
+		exit(EXIT_FAILURE) ;
+	}
+	current->pde_type = new_pde_type ;
+
+	current = NULL ;
 }
 /*============================================================================*/
 void amr_set_to_head(amr_grid** grid) 

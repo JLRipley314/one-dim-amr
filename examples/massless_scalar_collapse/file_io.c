@@ -49,34 +49,36 @@ static void check_if_file_exists(FILE* file, char* file_name)
 }
 /*==========================================================================*/
 void get_run_data(
-	char** theory,
-	char** output_dir,
-	int* Nx, int* Nt, int* t_step_save,
-	double* cfl_num, 
-	double* bbox_0, double* bbox_1,
-	double* stereographic_L,
-	double* coupling_gbs,
-	double* dt, double* dx, 
-	double* err_tolerance)
+	char **theory,
+	char **output_dir,
+	char **solver_Ze,
+	int *Nx, int *Nt, int *t_step_save,
+	double *cfl_num, 
+	double *bbox_0, double *bbox_1,
+	double *stereographic_L,
+	double *coupling_gbs,
+	double *dt, double *dx, 
+	double *err_tolerance)
 {
 	char run_data_name[MAX_NAME_LEN+1] ;
 	snprintf(run_data_name, MAX_NAME_LEN, "%srun_data.txt", HOME_DIR) ;
-	FILE* run_data_file = fopen(run_data_name, "r") ;
+	FILE *run_data_file = fopen(run_data_name, "r") ;
 	check_if_file_exists(run_data_file, run_data_name) ; 
 
-        char* line  = NULL ;
-        char* token = NULL ;
+        char *line  = NULL ;
+        char *token = NULL ;
         size_t len = 0 ; 
         ssize_t read = 0 ; 
 
-	char* delimeter = "=" ;
+	char *delimeter = "=" ;
 	
         while ((read = getline(&line, &len, run_data_file)) > 0) {
-		char* line_val = line ;
+		char *line_val = line ;
                 token = strsep(&line_val, delimeter) ;
 
 		get_string_val(line_val, token, "theory", delimeter, theory) ;
 		get_string_val(line_val, token, "output_dir", delimeter, output_dir) ;
+		get_string_val(line_val, token, "solver_Ze", delimeter, solver_Ze) ;
 
 		get_int_val(line_val, token, "Nx", delimeter, Nx) ;
 		get_int_val(line_val, token, "Nt", delimeter, Nt) ;
@@ -106,25 +108,25 @@ void get_run_data(
 }
 /*==========================================================================*/
 void get_initial_data(
-	char** initial_data,
-	char** direction,
-	double* amp, double* width, double* center,
-	double* initial_black_hole_mass) 
+	char **initial_data,
+	char **direction,
+	double *amp, double *width, double *center,
+	double *initial_black_hole_mass) 
 {
 	char initial_data_name[MAX_NAME_LEN+1] ;
 	snprintf(initial_data_name, MAX_NAME_LEN, "%sinitial_data.txt", HOME_DIR) ;
-	FILE* initial_data_file = fopen(initial_data_name, "r") ;
+	FILE *initial_data_file = fopen(initial_data_name, "r") ;
 	check_if_file_exists(initial_data_file, initial_data_name) ; 
 
-        char* line  = NULL ;
-        char* token = NULL ;
+        char *line  = NULL ;
+        char *token = NULL ;
         size_t len = 0 ; 
         ssize_t read = 0 ; 
 
-	char* delimeter = "=" ;
+	char *delimeter = "=" ;
 
         while ((read = getline(&line, &len, initial_data_file)) > 0) {
-		char* line_val = line ;
+		char *line_val = line ;
                 token = strsep(&line_val, delimeter) ;
 
 		get_string_val(line_val, token, "initial_data", delimeter, initial_data) ;
