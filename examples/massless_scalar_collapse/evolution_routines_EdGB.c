@@ -281,8 +281,8 @@ static double compute_iteration_excision_boundary_condition_Ze(
 	double SE_LL_ThTh = (1./2) * pow(r_j,2) * (pow(P,2) - pow(Q,2)) ;
 	double Ze_Der_SE_LL_ThTh = 0. ;
 
-	double SE_LL_TR        = (Al*(2*P*Q + (pow(P,2) + pow(Q,2))*Ze  ))/2. ;
-	double Ze_Der_SE_LL_TR = (Al*(0     + (pow(P,2) + pow(Q,2))*0.5 ))/2. ;
+	double SE_LL_TR        = (Al*(2*P*Q + (pow(P,2) + pow(Q,2))*Ze))/2. ;
+	double Ze_Der_SE_LL_TR = (Al*(0     + (pow(P,2) + pow(Q,2))*1.))/2. ;
 
 	double phi_Der_f    = 1. ;
 	double phiphi_Der_f = 0. ;
@@ -411,8 +411,8 @@ static double compute_iteration_Crank_Nicolson_Ze(
 		double SE_LL_ThTh = (1./2) * pow(r_j,2) * (pow(P,2) - pow(Q,2)) ;
 		double Ze_Der_SE_LL_ThTh = 0. ;
 
-		double SE_LL_TR        = (Al*(2*P*Q + (pow(P,2) + pow(Q,2))*Ze  ))/2. ;
-		double Ze_Der_SE_LL_TR = (Al*(0     + (pow(P,2) + pow(Q,2))*0.5 ))/2. ;
+		double SE_LL_TR        = (Al*(2*P*Q + (pow(P,2) + pow(Q,2))*Ze))/2. ;
+		double Ze_Der_SE_LL_TR = (Al*(0     + (pow(P,2) + pow(Q,2))*1.))/2. ;
 
 		double phi_Der_f    = 1. ;
 		double phiphi_Der_f = 0. ;
