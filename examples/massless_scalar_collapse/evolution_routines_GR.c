@@ -535,7 +535,9 @@ void advance_tStep_PQ_massless_scalar_GR(
 	Kreiss_Oliger_filter(Nx, exc_jC, P_n) ;
 	Kreiss_Oliger_filter(Nx, exc_jC, Q_n) ;
 
-	if (fabs(bbox[0])<machine_epsilon) {
+	if ((fabs(bbox[0])<machine_epsilon)
+	&&  (exc_jC>0)
+	) {
 		Kreiss_Oliger_filter_origin(P_n, "even") ;
 		Kreiss_Oliger_filter_origin(Q_n, "odd") ;
 	}
@@ -587,7 +589,9 @@ void advance_tStep_PQZe_massless_scalar_GR(
 	Kreiss_Oliger_filter(Nx, exc_jC,  Q_n) ;
 	Kreiss_Oliger_filter(Nx, exc_jC, Ze_n) ;
 
-	if (fabs(bbox[0])<machine_epsilon) {
+	if ((fabs(bbox[0])<machine_epsilon)
+	&&  (exc_jC>0)
+	) {
 		Kreiss_Oliger_filter_origin(P_n,  "even") ;
 		Kreiss_Oliger_filter_origin(Q_n,  "odd") ;
 		Kreiss_Oliger_filter_origin(Ze_n, "odd") ;
