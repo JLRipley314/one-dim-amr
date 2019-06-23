@@ -381,13 +381,13 @@ void compute_diagnostics_massless_scalar_EdGB(
 		ingoing_characteristic, 
 		outgoing_characteristic)
 	;
-	set_array_val(0, exc_jC-1, 0, P_n) ;
-	set_array_val(0, exc_jC-1, 0, Q_n) ;
-	set_array_val(0, exc_jC-1, 0, eom_TR) ;
-	set_array_val(0, exc_jC-1, 0, eom_ThTh) ;
-	set_array_val(0, exc_jC-1, 0, eom_scalar) ;
-	set_array_val(0, exc_jC-1, 0, ingoing_characteristic) ;
-	set_array_val(0, exc_jC-1, 0, outgoing_characteristic) ;
+	set_array_val(0, exc_jC, 0, P_n) ;
+	set_array_val(0, exc_jC, 0, Q_n) ;
+	set_array_val(0, exc_jC, 0, eom_TR) ;
+	set_array_val(0, exc_jC, 0, eom_ThTh) ;
+	set_array_val(0, exc_jC, 0, eom_scalar) ;
+	set_array_val(0, exc_jC, 0, ingoing_characteristic) ;
+	set_array_val(0, exc_jC, 0, outgoing_characteristic) ;
 
 	free(SE_LL_TR) ;
 	free(SE_LL_ThTh) ;

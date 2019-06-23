@@ -48,9 +48,9 @@ static double compute_iteration_Al(
         for (int jC=start_jC; jC<Nx-1; jC++) {
                 double x_joh = ((jC+1) + jC) * dx / 2 ;
 
-                double r_joh= stereographic_r(s_L, x_joh) ;
-
+                double r_joh = stereographic_r(s_L, x_joh) ;
                 double dr = stereographic_dr(s_L, x_joh, dx) ;
+
                 double Al_joh = (Al[jC+1] + Al[jC]) / 2 ;
                 double Ze_joh = (Ze[jC+1] + Ze[jC]) / 2 ;
 
@@ -65,8 +65,8 @@ static double compute_iteration_Al(
                 double Jr_joh = - Q_joh * P_joh ;
 		double Al_Der_Jr_joh = 0 ;
 
-		double phi_Der_f_joh = 1 ;
-		double phiphi_Der_f_joh = 0 ;
+		double phi_Der_f = 1 ;
+		double phiphi_Der_f = 0 ;
 /*---------------------------------------------------------------------------*/	
                 if ((fabs(Jr_joh) < 10*machine_epsilon)
                 &&  (fabs(Ze_joh) < 10*machine_epsilon)
@@ -77,27 +77,27 @@ static double compute_iteration_Al(
 /*---------------------------------------------------------------------------*/	
 		double res_Al = 			
 		-       (r_joh*Al_joh*Jr_joh)/(2.*Ze_joh)
-		+       (4*phi_Der_f_joh*r_Der_P_joh*c_gbs*Al_joh*Ze_joh)/r_joh
-		+       (4*phi_Der_f_joh*r_Der_Ze_joh*c_gbs*Al_joh*Q_joh*Ze_joh)/r_joh
-		+       (4*phiphi_Der_f_joh*c_gbs*Al_joh*P_joh*Q_joh*Ze_joh)/r_joh
+		+       (4*phi_Der_f*r_Der_P_joh*c_gbs*Al_joh*Ze_joh)/r_joh
+		+       (4*phi_Der_f*r_Der_Ze_joh*c_gbs*Al_joh*Q_joh*Ze_joh)/r_joh
+		+       (4*phiphi_Der_f*c_gbs*Al_joh*P_joh*Q_joh*Ze_joh)/r_joh
 		+       (
 				1
-			-       (8*phi_Der_f_joh*c_gbs*Q_joh)/r_joh
-			-       (8*phi_Der_f_joh*c_gbs*P_joh*Ze_joh)/r_joh
-			+       (4*phi_Der_f_joh*c_gbs*Q_joh*pow(Ze_joh,2))/r_joh
+			-       (8*phi_Der_f*c_gbs*Q_joh)/r_joh
+			-       (8*phi_Der_f*c_gbs*P_joh*Ze_joh)/r_joh
+			+       (4*phi_Der_f*c_gbs*Q_joh*pow(Ze_joh,2))/r_joh
 		)*r_Der_Al_joh
 		;
 		double jac_Al = 
 		-       (Al_Der_Jr_joh*r_joh*Al_joh)/(4.*Ze_joh)
 		-       (r_joh*Jr_joh)/(4.*Ze_joh)
-		+       (2*phi_Der_f_joh*r_Der_P_joh*c_gbs*Ze_joh)/r_joh
-		+       (2*phi_Der_f_joh*r_Der_Ze_joh*c_gbs*Q_joh*Ze_joh)/r_joh
-		+       (2*phiphi_Der_f_joh*c_gbs*P_joh*Q_joh*Ze_joh)/r_joh
+		+       (2*phi_Der_f*r_Der_P_joh*c_gbs*Ze_joh)/r_joh
+		+       (2*phi_Der_f*r_Der_Ze_joh*c_gbs*Q_joh*Ze_joh)/r_joh
+		+       (2*phiphi_Der_f*c_gbs*P_joh*Q_joh*Ze_joh)/r_joh
 		+       (
 				1
-			-       (8*phi_Der_f_joh*c_gbs*Q_joh)/r_joh
-			-       (8*phi_Der_f_joh*c_gbs*P_joh*Ze_joh)/r_joh
-			+       (4*phi_Der_f_joh*c_gbs*Q_joh*pow(Ze_joh,2))/r_joh
+			-       (8*phi_Der_f*c_gbs*Q_joh)/r_joh
+			-       (8*phi_Der_f*c_gbs*P_joh*Ze_joh)/r_joh
+			+       (4*phi_Der_f*c_gbs*Q_joh*pow(Ze_joh,2))/r_joh
 		)/dr
 		;
 		Al[jC+1] -= res_Al / jac_Al ;
@@ -147,31 +147,29 @@ static double compute_iteration_Ze(
 
                 double Al_joh = (Al[jC+1] + Al[jC]) / 2. ;
 
+                double Q_joh = (Q[jC+1] + Q[jC]) / 2. ;
                 double Q_jp1 = Q[jC+1] ;
                 double Q_j   = Q[jC] ;
+
+                double P_joh = (P[jC+1] + P[jC]) / 2. ;
 
                 double Al_sqrd_jp1 = pow(Al[jC+1], 2) ;
                 double Al_sqrd_j   = pow(Al[jC+0], 2) ;
                 double Ze_sqrd_jp1 = pow(Ze[jC+1], 2) ;
                 double Ze_sqrd_j   = pow(Ze[jC+0], 2) ;
 
-                double Q_joh = (Q[jC+1] + Q[jC]) / 2. ;
-                double P_joh = (P[jC+1] + P[jC]) / 2. ;
-
                 double rho_joh = (1./2) * (pow(Q_joh,2) + pow(P_joh,2)) ;
 
-		double phi_Der_f_jp1 = 1 ;
-		double phi_Der_f_joh = 1 ;
-		double phi_Der_f_j   = 1 ;
+		double phi_Der_f = 1 ;
 /*---------------------------------------------------------------------------*/
 		double res_Ze_sqrd = 
 		( 
-			(	(r_jp1 - 8*c_gbs*phi_Der_f_jp1*Q_jp1)*Al_sqrd_jp1*Ze_sqrd_jp1
-			-	(r_j   - 8*c_gbs*phi_Der_f_j  *Q_j  )*Al_sqrd_j  *Ze_sqrd_j
+			(	(r_jp1 - 8*c_gbs*phi_Der_f*Q_jp1)*Al_sqrd_jp1*Ze_sqrd_jp1
+			-	(r_j   - 8*c_gbs*phi_Der_f*Q_j  )*Al_sqrd_j  *Ze_sqrd_j
 			)/dr
 		)
 		- (	
-			(8*c_gbs*phi_Der_f_joh*P_joh/Al_joh)*(
+			(8*c_gbs*phi_Der_f*P_joh/Al_joh)*(
 				pow(Al_sqrd_jp1*Ze_sqrd_jp1,3./2.) 
 			- 	pow(Al_sqrd_j  *Ze_sqrd_j  ,3./2.)
 			)/dr
@@ -181,11 +179,11 @@ static double compute_iteration_Ze(
 		double jac_Ze_sqrd = 
 		(
 			(
-				(r_jp1 - 8*c_gbs*phi_Der_f_jp1*Q_jp1)*Al_sqrd_jp1
+				(r_jp1 - 8*c_gbs*phi_Der_f*Q_jp1)*Al_sqrd_jp1
 			)/dr
 		)
 		-(	
-			(8*c_gbs*phi_Der_f_joh*P_joh/Al_joh)*(
+			(8*c_gbs*phi_Der_f*P_joh/Al_joh)*(
 				(3./2.)*Al_sqrd_jp1*pow(Al_sqrd_jp1*Ze_sqrd_jp1,1./2.)
 			)/dr
 		)	
@@ -293,7 +291,7 @@ static double compute_iteration_excision_boundary_condition_Ze(
 	double SE_LL_TR        = (Al*(2*P*Q + (pow(P,2) + pow(Q,2))*Ze))/2. ;
 	double Ze_Der_SE_LL_TR = (Al*(0     + (pow(P,2) + pow(Q,2))*1.))/2. ;
 
-	double phi_Der_f    = 1. ;
+	double phi_Der_f = 1. ;
 	double phiphi_Der_f = 0. ;
 	
 	double res_Ze = free_evolution_Ze_res(
@@ -423,7 +421,7 @@ static double compute_iteration_Crank_Nicolson_Ze(
 		double SE_LL_TR        = (Al*(2*P*Q + (pow(P,2) + pow(Q,2))*Ze))/2. ;
 		double Ze_Der_SE_LL_TR = (Al*(0     + (pow(P,2) + pow(Q,2))*1.))/2. ;
 
-		double phi_Der_f    = 1. ;
+		double phi_Der_f = 1. ;
 		double phiphi_Der_f = 0. ;
 		
 		double res_Ze = free_evolution_Ze_res(
@@ -630,13 +628,12 @@ static double compute_iteration_Crank_Nicolson_PQ(
 	&&  (perim_interior[0] == false)
 	) {
 		double x_j = 0 ;
-		double dr  = pow(1. - (x_j/s_L), -2) * dx;
+		double dr  = stereographic_dr(s_L, x_j, dx) ;
 
 		double res_P = D1_forward_2ndOrder(
 			P_n[2], P_n[1], P_n[0], 
 		dr) ;
 		double jac_P = - (3./2.) / dr ;
-
 
 		P_n[0] -= res_P / jac_P ;
 
@@ -781,10 +778,12 @@ void advance_tStep_PQ_massless_scalar_EdGB(
 		;
 	} while (res>err_tolerance) ;
 
-	Kreiss_Oliger_filter(Nx, P_n) ;
-	Kreiss_Oliger_filter(Nx, Q_n) ;
+	Kreiss_Oliger_filter(Nx, exc_jC, P_n) ;
+	Kreiss_Oliger_filter(Nx, exc_jC, Q_n) ;
 
-	if (fabs(bbox[0])<machine_epsilon) {
+	if ((fabs(bbox[0])<machine_epsilon)
+	&&  (exc_jC==0)
+	) {
 		Kreiss_Oliger_filter_origin(P_n, "even") ;
 		Kreiss_Oliger_filter_origin(Q_n, "odd") ;
 	}
@@ -833,9 +832,9 @@ void advance_tStep_PQZe_massless_scalar_EdGB(
 		;
 	} while (res>err_tolerance) ;
 
-	Kreiss_Oliger_filter(Nx,  P_n) ;
-	Kreiss_Oliger_filter(Nx,  Q_n) ;
-	Kreiss_Oliger_filter(Nx, Ze_n) ;
+	Kreiss_Oliger_filter(Nx, exc_jC,  P_n) ;
+	Kreiss_Oliger_filter(Nx, exc_jC,  Q_n) ;
+	Kreiss_Oliger_filter(Nx, exc_jC, Ze_n) ;
 
 	if (fabs(bbox[0])<machine_epsilon) {
 		Kreiss_Oliger_filter_origin(P_n,  "even") ;

@@ -111,6 +111,7 @@ inline double D2_stereographic_center_2ndOrder(double s_L, double x, double vp1,
 /*==========================================================================*/
 void Kreiss_Oliger_filter(
 	int Nx,
+	int exc_jC,
 	double* field)
 ;
 /*==========================================================================*/

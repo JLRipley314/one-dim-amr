@@ -214,13 +214,13 @@ void compute_diagnostics_general(
 		Ze_n, Ze_nm1, Ze_nm2,
 		Gauss_Bonnet_scalar)
 	;
-	set_array_val(0, *exc_jC-1, 0, Al_n) ;
-	set_array_val(0, *exc_jC-1, 0, Ze_n) ;
-	set_array_val(0, *exc_jC-1, 0, mass_aspect) ;
-	set_array_val(0, *exc_jC-1, 0, ingoing_null_characteristic) ;
-	set_array_val(0, *exc_jC-1, 0, outgoing_null_characteristic) ;
-	set_array_val(0, *exc_jC-1, 0, Ricci_scalar) ;
-	set_array_val(0, *exc_jC-1, 0, Gauss_Bonnet_scalar) ;
+	set_array_val(0, *exc_jC, 0, Al_n) ;
+	set_array_val(0, *exc_jC, 0, Ze_n) ;
+	set_array_val(0, *exc_jC, 0, mass_aspect) ;
+	set_array_val(0, *exc_jC, 0, ingoing_null_characteristic) ;
+	set_array_val(0, *exc_jC, 0, outgoing_null_characteristic) ;
+	set_array_val(0, *exc_jC, 0, Ricci_scalar) ;
+	set_array_val(0, *exc_jC, 0, Gauss_Bonnet_scalar) ;
 
 	double asymptotic_mass = mass_aspect[Nx-5] ;
 	double outer_trapped_ratio = 0.2 ;

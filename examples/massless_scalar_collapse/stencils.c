@@ -52,10 +52,11 @@ extern double D2_stereographic_center_2ndOrder(double s_L, double x, double vp1 
 /*==========================================================================*/
 void Kreiss_Oliger_filter(
 	int Nx,
+	int exc_jC,
 	double* field)
 {
 	double epsilon_ko = 0.8 ;
-	for (int iC=2; iC<Nx-2; iC++) {
+	for (int iC=exc_jC+2; iC<Nx-2; iC++) {
 		field[iC] -= (epsilon_ko/16.) * (
 			field[iC+2] 
 		+ 	(-4.*field[iC+1]) 
