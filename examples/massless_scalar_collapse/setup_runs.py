@@ -36,7 +36,7 @@ run_data = {
 ###
 ###	EdGB: coupling for Gauss-Bonnet scalar (gbs)
 ###
-	"coupling_gbs"	: 1.0,
+	"coupling_gbs"	: 0.5,
 
 	"stereographic_L" : 100,
 	
@@ -62,7 +62,7 @@ run_data = {
 ###
 ###	if initial_data is r4Exp
 ###
-	"amp"		: 0.00002,
+	"amp"		: 0.00001,
 	"width"		: 4.0,
 	"center"	: 10.0,
 	"direction"	: "stationary",#"ingoing",#"outgoing",#

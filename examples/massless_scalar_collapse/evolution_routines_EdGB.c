@@ -27,7 +27,8 @@ static inline double weighted_infty_norm(double weight, double val_1, double val
 /* there is Jr/Ze term that is zero in empty
  * space but undefined if below machine precision.
  * The slope is zero though in empty spacce so
- * to that precision we do this. */
+ * to that precision we do this. 
+ * This returns res_infty_norm*/
 /*==========================================================================*/
 static double compute_iteration_Al(
 	double s_L,	double c_gbs,
@@ -36,19 +37,18 @@ static double compute_iteration_Al(
 	int start_jC,
 	double bbox[2],
 	double *Al, 	double *Ze, 
-	double * P, 	double * Q)
+	double  *P, 	double  *Q)
 {
-	double phiphi_Der_f_joh = 1 ;
-	double phi_Der_f_joh = 1 ;
-
 	int size = Nx ;
-	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
-        double res_infty_norm = 0 ; /* returning this */
- /* scalar field functions */
+/* to avoid problems with r=infty when x=s_L */
+	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ;
+
+	double res_infty_norm = 0 ; 
+
         for (int jC=start_jC; jC<Nx-1; jC++) {
                 double x_joh = ((jC+1) + jC) * dx / 2 ;
 
-                double r_joh = stereographic_r(s_L, x_joh) ;
+                double r_joh= stereographic_r(s_L, x_joh) ;
 
                 double dr = stereographic_dr(s_L, x_joh, dx) ;
                 double Al_joh = (Al[jC+1] + Al[jC]) / 2 ;
@@ -65,50 +65,58 @@ static double compute_iteration_Al(
                 double Jr_joh = - Q_joh * P_joh ;
 		double Al_Der_Jr_joh = 0 ;
 
+		double phi_Der_f_joh = 1 ;
+		double phiphi_Der_f_joh = 0 ;
+/*---------------------------------------------------------------------------*/	
                 if ((fabs(Jr_joh) < 10*machine_epsilon)
                 &&  (fabs(Ze_joh) < 10*machine_epsilon)
                 ) {
                         Al[jC+1] = Al[jC] ;
-                } else {
-                        double res_Al = 			
-			-	(r_joh*Al_joh*Jr_joh)/(2.*Ze_joh) 
-			+ 	(4*phi_Der_f_joh*r_Der_P_joh*c_gbs*Al_joh*Ze_joh)/r_joh 
-			+ 	(4*phi_Der_f_joh*r_Der_Ze_joh*c_gbs*Al_joh*Q_joh*Ze_joh)/r_joh 
-			+ 	(4*phiphi_Der_f_joh*c_gbs*Al_joh*P_joh*Q_joh*Ze_joh)/r_joh 
-			+ 	(
-					1 
-				- 	(8*phi_Der_f_joh*c_gbs*Q_joh)/r_joh 
-				- 	(8*phi_Der_f_joh*c_gbs*P_joh*Ze_joh)/r_joh 
-				+ 	(4*phi_Der_f_joh*c_gbs*Q_joh*pow(Ze_joh,2))/r_joh
-			)*r_Der_Al_joh
-			;
-                        double jac_Al = 
-			-	(Al_Der_Jr_joh*r_joh*Al_joh)/(4.*Ze_joh) 
-			- 	(r_joh*Jr_joh)/(4.*Ze_joh) 
-			+ 	(2*phi_Der_f_joh*r_Der_P_joh*c_gbs*Ze_joh)/r_joh 
-			+ 	(2*phi_Der_f_joh*r_Der_Ze_joh*c_gbs*Q_joh*Ze_joh)/r_joh 
-			+ 	(2*phiphi_Der_f_joh*c_gbs*P_joh*Q_joh*Ze_joh)/r_joh 
-			+ 	(
-					1 
-				- 	(8*phi_Der_f_joh*c_gbs*Q_joh)/r_joh 
-				- 	(8*phi_Der_f_joh*c_gbs*P_joh*Ze_joh)/r_joh 
-				+ 	(4*phi_Der_f_joh*c_gbs*Q_joh*pow(Ze_joh,2))/r_joh
-			)/dr
-			;
-                        Al[jC+1] -= res_Al / jac_Al ;
-			if ((isnan(res_Al) != 0)
-			||  (isnan(jac_Al) != 0)
-			) {
-				printf("jC:%d\tres_Al:%.e\tjac_Al:%.e\n", jC, res_Al, jac_Al) ;
-				exit(EXIT_FAILURE) ;
-			}
-                	res_infty_norm = weighted_infty_norm(1-x_joh/s_L, res_Al, res_infty_norm) ;
-                }
+			continue ;
+		}
+/*---------------------------------------------------------------------------*/	
+		double res_Al = 			
+		-       (r_joh*Al_joh*Jr_joh)/(2.*Ze_joh)
+		+       (4*phi_Der_f_joh*r_Der_P_joh*c_gbs*Al_joh*Ze_joh)/r_joh
+		+       (4*phi_Der_f_joh*r_Der_Ze_joh*c_gbs*Al_joh*Q_joh*Ze_joh)/r_joh
+		+       (4*phiphi_Der_f_joh*c_gbs*Al_joh*P_joh*Q_joh*Ze_joh)/r_joh
+		+       (
+				1
+			-       (8*phi_Der_f_joh*c_gbs*Q_joh)/r_joh
+			-       (8*phi_Der_f_joh*c_gbs*P_joh*Ze_joh)/r_joh
+			+       (4*phi_Der_f_joh*c_gbs*Q_joh*pow(Ze_joh,2))/r_joh
+		)*r_Der_Al_joh
+		;
+		double jac_Al = 
+		-       (Al_Der_Jr_joh*r_joh*Al_joh)/(4.*Ze_joh)
+		-       (r_joh*Jr_joh)/(4.*Ze_joh)
+		+       (2*phi_Der_f_joh*r_Der_P_joh*c_gbs*Ze_joh)/r_joh
+		+       (2*phi_Der_f_joh*r_Der_Ze_joh*c_gbs*Q_joh*Ze_joh)/r_joh
+		+       (2*phiphi_Der_f_joh*c_gbs*P_joh*Q_joh*Ze_joh)/r_joh
+		+       (
+				1
+			-       (8*phi_Der_f_joh*c_gbs*Q_joh)/r_joh
+			-       (8*phi_Der_f_joh*c_gbs*P_joh*Ze_joh)/r_joh
+			+       (4*phi_Der_f_joh*c_gbs*Q_joh*pow(Ze_joh,2))/r_joh
+		)/dr
+		;
+		Al[jC+1] -= res_Al / jac_Al ;
+		res_infty_norm = weighted_infty_norm(1-x_joh/s_L, res_Al, res_infty_norm) ;
+/*---------------------------------------------------------------------------*/	
+		if ((isnan(res_Al) != 0)
+		||  (isnan(jac_Al) != 0)
+		) {
+			printf("jC:%d\tres_Al:%.e\tjac_Al:%.e\n", jC, res_Al, jac_Al) ;
+			exit(EXIT_FAILURE) ;
+		}
+/*---------------------------------------------------------------------------*/	
         }
 	if (size==Nx-1) Al[Nx-1] = Al[Nx-2] ;
 
         return res_infty_norm ;
 }
+/*==========================================================================*/
+/* returns  res_infty_norm */
 /*==========================================================================*/
 static double compute_iteration_Ze(
 	double s_L,	double c_gbs,
@@ -119,15 +127,11 @@ static double compute_iteration_Ze(
 	double *Al, 	double *Ze, 
 	double * P, 	double * Q)
 {
-	double phi_Der_f_jp1 = 1 ;
-	double phi_Der_f_joh = 1 ;
-	double phi_Der_f_j   = 1 ;
-
 	int size = Nx ;
-	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
- /* scalar field functions */   
+/* to avoid problems with r=infty when x=s_L */	
+	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; 
 
-        double res_infty_norm = 0 ; /* returning this */
+        double res_infty_norm = 0 ; 
 
         for (int jC=start_jC; jC<size-1; jC++) {
                 double x_joh = ((jC+1) + jC) * dx / 2 ; 
@@ -155,6 +159,10 @@ static double compute_iteration_Ze(
                 double P_joh = (P[jC+1] + P[jC]) / 2. ;
 
                 double rho_joh = (1./2) * (pow(Q_joh,2) + pow(P_joh,2)) ;
+
+		double phi_Der_f_jp1 = 1 ;
+		double phi_Der_f_joh = 1 ;
+		double phi_Der_f_j   = 1 ;
 /*---------------------------------------------------------------------------*/
 		double res_Ze_sqrd = 
 		( 
@@ -184,6 +192,7 @@ static double compute_iteration_Ze(
 		;
                 Ze_sqrd_jp1 -= res_Ze_sqrd/jac_Ze_sqrd ;
                 Ze[jC+1]  = sqrt(Ze_sqrd_jp1) ;
+                res_infty_norm = weighted_infty_norm(1-x_joh/s_L, res_Ze_sqrd, res_infty_norm) ;
 /*---------------------------------------------------------------------------*/	
                 if ((isnan(res_Ze_sqrd) != 0)    
                 ||  (isnan(jac_Ze_sqrd) != 0)
@@ -191,7 +200,7 @@ static double compute_iteration_Ze(
                         printf("jC:%d\tZe_j:%.6e\tZe_jp1:%.6e\tres_Ze_sqrd:%.e\tjac_Ze_sqrd:%.e\n", jC, Ze[jC], Ze[jC+1], res_Ze_sqrd, jac_Ze_sqrd) ;
                         exit(EXIT_FAILURE) ;
                 }
-                res_infty_norm = weighted_infty_norm(1-x_joh/s_L, res_Ze_sqrd, res_infty_norm) ;
+/*---------------------------------------------------------------------------*/	
         }
 	if (size==Nx-1) Ze[Nx-1] = 0 ;
 
@@ -559,8 +568,8 @@ static double compute_iteration_Crank_Nicolson_PQ(
 		double r_Der_Al = D1_center_2ndOrder(Al_jp1, Al_jm1, dr) ;
 		double r_Der_Ze = D1_center_2ndOrder(Ze_jp1, Ze_jm1, dr) ;
 
-		double phi_Der_f = 1 ;
-		double phiphi_Der_f = 0 ;
+		double phi_Der_f = 1. ;
+		double phiphi_Der_f = 0. ;
 
 		double SE_LL_TR = (Al*(2*P*Q + (pow(P,2) + pow(Q,2))*Ze))/2. ;
 		double P_Der_SE_LL_TR = (Al*(2*Q + 2*P*Ze))/2. ;
