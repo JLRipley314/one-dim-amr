@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <bbhutil.h>
 #include <assert.h>
+#include <time.h>
 /* for checking if output directory exists */
 #include <dirent.h>
 #include <errno.h>
@@ -53,7 +54,7 @@ char *solver_Ze ;
 double cfl_num ;
 double bbox[2] ;
 double dt, dx ;
-double time ;
+double grid_time ;
 double stereographic_L ; /* stereographic length: for compactification */
 double coupling_gbs ; /* for EdGB theory. gbs: Gauss-Bonnet scalar */
 
@@ -235,7 +236,7 @@ void set_globals(amr_grid *grid)
 	dt = grid->dt ;
 	dx = grid->dx ;
 
-	time = grid->time ;
+	grid_time = grid->time ;
 
 	bbox[0] = grid->bbox[0] ;
 	bbox[1] = grid->bbox[1] ;
@@ -508,10 +509,10 @@ void save_to_file(amr_grid *grid)
 	made_output_files = true ;
 /* 	save to file-see man pages for bbhutil utilities on Choptuik's website 
 */
-	gft_out_bbox(output_name_Al, time, &Nx, 1, bbox, Al_n) ;
-	gft_out_bbox(output_name_Ze, time, &Nx, 1, bbox, Ze_n) ;
-	gft_out_bbox(output_name_P,  time, &Nx, 1, bbox,  P_n) ;
-	gft_out_bbox(output_name_Q,  time, &Nx, 1, bbox,  Q_n) ;
+	gft_out_bbox(output_name_Al, grid_time, &Nx, 1, bbox, Al_n) ;
+	gft_out_bbox(output_name_Ze, grid_time, &Nx, 1, bbox, Ze_n) ;
+	gft_out_bbox(output_name_P,  grid_time, &Nx, 1, bbox,  P_n) ;
+	gft_out_bbox(output_name_Q,  grid_time, &Nx, 1, bbox,  Q_n) ;
 
 	double *test_1 = calloc(Nx,sizeof(double)) ;
 	double *test_2 = calloc(Nx,sizeof(double)) ;
@@ -521,24 +522,24 @@ void save_to_file(amr_grid *grid)
 		test_2[jC] = Ze_extr_m2[jC] ;
 	}
 
-	gft_out_bbox(output_name_test_1, time, &Nx, 1, bbox, test_1) ;
-	gft_out_bbox(output_name_test_2, time, &Nx, 1, bbox, test_2) ;
+	gft_out_bbox(output_name_test_1, grid_time, &Nx, 1, bbox, test_1) ;
+	gft_out_bbox(output_name_test_2, grid_time, &Nx, 1, bbox, test_2) ;
 
 	free(test_1) ;
 	free(test_2) ;
 
-	gft_out_bbox(output_name_mass_aspect,  time, &Nx, 1, bbox, mass_aspect) ;
+	gft_out_bbox(output_name_mass_aspect,  grid_time, &Nx, 1, bbox, mass_aspect) ;
 
-	gft_out_bbox(output_name_ingoing_null_characteristic,  time, &Nx, 1, bbox, ingoing_null_characteristic) ;
-	gft_out_bbox(output_name_outgoing_null_characteristic, time, &Nx, 1, bbox, outgoing_null_characteristic) ;
-	gft_out_bbox(output_name_ingoing_scalar_characteristic,  time, &Nx, 1, bbox, ingoing_scalar_characteristic) ;
-	gft_out_bbox(output_name_outgoing_scalar_characteristic, time, &Nx, 1, bbox, outgoing_scalar_characteristic) ;
-	gft_out_bbox(output_name_Ricci_scalar,        time, &Nx, 1, bbox,  Ricci_scalar) ;
-	gft_out_bbox(output_name_Gauss_Bonnet_scalar, time, &Nx, 1, bbox,  Gauss_Bonnet_scalar) ;
+	gft_out_bbox(output_name_ingoing_null_characteristic,  grid_time, &Nx, 1, bbox, ingoing_null_characteristic) ;
+	gft_out_bbox(output_name_outgoing_null_characteristic, grid_time, &Nx, 1, bbox, outgoing_null_characteristic) ;
+	gft_out_bbox(output_name_ingoing_scalar_characteristic,  grid_time, &Nx, 1, bbox, ingoing_scalar_characteristic) ;
+	gft_out_bbox(output_name_outgoing_scalar_characteristic, grid_time, &Nx, 1, bbox, outgoing_scalar_characteristic) ;
+	gft_out_bbox(output_name_Ricci_scalar,        grid_time, &Nx, 1, bbox,  Ricci_scalar) ;
+	gft_out_bbox(output_name_Gauss_Bonnet_scalar, grid_time, &Nx, 1, bbox,  Gauss_Bonnet_scalar) ;
 
-	gft_out_bbox(output_name_eom_TR, time, &Nx, 1, bbox, eom_TR) ;
-	gft_out_bbox(output_name_eom_ThTh, time, &Nx, 1, bbox, eom_ThTh) ;
-	gft_out_bbox(output_name_eom_scalar, time, &Nx, 1, bbox, eom_scalar) ;
+	gft_out_bbox(output_name_eom_TR, grid_time, &Nx, 1, bbox, eom_TR) ;
+	gft_out_bbox(output_name_eom_ThTh, grid_time, &Nx, 1, bbox, eom_ThTh) ;
+	gft_out_bbox(output_name_eom_scalar, grid_time, &Nx, 1, bbox, eom_scalar) ;
 
 	fflush(NULL) ;
 	
@@ -577,6 +578,7 @@ int main(void)
 		bbox,
 		excision_on)
 	;
+	clock_t begin_time = clock() ;
 	amr_main(
 		gh, 
 		set_free_initial_data,
@@ -585,6 +587,10 @@ int main(void)
 		compute_diagnostics,
 		save_to_file)
 	;
+	clock_t end_time = clock() ;
+	double time_spent = (end_time-begin_time)/CLOCKS_PER_SEC ;
+	printf("time evolving sim (sec): %f\n", time_spent) ;
+
 	amr_destroy_grid_hierarchy(gh) ;
 /*--------------------------------------------------------------------------*/
 /* theory and initial_data are malloc'ed in get_run_data and get_initial_data,

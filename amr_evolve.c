@@ -288,17 +288,25 @@ static void amr_extrapolate_ode_fields(amr_field* fields, amr_grid* grid)
 	return ;
 }
 /*==========================================================================*/
-/* for now: finer grid sets boundary condition for coarser to be integrated
- * outwards */
-/*==========================================================================*/
-static void set_ode_initial_condition(amr_field* fields, amr_grid* grid) 
+static void set_finer_grid_ode_initial_condition(amr_field* fields, amr_grid* grid, amr_grid* child) 
 {
-	int excised_jC = grid->excised_jC ;
-	int child_Nx = grid->child->Nx ;
+	int child_lower_jC = child->perim_coords[0] ;
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		if (strcmp(field->pde_type,ODE) == 0) {
 			int index = field->index ;
-			grid->grid_funcs[index][excised_jC] = grid->child->grid_funcs[index][child_Nx-1] ;
+			child->grid_funcs[index][0] = grid->grid_funcs[index][child_lower_jC] ;
+		}
+	}
+	return ; 
+}
+/*==========================================================================*/
+static void set_coarser_grid_ode_initial_condition(amr_field* fields, amr_grid* grid, amr_grid* child) 
+{
+	int child_upper_jC = child->perim_coords[1] ;
+	for (amr_field* field=fields; field!=NULL; field=field->next) {
+		if (strcmp(field->pde_type,ODE) == 0) {
+			int index = field->index ;
+			grid->grid_funcs[index][child_upper_jC] = child->grid_funcs[index][(child->Nx)-1] ;
 		}
 	}
 	return ; 
@@ -311,33 +319,37 @@ static void set_ode_initial_condition(amr_field* fields, amr_grid* grid)
 static void solve_ode_fields(
 	amr_field* fields, amr_grid* grid, void (*solve_ode)(amr_grid*)) 
 {
+	if ((grid->child)==NULL) {
+		solve_ode(grid) ;
+		return ;
+	} 	
 	int excised_jC = grid->excised_jC ;
 	int child_lower_jC = grid->child->perim_coords[0] ;
 	int child_upper_jC = grid->child->perim_coords[1] ;
 	int Nx = grid->Nx ;
 
-	if (((grid->child)==NULL) 
-	||  (child_upper_jC<excised_jC)
-	) {
+	if (child_upper_jC<excised_jC) {
 		solve_ode(grid) ;
-	} else {
-		if (child_lower_jC>excised_jC) {
-			grid->Nx = child_lower_jC ;
-	
-			solve_ode(grid) ;
+	}
+	if (child_lower_jC>excised_jC) {
+		grid->Nx = child_lower_jC ;
 
-			grid->Nx = Nx ;
-		}
-		if (child_upper_jC<(Nx-1)) {
-			(grid->excised_jC) = child_upper_jC ;
-			(grid->excision_on) = false ;
+		solve_ode(grid) ;
 
-			set_ode_initial_condition(fields, grid) ;
-			solve_ode(grid) ;
+		grid->Nx = Nx ;
+	}
+	set_finer_grid_ode_initial_condition(fields, grid, grid->child) ; 
+	solve_ode_fields(fields, grid->child, solve_ode) ;
 
-			grid->excised_jC = excised_jC ;
-			(grid->excision_on) = true ;
-		}
+	if (child_upper_jC<(Nx-1)) {
+		(grid->excised_jC) = child_upper_jC ;
+		(grid->excision_on) = false ;
+
+		set_coarser_grid_ode_initial_condition(fields, grid, grid->child) ; 
+		solve_ode(grid) ;
+
+		grid->excised_jC = excised_jC ;
+		(grid->excision_on) = true ;
 	}
 	return ;
 }
@@ -415,10 +427,13 @@ static void shift_grids_ode_extrap_levels(amr_grid_hierarchy* gh)
 static void solve_ode_initial_data(
 	amr_grid_hierarchy* gh, void (*solve_ode)(amr_grid*)) 
 {
+	printf("starting solve_ode_initial_data\n") ;
+	solve_ode_fields(gh->fields, gh->grids->child, solve_ode) ;
+	printf("done\n") ;
+	fflush(NULL) ;
 	amr_grid* grid = gh->grids ;
 	amr_set_to_tail(&grid) ;
 	do {
-		solve_ode_fields(gh->fields, grid, solve_ode) ;
 		inject_overlaping_fields(gh->fields, grid->parent, grid) ;
 		grid = grid->parent ;
 	} while ((grid->level)!=0) ;	
@@ -629,7 +644,7 @@ void amr_main(
 	add_initial...: for the fixed amr grid hierarchy 
 */
 	int grid_size_ratio = 2 ;
-	int grid_levels = 2 ;
+	int grid_levels = 1 ;
 	add_self_similar_initial_grids(gh, grid_size_ratio, grid_levels) ;
 
 	set_initial_data(

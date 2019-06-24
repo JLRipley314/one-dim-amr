@@ -118,11 +118,10 @@ static double compute_iteration_Ze(
 
                 double rho_joh = (1./2) * (pow(Q_joh,2) + pow(P_joh,2)) ;
 /*---------------------------------------------------------------------------*/
-                double res_Ze_sqrd = (
+                double res_Ze_sqrd = 
                         (       (r_jp1)*Al_sqrd_jp1*Ze_sqrd_jp1
                         -       (r_j  )*Al_sqrd_j  *Ze_sqrd_j
                         )/dr
-                )
                 -       pow(r_joh,2)*pow(Al_joh,2)*rho_joh
                 ;
                 double jac_Ze_sqrd = (r_jp1)*Al_sqrd_jp1/dr
