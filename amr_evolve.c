@@ -311,20 +311,33 @@ static void set_ode_initial_condition(amr_field* fields, amr_grid* grid)
 static void solve_ode_fields(
 	amr_field* fields, amr_grid* grid, void (*solve_ode)(amr_grid*)) 
 {
+	int excised_jC = grid->excised_jC ;
+	int child_lower_jC = grid->child->perim_coords[0] ;
+	int child_upper_jC = grid->child->perim_coords[1] ;
+	int Nx = grid->Nx ;
+
 	if (((grid->child)==NULL) 
-	||  ((grid->child->perim_coords[1])<(grid->excised_jC))
+	||  (child_upper_jC<excised_jC)
 	) {
 		solve_ode(grid) ;
 	} else {
-		int temp_jC = grid->excised_jC ;
-		(grid->excision_on)=false ;
+		if (child_lower_jC>excised_jC) {
+			grid->Nx = child_lower_jC ;
+	
+			solve_ode(grid) ;
 
-		(grid->excised_jC)=(grid->child->perim_coords[1]) ;
-		set_ode_initial_condition(fields, grid) ;
-		solve_ode(grid) ;
+			grid->Nx = Nx ;
+		}
+		if (child_upper_jC<(Nx-1)) {
+			(grid->excised_jC) = child_upper_jC ;
+			(grid->excision_on) = false ;
 
-		grid->excised_jC = temp_jC ;
-		(grid->excision_on) = true ;
+			set_ode_initial_condition(fields, grid) ;
+			solve_ode(grid) ;
+
+			grid->excised_jC = excised_jC ;
+			(grid->excision_on) = true ;
+		}
 	}
 	return ;
 }
