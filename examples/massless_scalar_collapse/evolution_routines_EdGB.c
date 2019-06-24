@@ -33,7 +33,7 @@ static inline double weighted_infty_norm(double weight, double val_1, double val
 static double compute_iteration_Al(
 	double s_L,	double c_gbs,
 	int Nx,
-	double dt, 	double dx,
+	double dx,
 	int start_jC,
 	double bbox[2],
 	double *Al, 	double *Ze, 
@@ -121,7 +121,7 @@ static double compute_iteration_Al(
 static double compute_iteration_Ze(
 	double s_L,	double c_gbs,
 	int Nx,
-	double dt, 	double dx,
+	double dx,
 	int start_jC,
 	double bbox[2],
 	double *Al, 	double *Ze, 
@@ -234,31 +234,16 @@ static double free_evolution_Ze_forward_jac(
 	;
 }
 /*==========================================================================*/
-static double free_evolution_Ze_center_jac(
-	double c_gbs, 
-	double dt, double dr, double r_j, 
-	double Al, double Ze, double P,   double Q,
-	double phi_Der_f, double phiphi_Der_f,
-	double SE_LL_TR,        double SE_LL_ThTh,
-	double Ze_Der_SE_LL_TR, double Ze_Der_SE_LL_ThTh,
-	double r_Der_Al, double r_Der_Ze, double r_Der_P, double r_Der_Q,
-	double t_Der_Ze)
-{
-	return 
-		(128*pow(phi_Der_f,3)*pow(r_Der_Al,2)*pow(c_gbs,3)*pow(Ze,4)*(5*P + 6*Q*Ze))/(pow(r_j,4)*Al) + (pow(r_j,2)*SE_LL_TR - pow(r_j,2)*Ze_Der_SE_LL_TR*Ze - 2*Al*pow(Ze,3))/(4.*r_j*pow(Ze,2)) + (16*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*Ze*(4*pow(r_j,2)*pow(Q,2) + 12*pow(r_j,2)*P*Q*Ze + pow(Ze,2)*(8*pow(r_j,2)*pow(P,2) + 4*SE_LL_ThTh + Ze_Der_SE_LL_ThTh*Ze)))/pow(r_j,5) + r_Der_P*((-2*phi_Der_f*c_gbs*Al)/r_j + (16*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*(Q + 2*P*Ze))/pow(r_j,2)) + r_Der_Q*((-4*phi_Der_f*c_gbs*Al*Ze)/r_j + (16*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*Ze*(2*Q + 3*P*Ze))/pow(r_j,2)) + pow(r_Der_Ze,2)*((-256*pow(phi_Der_f,2)*pow(c_gbs,2)*Al*pow(Ze,3))/pow(r_j,3) + (384*pow(phi_Der_f,3)*pow(c_gbs,3)*Al*pow(Ze,3)*(4*Q + 5*P*Ze))/pow(r_j,4)) + phiphi_Der_f*((-2*c_gbs*Al*P*(Q + 2*P*Ze))/r_j + (16*phi_Der_f*pow(c_gbs,2)*Al*P*(pow(Q,2) + 4*P*Q*Ze + 3*pow(P,2)*pow(Ze,2)))/pow(r_j,2)) + (2*phi_Der_f*c_gbs*(P*pow(Ze,2)*(pow(r_j,2)*Ze_Der_SE_LL_TR - 3*Al*pow(Ze,2)) + Q*(-(pow(r_j,2)*SE_LL_TR) + pow(r_j,2)*Ze_Der_SE_LL_TR*Ze - 2*Al*pow(Ze,3))))/(pow(r_j,2)*pow(Ze,2)) + (1 + (256*pow(phi_Der_f,3)*r_Der_Q*pow(c_gbs,3)*pow(Ze,4))/pow(r_j,4) + (256*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*pow(Q,2)*pow(Ze,4))/pow(r_j,4) - (16*phi_Der_f*c_gbs*(Q + P*Ze))/r_j + (32*pow(phi_Der_f,2)*pow(c_gbs,2)*(2*pow(r_j,2)*pow(Q,2) + 4*pow(r_j,2)*P*Q*Ze + 2*pow(r_j,2)*pow(P,2)*pow(Ze,2) - pow(Ze,4)))/pow(r_j,4) + r_Der_Ze*((128*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,3))/pow(r_j,3) - (256*pow(phi_Der_f,3)*pow(c_gbs,3)*pow(Ze,3)*(4*Q + 3*P*Ze))/pow(r_j,4)) + r_Der_Al*((128*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,4))/(pow(r_j,3)*Al) - (256*pow(phi_Der_f,3)*pow(c_gbs,3)*pow(Ze,4)*(4*Q + 3*P*Ze))/(pow(r_j,4)*Al)))/dt + t_Der_Ze*((-8*phi_Der_f*c_gbs*P)/r_j + (512*pow(phi_Der_f,3)*r_Der_Q*pow(c_gbs,3)*pow(Ze,3))/pow(r_j,4) + (512*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*pow(Q,2)*pow(Ze,3))/pow(r_j,4) + (64*pow(phi_Der_f,2)*pow(c_gbs,2)*(pow(r_j,2)*P*Q + pow(r_j,2)*pow(P,2)*Ze - pow(Ze,3)))/pow(r_j,4) + r_Der_Ze*((192*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,2))/pow(r_j,3) - (1536*pow(phi_Der_f,3)*pow(c_gbs,3)*pow(Ze,2)*(Q + P*Ze))/pow(r_j,4)) + r_Der_Al*((256*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,3))/(pow(r_j,3)*Al) - (128*pow(phi_Der_f,3)*pow(c_gbs,3)*pow(Ze,3)*(16*Q + 15*P*Ze))/(pow(r_j,4)*Al))) + r_Der_Ze*(-Al/2. - (512*pow(phi_Der_f,3)*r_Der_P*pow(c_gbs,3)*Al*pow(Ze,3))/pow(r_j,4) - (640*pow(phi_Der_f,3)*r_Der_Q*pow(c_gbs,3)*Al*pow(Ze,4))/pow(r_j,4) + (6*phi_Der_f*c_gbs*Al*(Q + 2*P*Ze))/r_j - (128*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*Al*Q*pow(Ze,3)*(4*P + 5*Q*Ze))/pow(r_j,4) - (16*pow(phi_Der_f,2)*pow(c_gbs,2)*(pow(r_j,2)*Ze*(2*SE_LL_TR + Ze_Der_SE_LL_TR*Ze) + Al*(pow(r_j,2)*pow(Q,2) + 4*pow(r_j,2)*P*Q*Ze + 3*pow(r_j,2)*pow(P,2)*pow(Ze,2) - 5*pow(Ze,4))))/pow(r_j,4)) + r_Der_Al*((512*pow(phi_Der_f,3)*r_Der_Q*pow(c_gbs,3)*pow(Ze,3))/pow(r_j,4) + (640*pow(phi_Der_f,3)*r_Der_P*pow(c_gbs,3)*pow(Ze,4))/pow(r_j,4) - (2*phi_Der_f*c_gbs*Ze*(2*Q + 3*P*Ze))/r_j + (128*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*Q*pow(Ze,3)*(4*Q + 5*P*Ze))/pow(r_j,4) - (16*pow(phi_Der_f,2)*pow(c_gbs,2)*Ze*(pow(r_j,2)*Ze*(3*SE_LL_TR + Ze_Der_SE_LL_TR*Ze) - 2*Al*(pow(r_j,2)*pow(Q,2) + 3*pow(r_j,2)*P*Q*Ze + 2*(-1 + pow(r_j,2)*pow(P,2))*pow(Ze,2))))/(pow(r_j,4)*Al) + r_Der_Ze*((32*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,2)*(3 - 10*pow(Ze,2)))/pow(r_j,3) + (256*pow(phi_Der_f,3)*pow(c_gbs,3)*pow(Ze,2)*(P*Ze*(-2 + 9*pow(Ze,2)) + Q*(-3 + 10*pow(Ze,2))))/pow(r_j,4)))
-	;
-}
-/*==========================================================================*/
 static double compute_iteration_excision_boundary_condition_Ze(
 	double s_L,	double c_gbs,
-	int Nx,
 	double dt, 	double dx,
 	int exc_jC,
 	double bbox[2],
 	double *Al_n,  double *Al_nm1, double *Ze_n, double *Ze_nm1,
 	double *P_n,   double *P_nm1,  double *Q_n,  double *Q_nm1)
 {
-        double x_j = dx * exc_jC ;
+	double x_lower = bbox[0] ;
+        double x_j = x_lower + (dx * exc_jC) ;
         double r_j = stereographic_r( s_L, x_j) ;
         double dr  = stereographic_dr(s_L, x_j, dx) ;
 
@@ -340,7 +325,6 @@ void solve_Al_Ze_EdGB(
 		) {	
 			res += compute_iteration_excision_boundary_condition_Ze(
 				s_L,	c_gbs,
-				Nx,
 				dt, 	dx,
 				start_jC,
 				bbox,
@@ -351,7 +335,7 @@ void solve_Al_Ze_EdGB(
 		res += compute_iteration_Ze(
 			s_L,	c_gbs,
 			Nx,
-			dt, 	dx,
+			dx,
 			start_jC,
 			bbox,
 			Al_n, 	Ze_n, 
@@ -360,7 +344,7 @@ void solve_Al_Ze_EdGB(
 		res += compute_iteration_Al(
 			s_L,	c_gbs,
 			Nx,
-			dt, 	dx,
+			dx,
 			start_jC,
 			bbox,
 			Al_n, 	Ze_n, 
@@ -368,111 +352,6 @@ void solve_Al_Ze_EdGB(
 		;
 	} while (res>err_tolerance) ;
 	return ;
-}
-/*==========================================================================*/
-static double compute_iteration_Crank_Nicolson_Ze(
-	double s_L,	double c_gbs,
-	int Nx,
-	double dt, 	double dx,
-	bool excision_on,
-	int exc_jC,
-	double bbox[2],
-	bool perim_interior[2],
-	double *Al_n, 	double *Al_nm1, double *Ze_n, double *Ze_nm1,
-	double *P_n, 	double  *P_nm1, double  *Q_n, double  *Q_nm1)
-{
-	double lower_x = bbox[0] ;
-
-	int size = Nx ;
-	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
-	double res_infty_norm = 0 ; /* returning this */
-
-	for (int jC=exc_jC+1;jC<size-1;jC++) {
-		double x_j = lower_x + dx * jC ;
-		double r_j = stereographic_r( s_L, x_j) ;
-		double dr  = stereographic_dr(s_L, x_j, dx) ;
-
-		double Al     = (Al_n[jC  ] + Al_nm1[jC  ]) / 2. ;
-		double Al_jp1 = (Al_n[jC+1] + Al_nm1[jC+1]) / 2. ;
-		double Al_jm1 = (Al_n[jC-1] + Al_nm1[jC-1]) / 2. ;
-
-		double Ze     = (Ze_n[jC  ] + Ze_nm1[jC  ]) / 2. ;
-		double Ze_jp1 = (Ze_n[jC+1] + Ze_nm1[jC+1]) / 2. ;
-		double Ze_jm1 = (Ze_n[jC-1] + Ze_nm1[jC-1]) / 2. ;
-
-		double P     = (P_n[jC  ] + P_nm1[jC  ]) / 2. ;
-		double P_jp1 = (P_n[jC+1] + P_nm1[jC+1]) / 2. ;
-		double P_jm1 = (P_n[jC-1] + P_nm1[jC-1]) / 2. ;
-
-		double Q     = (Q_n[jC  ] + Q_nm1[jC  ]) / 2. ;
-		double Q_jp1 = (Q_n[jC+1] + Q_nm1[jC+1]) / 2. ;
-		double Q_jm1 = (Q_n[jC-1] + Q_nm1[jC-1]) / 2. ;
-
-		double t_Der_Ze = (Ze_n[jC] - Ze_nm1[jC]) / dt ;
-
-		double	r_Der_Al = D1_center_2ndOrder(Al_jp1, Al_jm1, dr) ;
-		double	r_Der_Ze = D1_center_2ndOrder(Ze_jp1, Ze_jm1, dr) ;
-		double	r_Der_P  = D1_center_2ndOrder( P_jp1,  P_jm1, dr) ;
-		double	r_Der_Q  = D1_center_2ndOrder( Q_jp1,  Q_jm1, dr) ;
-
-		double SE_LL_ThTh = (1./2) * pow(r_j,2) * (pow(P,2) - pow(Q,2)) ;
-		double Ze_Der_SE_LL_ThTh = 0. ;
-
-		double SE_LL_TR        = (Al*(2*P*Q + (pow(P,2) + pow(Q,2))*Ze))/2. ;
-		double Ze_Der_SE_LL_TR = (Al*(0     + (pow(P,2) + pow(Q,2))*1.))/2. ;
-
-		double phi_Der_f = 1. ;
-		double phiphi_Der_f = 0. ;
-		
-		double res_Ze = free_evolution_Ze_res(
-			c_gbs, 
-			r_j, 
-			Al, Ze, P, Q,
-			phi_Der_f, phiphi_Der_f,
-			SE_LL_TR, SE_LL_ThTh,
-			r_Der_Al, r_Der_Ze, r_Der_P, r_Der_Q,
-			t_Der_Ze)
-		;
-		double jac_Ze = free_evolution_Ze_center_jac(
-			c_gbs, 
-			dt, dr, r_j, 
-			Al, Ze, P,   Q,
-			phi_Der_f, phiphi_Der_f,
-			SE_LL_TR,        SE_LL_ThTh,
-			Ze_Der_SE_LL_TR, Ze_Der_SE_LL_ThTh,
-			r_Der_Al, r_Der_Ze, r_Der_P, r_Der_Q,
-			t_Der_Ze)
-		;
-		Ze_n[jC] -= res_Ze/jac_Ze ;
-	}
-/*--------------------------------------------------------------------------*/
-/* lower boundary */
-/*--------------------------------------------------------------------------*/
-	if ((exc_jC == 0) 
-	&&  (perim_interior[0] == false)
-	) {
-		/* Ze[0] = 0, so do not change anything. */	
-	}
-	if ((exc_jC > 0) 
-	&&  (excision_on==true)
-	) {
-		double norm = compute_iteration_excision_boundary_condition_Ze(
-			s_L,	c_gbs,
-			Nx,
-			dt, 	dx,
-			exc_jC,
-			bbox,
-			Al_n,  Al_nm1, Ze_n, Ze_nm1,
-			 P_n,   P_nm1,  Q_n,  Q_nm1)
-		;
-		double x_j = dx * exc_jC ;
-		res_infty_norm = weighted_infty_norm(1-x_j/s_L, norm, res_infty_norm) ;
-	}
-/*--------------------------------------------------------------------------*/
-/* dirichlet outer boundary conditions if outermost level;
- * otherwise do not evolve outer boundary anyways (it is interpolated) */
-/*--------------------------------------------------------------------------*/
-	return res_infty_norm ;
 }
 /*==========================================================================*/
 static double compute_res_eom_P(
@@ -489,7 +368,7 @@ static double compute_res_eom_P(
 }
 /*==========================================================================*/
 static double compute_jac_center_eom_P(
-	double c_gbs, double r_j, double dr, double dt,
+	double c_gbs, double r_j, double dt,
 	double phi_Der_f, double phiphi_Der_f, 
 	double SE_LL_TR, 	double SE_LL_ThTh, 
 	double P_Der_SE_LL_TR, 	double P_Der_SE_LL_ThTh, 
@@ -512,7 +391,7 @@ static double compute_jac_forward_eom_P(
                                           double t_Der_P)
 {
 	return 
-		phi_Der_f*((-2*P_Der_SE_LL_TR*c_gbs*Ze)/pow(r_j,2) + (4*P_Der_SE_LL_ThTh*c_gbs*Al*pow(Ze,2))/pow(r_j,4)) + pow(phiphi_Der_f,2)*phi_Der_f*((128*pow(c_gbs,3)*Al*pow(Q,3)*pow(Ze,3))/pow(r_j,4) + (256*pow(c_gbs,3)*Al*P*pow(Q,2)*pow(Ze,4))/pow(r_j,4)) + pow(phi_Der_f,2)*((-32*P_Der_SE_LL_TR*pow(c_gbs,2)*Q*Ze)/pow(r_j,3) - (32*P_Der_SE_LL_ThTh*pow(c_gbs,2)*Al*Q*pow(Ze,2))/pow(r_j,5) + (32*pow(c_gbs,2)*Al*pow(Ze,3))/pow(r_j,5) - (32*P_Der_SE_LL_ThTh*pow(c_gbs,2)*Al*P*pow(Ze,3))/pow(r_j,5) - (32*pow(c_gbs,2)*Al*SE_LL_ThTh*pow(Ze,3))/pow(r_j,5) - (32*pow(c_gbs,2)*Al*pow(Ze,5))/pow(r_j,5)) + pow(phi_Der_f,3)*((512*pow(c_gbs,3)*Al*Q*pow(Ze,3))/pow(r_j,6) - (512*pow(c_gbs,3)*Al*Q*pow(Ze,5))/pow(r_j,6)) + t_Der_P*((-8*phi_Der_f*c_gbs*Ze)/r_j - (384*pow(phi_Der_f,3)*r_Der_Ze*pow(c_gbs,3)*pow(Ze,4))/pow(r_j,4) - (384*pow(phi_Der_f,3)*r_Der_Al*pow(c_gbs,3)*pow(Ze,5))/(pow(r_j,4)*Al) + pow(phi_Der_f,2)*((64*pow(c_gbs,2)*Q*Ze)/pow(r_j,2) + (64*pow(c_gbs,2)*P*pow(Ze,2))/pow(r_j,2))) + pow(r_Der_Ze,2)*(pow(phi_Der_f,2)*((-32*pow(c_gbs,2)*Al*Ze)/pow(r_j,3) + (64*pow(c_gbs,2)*Al*pow(Ze,3))/pow(r_j,3)) + pow(phi_Der_f,3)*((256*pow(c_gbs,3)*Al*Q*Ze)/pow(r_j,4) + (256*pow(c_gbs,3)*Al*P*pow(Ze,2))/pow(r_j,4) - (640*pow(c_gbs,3)*Al*Q*pow(Ze,3))/pow(r_j,4) - (768*pow(c_gbs,3)*Al*P*pow(Ze,4))/pow(r_j,4))) + der_Q*((8*phi_Der_f*c_gbs*Ze)/r_j + pow(phi_Der_f,2)*((16*P_Der_SE_LL_TR*pow(c_gbs,2)*Ze)/(pow(r_j,2)*Al) - (64*pow(c_gbs,2)*Q*Ze)/pow(r_j,2) - (64*pow(c_gbs,2)*P*pow(Ze,2))/pow(r_j,2)) + pow(phi_Der_f,3)*r_Der_Ze*((-128*pow(c_gbs,3)*pow(Ze,2))/pow(r_j,4) + (128*pow(c_gbs,3)*pow(Ze,4))/pow(r_j,4)) + phiphi_Der_f*pow(phi_Der_f,2)*((128*pow(c_gbs,3)*Q*pow(Ze,3))/pow(r_j,4) + (256*pow(c_gbs,3)*P*pow(Ze,4))/pow(r_j,4)) + pow(phi_Der_f,3)*((-256*pow(c_gbs,3)*pow(Ze,3))/pow(r_j,5) + (256*pow(c_gbs,3)*pow(Ze,5))/pow(r_j,5)) + pow(phi_Der_f,3)*r_Der_Al*((-384*pow(c_gbs,3)*pow(Ze,3))/(pow(r_j,4)*Al) + (128*pow(c_gbs,3)*pow(Ze,5))/(pow(r_j,4)*Al))) + der_P*((8*phi_Der_f*c_gbs*Ze)/r_j + pow(phi_Der_f,2)*((-64*pow(c_gbs,2)*Q*Ze)/pow(r_j,2) - (64*pow(c_gbs,2)*P*pow(Ze,2))/pow(r_j,2)) + pow(phi_Der_f,3)*r_Der_Ze*((-128*pow(c_gbs,3)*pow(Ze,2))/pow(r_j,4) + (384*pow(c_gbs,3)*pow(Ze,4))/pow(r_j,4)) + pow(phi_Der_f,3)*r_Der_Al*((-640*pow(c_gbs,3)*pow(Ze,3))/(pow(r_j,4)*Al) + (384*pow(c_gbs,3)*pow(Ze,5))/(pow(r_j,4)*Al))) + phiphi_Der_f*(phi_Der_f*((16*P_Der_SE_LL_TR*pow(c_gbs,2)*pow(Q,2)*Ze)/pow(r_j,2) - (16*pow(c_gbs,2)*Al*Q*pow(Ze,3))/pow(r_j,4) - (32*pow(c_gbs,2)*Al*P*pow(Ze,4))/pow(r_j,4)) + pow(phi_Der_f,2)*((-512*pow(c_gbs,3)*Al*pow(Q,2)*pow(Ze,3))/pow(r_j,5) - (512*pow(c_gbs,3)*Al*P*Q*pow(Ze,4))/pow(r_j,5) + (256*pow(c_gbs,3)*Al*pow(Q,2)*pow(Ze,5))/pow(r_j,5))) + pow(r_Der_Al,2)*(pow(phi_Der_f,2)*((-64*pow(c_gbs,2)*pow(Ze,3))/(pow(r_j,3)*Al) + (64*pow(c_gbs,2)*pow(Ze,5))/(pow(r_j,3)*Al)) + pow(phi_Der_f,3)*((896*pow(c_gbs,3)*Q*pow(Ze,3))/(pow(r_j,4)*Al) + (768*pow(c_gbs,3)*P*pow(Ze,4))/(pow(r_j,4)*Al) - (896*pow(c_gbs,3)*Q*pow(Ze,5))/(pow(r_j,4)*Al) - (768*pow(c_gbs,3)*P*pow(Ze,6))/(pow(r_j,4)*Al))) + r_Der_Ze*((4*phi_Der_f*P_Der_SE_LL_TR*c_gbs)/r_j + pow(phi_Der_f,2)*((-32*P_Der_SE_LL_TR*pow(c_gbs,2)*Q)/pow(r_j,2) - (16*P_Der_SE_LL_TR*pow(c_gbs,2)*P*Ze)/pow(r_j,2) - (16*pow(c_gbs,2)*SE_LL_TR*Ze)/pow(r_j,2) - (48*pow(c_gbs,2)*Al*pow(Ze,2))/pow(r_j,4) + (64*pow(c_gbs,2)*Al*pow(Ze,4))/pow(r_j,4)) + pow(phi_Der_f,3)*((768*pow(c_gbs,3)*Al*Q*pow(Ze,2))/pow(r_j,5) + (512*pow(c_gbs,3)*Al*P*pow(Ze,3))/pow(r_j,5) - (1280*pow(c_gbs,3)*Al*Q*pow(Ze,4))/pow(r_j,5) - (1536*pow(c_gbs,3)*Al*P*pow(Ze,5))/pow(r_j,5)) + phiphi_Der_f*(phi_Der_f*((32*pow(c_gbs,2)*Al*Q*pow(Ze,2))/pow(r_j,3) + (128*pow(c_gbs,2)*Al*P*pow(Ze,3))/pow(r_j,3)) + pow(phi_Der_f,2)*((-384*pow(c_gbs,3)*Al*pow(Q,2)*pow(Ze,2))/pow(r_j,4) - (1280*pow(c_gbs,3)*Al*P*Q*pow(Ze,3))/pow(r_j,4) - (1152*pow(c_gbs,3)*Al*pow(P,2)*pow(Ze,4))/pow(r_j,4) + (128*pow(c_gbs,3)*Al*pow(Q,2)*pow(Ze,4))/pow(r_j,4)))) + (1 + (256*pow(phi_Der_f,3)*pow(c_gbs,3)*der_Q*pow(Ze,4))/(pow(r_j,4)*Al) - (512*pow(phi_Der_f,3)*pow(c_gbs,3)*Q*pow(Ze,4))/pow(r_j,5) + (256*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*pow(Q,2)*pow(Ze,4))/pow(r_j,4) + phi_Der_f*((-16*c_gbs*Q)/r_j - (16*c_gbs*P*Ze)/r_j) + pow(phi_Der_f,2)*((64*pow(c_gbs,2)*pow(Q,2))/pow(r_j,2) + (128*pow(c_gbs,2)*P*Q*Ze)/pow(r_j,2) + (64*pow(c_gbs,2)*pow(P,2)*pow(Ze,2))/pow(r_j,2) - (32*pow(c_gbs,2)*pow(Ze,4))/pow(r_j,4)) + r_Der_Ze*((128*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,3))/pow(r_j,3) + pow(phi_Der_f,3)*((-1024*pow(c_gbs,3)*Q*pow(Ze,3))/pow(r_j,4) - (768*pow(c_gbs,3)*P*pow(Ze,4))/pow(r_j,4))) + r_Der_Al*((128*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,4))/(pow(r_j,3)*Al) + pow(phi_Der_f,3)*((-1280*pow(c_gbs,3)*Q*pow(Ze,4))/(pow(r_j,4)*Al) - (768*pow(c_gbs,3)*P*pow(Ze,5))/(pow(r_j,4)*Al))))/dt + r_Der_Al*((4*phi_Der_f*P_Der_SE_LL_TR*c_gbs*Ze)/(r_j*Al) + pow(phi_Der_f,2)*((-48*P_Der_SE_LL_TR*pow(c_gbs,2)*Q*Ze)/(pow(r_j,2)*Al) - (16*P_Der_SE_LL_TR*pow(c_gbs,2)*P*pow(Ze,2))/(pow(r_j,2)*Al) - (16*pow(c_gbs,2)*SE_LL_TR*pow(Ze,2))/(pow(r_j,2)*Al) - (144*pow(c_gbs,2)*pow(Ze,3))/pow(r_j,4) + (64*pow(c_gbs,2)*pow(Ze,5))/pow(r_j,4)) + pow(phi_Der_f,3)*((2560*pow(c_gbs,3)*Q*pow(Ze,3))/pow(r_j,5) + (2560*pow(c_gbs,3)*P*pow(Ze,4))/pow(r_j,5) - (1536*pow(c_gbs,3)*Q*pow(Ze,5))/pow(r_j,5) - (1536*pow(c_gbs,3)*P*pow(Ze,6))/pow(r_j,5)) + r_Der_Ze*(pow(phi_Der_f,2)*((-224*pow(c_gbs,2)*pow(Ze,2))/pow(r_j,3) + (128*pow(c_gbs,2)*pow(Ze,4))/pow(r_j,3)) + pow(phi_Der_f,3)*((1920*pow(c_gbs,3)*Q*pow(Ze,2))/pow(r_j,4) + (2048*pow(c_gbs,3)*P*pow(Ze,3))/pow(r_j,4) - (1536*pow(c_gbs,3)*Q*pow(Ze,4))/pow(r_j,4) - (1536*pow(c_gbs,3)*P*pow(Ze,5))/pow(r_j,4))) + phiphi_Der_f*(phi_Der_f*((96*pow(c_gbs,2)*Q*pow(Ze,3))/pow(r_j,3) + (128*pow(c_gbs,2)*P*pow(Ze,4))/pow(r_j,3)) + pow(phi_Der_f,2)*((-1280*pow(c_gbs,3)*pow(Q,2)*pow(Ze,3))/pow(r_j,4) - (2560*pow(c_gbs,3)*P*Q*pow(Ze,4))/pow(r_j,4) - (1152*pow(c_gbs,3)*pow(P,2)*pow(Ze,5))/pow(r_j,4) + (128*pow(c_gbs,3)*pow(Q,2)*pow(Ze,5))/pow(r_j,4))))
+		phi_Der_f*((-2*P_Der_SE_LL_TR*c_gbs*Ze)/pow(r_j,2) + (4*P_Der_SE_LL_ThTh*c_gbs*Al*pow(Ze,2))/pow(r_j,4)) + pow(phiphi_Der_f,2)*phi_Der_f*((128*pow(c_gbs,3)*Al*pow(Q,3)*pow(Ze,3))/pow(r_j,4) + (256*pow(c_gbs,3)*Al*P*pow(Q,2)*pow(Ze,4))/pow(r_j,4)) + pow(phi_Der_f,2)*((-32*P_Der_SE_LL_TR*pow(c_gbs,2)*Q*Ze)/pow(r_j,3) - (32*P_Der_SE_LL_ThTh*pow(c_gbs,2)*Al*Q*pow(Ze,2))/pow(r_j,5) + (32*pow(c_gbs,2)*Al*pow(Ze,3))/pow(r_j,5) - (32*P_Der_SE_LL_ThTh*pow(c_gbs,2)*Al*P*pow(Ze,3))/pow(r_j,5) - (32*pow(c_gbs,2)*Al*SE_LL_ThTh*pow(Ze,3))/pow(r_j,5) - (32*pow(c_gbs,2)*Al*pow(Ze,5))/pow(r_j,5)) + pow(phi_Der_f,3)*((512*pow(c_gbs,3)*Al*Q*pow(Ze,3))/pow(r_j,6) - (512*pow(c_gbs,3)*Al*Q*pow(Ze,5))/pow(r_j,6)) + t_Der_P*((-8*phi_Der_f*c_gbs*Ze)/r_j - (384*pow(phi_Der_f,3)*r_Der_Ze*pow(c_gbs,3)*pow(Ze,4))/pow(r_j,4) - (384*pow(phi_Der_f,3)*r_Der_Al*pow(c_gbs,3)*pow(Ze,5))/(pow(r_j,4)*Al) + pow(phi_Der_f,2)*((64*pow(c_gbs,2)*Q*Ze)/pow(r_j,2) + (64*pow(c_gbs,2)*P*pow(Ze,2))/pow(r_j,2))) + pow(r_Der_Ze,2)*(pow(phi_Der_f,2)*((-32*pow(c_gbs,2)*Al*Ze)/pow(r_j,3) + (64*pow(c_gbs,2)*Al*pow(Ze,3))/pow(r_j,3)) + pow(phi_Der_f,3)*((256*pow(c_gbs,3)*Al*Q*Ze)/pow(r_j,4) + (256*pow(c_gbs,3)*Al*P*pow(Ze,2))/pow(r_j,4) - (640*pow(c_gbs,3)*Al*Q*pow(Ze,3))/pow(r_j,4) - (768*pow(c_gbs,3)*Al*P*pow(Ze,4))/pow(r_j,4))) + der_Q*((8*phi_Der_f*c_gbs*Ze)/r_j + pow(phi_Der_f,2)*((16*P_Der_SE_LL_TR*pow(c_gbs,2)*Ze)/(pow(r_j,2)*Al) - (64*pow(c_gbs,2)*Q*Ze)/pow(r_j,2) - (64*pow(c_gbs,2)*P*pow(Ze,2))/pow(r_j,2)) + pow(phi_Der_f,3)*r_Der_Ze*((-128*pow(c_gbs,3)*pow(Ze,2))/pow(r_j,4) + (128*pow(c_gbs,3)*pow(Ze,4))/pow(r_j,4)) + phiphi_Der_f*pow(phi_Der_f,2)*((128*pow(c_gbs,3)*Q*pow(Ze,3))/pow(r_j,4) + (256*pow(c_gbs,3)*P*pow(Ze,4))/pow(r_j,4)) + pow(phi_Der_f,3)*((-256*pow(c_gbs,3)*pow(Ze,3))/pow(r_j,5) + (256*pow(c_gbs,3)*pow(Ze,5))/pow(r_j,5)) + pow(phi_Der_f,3)*r_Der_Al*((-384*pow(c_gbs,3)*pow(Ze,3))/(pow(r_j,4)*Al) + (128*pow(c_gbs,3)*pow(Ze,5))/(pow(r_j,4)*Al))) + der_P*((8*phi_Der_f*c_gbs*Ze)/r_j + pow(phi_Der_f,2)*((-64*pow(c_gbs,2)*Q*Ze)/pow(r_j,2) - (64*pow(c_gbs,2)*P*pow(Ze,2))/pow(r_j,2)) + pow(phi_Der_f,3)*r_Der_Ze*((-128*pow(c_gbs,3)*pow(Ze,2))/pow(r_j,4) + (384*pow(c_gbs,3)*pow(Ze,4))/pow(r_j,4)) + pow(phi_Der_f,3)*r_Der_Al*((-640*pow(c_gbs,3)*pow(Ze,3))/(pow(r_j,4)*Al) + (384*pow(c_gbs,3)*pow(Ze,5))/(pow(r_j,4)*Al))) + phiphi_Der_f*(phi_Der_f*((16*P_Der_SE_LL_TR*pow(c_gbs,2)*pow(Q,2)*Ze)/pow(r_j,2) - (16*pow(c_gbs,2)*Al*Q*pow(Ze,3))/pow(r_j,4) - (32*pow(c_gbs,2)*Al*P*pow(Ze,4))/pow(r_j,4)) + pow(phi_Der_f,2)*((-512*pow(c_gbs,3)*Al*pow(Q,2)*pow(Ze,3))/pow(r_j,5) - (512*pow(c_gbs,3)*Al*P*Q*pow(Ze,4))/pow(r_j,5) + (256*pow(c_gbs,3)*Al*pow(Q,2)*pow(Ze,5))/pow(r_j,5))) + pow(r_Der_Al,2)*(pow(phi_Der_f,2)*((-64*pow(c_gbs,2)*pow(Ze,3))/(pow(r_j,3)*Al) + (64*pow(c_gbs,2)*pow(Ze,5))/(pow(r_j,3)*Al)) + pow(phi_Der_f,3)*((896*pow(c_gbs,3)*Q*pow(Ze,3))/(pow(r_j,4)*Al) + (768*pow(c_gbs,3)*P*pow(Ze,4))/(pow(r_j,4)*Al) - (896*pow(c_gbs,3)*Q*pow(Ze,5))/(pow(r_j,4)*Al) - (768*pow(c_gbs,3)*P*pow(Ze,6))/(pow(r_j,4)*Al))) + r_Der_Ze*((4*phi_Der_f*P_Der_SE_LL_TR*c_gbs)/r_j + pow(phi_Der_f,2)*((-32*P_Der_SE_LL_TR*pow(c_gbs,2)*Q)/pow(r_j,2) - (16*P_Der_SE_LL_TR*pow(c_gbs,2)*P*Ze)/pow(r_j,2) - (16*pow(c_gbs,2)*SE_LL_TR*Ze)/pow(r_j,2) - (48*pow(c_gbs,2)*Al*pow(Ze,2))/pow(r_j,4) + (64*pow(c_gbs,2)*Al*pow(Ze,4))/pow(r_j,4)) + pow(phi_Der_f,3)*((768*pow(c_gbs,3)*Al*Q*pow(Ze,2))/pow(r_j,5) + (512*pow(c_gbs,3)*Al*P*pow(Ze,3))/pow(r_j,5) - (1280*pow(c_gbs,3)*Al*Q*pow(Ze,4))/pow(r_j,5) - (1536*pow(c_gbs,3)*Al*P*pow(Ze,5))/pow(r_j,5)) + phiphi_Der_f*(phi_Der_f*((32*pow(c_gbs,2)*Al*Q*pow(Ze,2))/pow(r_j,3) + (128*pow(c_gbs,2)*Al*P*pow(Ze,3))/pow(r_j,3)) + pow(phi_Der_f,2)*((-384*pow(c_gbs,3)*Al*pow(Q,2)*pow(Ze,2))/pow(r_j,4) - (1280*pow(c_gbs,3)*Al*P*Q*pow(Ze,3))/pow(r_j,4) - (1152*pow(c_gbs,3)*Al*pow(P,2)*pow(Ze,4))/pow(r_j,4) + (128*pow(c_gbs,3)*Al*pow(Q,2)*pow(Ze,4))/pow(r_j,4)))) + (1 + (256*pow(phi_Der_f,3)*pow(c_gbs,3)*der_Q*pow(Ze,4))/(pow(r_j,4)*Al) - (512*pow(phi_Der_f,3)*pow(c_gbs,3)*Q*pow(Ze,4))/pow(r_j,5) + (256*phiphi_Der_f*pow(phi_Der_f,2)*pow(c_gbs,3)*pow(Q,2)*pow(Ze,4))/pow(r_j,4) + phi_Der_f*((-16*c_gbs*Q)/r_j - (16*c_gbs*P*Ze)/r_j) + pow(phi_Der_f,2)*((64*pow(c_gbs,2)*pow(Q,2))/pow(r_j,2) + (128*pow(c_gbs,2)*P*Q*Ze)/pow(r_j,2) + (64*pow(c_gbs,2)*pow(P,2)*pow(Ze,2))/pow(r_j,2) - (32*pow(c_gbs,2)*pow(Ze,4))/pow(r_j,4)) + r_Der_Ze*((128*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,3))/pow(r_j,3) + pow(phi_Der_f,3)*((-1024*pow(c_gbs,3)*Q*pow(Ze,3))/pow(r_j,4) - (768*pow(c_gbs,3)*P*pow(Ze,4))/pow(r_j,4))) + r_Der_Al*((128*pow(phi_Der_f,2)*pow(c_gbs,2)*pow(Ze,4))/(pow(r_j,3)*Al) + pow(phi_Der_f,3)*((-1280*pow(c_gbs,3)*Q*pow(Ze,4))/(pow(r_j,4)*Al) - (768*pow(c_gbs,3)*P*pow(Ze,5))/(pow(r_j,4)*Al))))/dt + r_Der_Al*((4*phi_Der_f*P_Der_SE_LL_TR*c_gbs*Ze)/(r_j*Al) + pow(phi_Der_f,2)*((-48*P_Der_SE_LL_TR*pow(c_gbs,2)*Q*Ze)/(pow(r_j,2)*Al) - (16*P_Der_SE_LL_TR*pow(c_gbs,2)*P*pow(Ze,2))/(pow(r_j,2)*Al) - (16*pow(c_gbs,2)*SE_LL_TR*pow(Ze,2))/(pow(r_j,2)*Al) - (144*pow(c_gbs,2)*pow(Ze,3))/pow(r_j,4) + (64*pow(c_gbs,2)*pow(Ze,5))/pow(r_j,4)) + pow(phi_Der_f,3)*((2560*pow(c_gbs,3)*Q*pow(Ze,3))/pow(r_j,5) + (2560*pow(c_gbs,3)*P*pow(Ze,4))/pow(r_j,5) - (1536*pow(c_gbs,3)*Q*pow(Ze,5))/pow(r_j,5) - (1536*pow(c_gbs,3)*P*pow(Ze,6))/pow(r_j,5)) + r_Der_Ze*(pow(phi_Der_f,2)*((-224*pow(c_gbs,2)*pow(Ze,2))/pow(r_j,3) + (128*pow(c_gbs,2)*pow(Ze,4))/pow(r_j,3)) + pow(phi_Der_f,3)*((1920*pow(c_gbs,3)*Q*pow(Ze,2))/pow(r_j,4) + (2048*pow(c_gbs,3)*P*pow(Ze,3))/pow(r_j,4) - (1536*pow(c_gbs,3)*Q*pow(Ze,4))/pow(r_j,4) - (1536*pow(c_gbs,3)*P*pow(Ze,5))/pow(r_j,4))) + phiphi_Der_f*(phi_Der_f*((96*pow(c_gbs,2)*Q*pow(Ze,3))/pow(r_j,3) + (128*pow(c_gbs,2)*P*pow(Ze,4))/pow(r_j,3)) + pow(phi_Der_f,2)*((-1280*pow(c_gbs,3)*pow(Q,2)*pow(Ze,3))/pow(r_j,4) - (2560*pow(c_gbs,3)*P*Q*pow(Ze,4))/pow(r_j,4) - (1152*pow(c_gbs,3)*pow(P,2)*pow(Ze,5))/pow(r_j,4) + (128*pow(c_gbs,3)*pow(Q,2)*pow(Ze,5))/pow(r_j,4)))) + ((3*Al*Ze)/4. + phi_Der_f*((-12*c_gbs*Al*Q*Ze)/r_j - (12*c_gbs*Al*P*pow(Ze,2))/r_j) + pow(phi_Der_f,3)*der_Q*((-192*pow(c_gbs,3)*pow(Ze,3))/pow(r_j,4) + (192*pow(c_gbs,3)*pow(Ze,5))/pow(r_j,4)) + pow(phi_Der_f,2)*((48*pow(c_gbs,2)*Al*pow(Q,2)*Ze)/pow(r_j,2) + (96*pow(c_gbs,2)*Al*P*Q*pow(Ze,2))/pow(r_j,2) + (24*pow(c_gbs,2)*Al*pow(Ze,3))/pow(r_j,4) + (48*pow(c_gbs,2)*Al*pow(P,2)*pow(Ze,3))/pow(r_j,2) - (24*pow(c_gbs,2)*Al*pow(Ze,5))/pow(r_j,4)) + pow(phi_Der_f,3)*((384*pow(c_gbs,3)*Al*Q*pow(Ze,3))/pow(r_j,5) - (384*pow(c_gbs,3)*Al*Q*pow(Ze,5))/pow(r_j,5)) + phiphi_Der_f*pow(phi_Der_f,2)*((-192*pow(c_gbs,3)*Al*pow(Q,2)*pow(Ze,3))/pow(r_j,4) + (192*pow(c_gbs,3)*Al*pow(Q,2)*pow(Ze,5))/pow(r_j,4)) + r_Der_Ze*(pow(phi_Der_f,2)*((-48*pow(c_gbs,2)*Al*pow(Ze,2))/pow(r_j,3) + (96*pow(c_gbs,2)*Al*pow(Ze,4))/pow(r_j,3)) + pow(phi_Der_f,3)*((384*pow(c_gbs,3)*Al*Q*pow(Ze,2))/pow(r_j,4) + (192*pow(c_gbs,3)*Al*P*pow(Ze,3))/pow(r_j,4) - (768*pow(c_gbs,3)*Al*Q*pow(Ze,4))/pow(r_j,4) - (576*pow(c_gbs,3)*Al*P*pow(Ze,5))/pow(r_j,4))) + r_Der_Al*(pow(phi_Der_f,2)*((-144*pow(c_gbs,2)*pow(Ze,3))/pow(r_j,3) + (96*pow(c_gbs,2)*pow(Ze,5))/pow(r_j,3)) + pow(phi_Der_f,3)*((1344*pow(c_gbs,3)*Q*pow(Ze,3))/pow(r_j,4) + (960*pow(c_gbs,3)*P*pow(Ze,4))/pow(r_j,4) - (960*pow(c_gbs,3)*Q*pow(Ze,5))/pow(r_j,4) - (576*pow(c_gbs,3)*P*pow(Ze,6))/pow(r_j,4))))/dr
 	;
 }
 /*==========================================================================*/
@@ -604,7 +483,7 @@ static double compute_iteration_Crank_Nicolson_PQ(
 			                  t_Der_P)
 		;
 		double jac_P = compute_jac_center_eom_P(
-			c_gbs, r_j, dr, dt,
+			c_gbs, r_j, dt,
 			phi_Der_f, phiphi_Der_f, 
 			SE_LL_TR, 	SE_LL_ThTh, 
 			P_Der_SE_LL_TR, P_Der_SE_LL_ThTh, 
@@ -786,62 +665,6 @@ void advance_tStep_PQ_massless_scalar_EdGB(
 	) {
 		Kreiss_Oliger_filter_origin(P_n, "even") ;
 		Kreiss_Oliger_filter_origin(Q_n, "odd") ;
-	}
-	return ;
-}	
-/*===========================================================================*/
-void advance_tStep_PQZe_massless_scalar_EdGB(
-	double s_L,double c_gbs,
-	int Nx, 
-	double dt, double dx, 
-	double err_tolerance, 
-	bool excision_on,
-	int exc_jC,
-	double bbox[2], 
-	bool perim_interior[2],
-	double *Al_n, double *Al_nm1, double *Ze_n, double *Ze_nm1,
-	double *P_n,  double  *P_nm1, double  *Q_n, double  *Q_nm1)
-{ 
-	if (exc_jC==Nx-1) { /* then no domain */
-		return ;
-	}
-	double res = 0 ;
-
-	do {
-		res = compute_iteration_Crank_Nicolson_PQ(
-			s_L,	c_gbs,
-			Nx,
-			dt, 	dx,
-			excision_on,
-			exc_jC,
-			bbox,
-			perim_interior,
-			Al_n, 	Al_nm1, Ze_n, Ze_nm1,
-			 P_n, 	 P_nm1,  Q_n,  Q_nm1)
-		;
-		res += compute_iteration_Crank_Nicolson_Ze(
-			s_L,	c_gbs,
-			Nx,
-			dt, 	dx,
-			excision_on,
-			exc_jC,
-			bbox,
-			perim_interior,
-			Al_n, 	Al_nm1, Ze_n, Ze_nm1,
-			 P_n, 	 P_nm1,  Q_n,  Q_nm1)
-		;
-	} while (res>err_tolerance) ;
-
-	Kreiss_Oliger_filter(Nx, exc_jC,  P_n) ;
-	Kreiss_Oliger_filter(Nx, exc_jC,  Q_n) ;
-	Kreiss_Oliger_filter(Nx, exc_jC, Ze_n) ;
-
-	if ((fabs(bbox[0])<machine_epsilon)
-	&&  (exc_jC==0)
-	) {
-		Kreiss_Oliger_filter_origin(P_n,  "even") ;
-		Kreiss_Oliger_filter_origin(Q_n,  "odd") ;
-		Kreiss_Oliger_filter_origin(Ze_n, "odd") ;
 	}
 	return ;
 }	

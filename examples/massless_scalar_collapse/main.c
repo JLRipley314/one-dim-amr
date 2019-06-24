@@ -262,7 +262,7 @@ void set_free_initial_data(amr_grid* grid)
 		initial_data_Gaussian(
 			stereographic_L,
 			Nx, 	
-			dt, dx,
+			dx,
 			bbox,
 			direction,
 			amp, width, center,
@@ -279,7 +279,7 @@ void set_free_initial_data(amr_grid* grid)
 		initial_data_black_hole(
 			stereographic_L,
 			Nx, 	
-			dt, dx,
+			dx,
 			bbox,
 			initial_black_hole_mass,
 			grid->excised_jC,
@@ -367,16 +367,7 @@ void evolve_hyperbolic_pde(amr_grid *grid)
 			) ;	
 		} else
 		if (strcmp(solver_Ze,"free")==0) {
-			advance_tStep_PQZe_massless_scalar_GR(
-				stereographic_L,
-				Nx, dt, dx, 
-				err_tolerance,
-				excision_on,
-				excised_jC,
-				bbox, perim_interior,
-				Al_n, Al_nm1, Ze_n, Ze_nm1,
-				 P_n,  P_nm1,  Q_n,  Q_nm1)
-			;
+			/* add routine later */
 		} else {
 			fprintf(stderr,"ERROR(main.c): solverZe=%s",solver_Ze) ;
 			exit(EXIT_FAILURE) ;
@@ -398,18 +389,7 @@ void evolve_hyperbolic_pde(amr_grid *grid)
 			;
 		} else
 		if (strcmp(solver_Ze,"free")==0) {
-			advance_tStep_PQZe_massless_scalar_EdGB(
-				stereographic_L, coupling_gbs,
-				Nx, 
-				dt, dx, 
-				err_tolerance, 
-				excision_on,
-				excised_jC,
-				bbox, 
-				perim_interior,
-				Al_n, Al_nm1, Ze_n, Ze_nm1,
-				 P_n,  P_nm1,  Q_n,  Q_nm1)
-			;
+			/* add routine later */
 		} else {
 			fprintf(stderr,"ERROR(main.c): solver_Ze=%s",solver_Ze) ;
 			exit(EXIT_FAILURE) ;
@@ -432,7 +412,7 @@ void compute_diagnostics(amr_grid *grid)
 			Al_n, Al_nm1, Al_nm2,
 			Ze_n, Ze_nm1, Ze_nm2,
 			P_n, P_nm1, P_nm2,
-			Q_n, Q_nm1, Q_nm2,
+			Q_n, 
 			eom_TR,
 			eom_ThTh,
 			eom_scalar)
@@ -447,7 +427,7 @@ void compute_diagnostics(amr_grid *grid)
 			Al_n, Al_nm1, Al_nm2,
 			Ze_n, Ze_nm1, Ze_nm2,
 			P_n, P_nm1, P_nm2,
-			Q_n, Q_nm1, Q_nm2,
+			Q_n, 
 			eom_TR,
 			eom_ThTh,
 			eom_scalar,
@@ -568,7 +548,7 @@ void save_to_file(amr_grid *grid)
 /* call amr evolution */
 /*===========================================================================*/
 
-int main(int argc, char *argv[])
+int main(void) 
 {
 	get_run_data(
 		&theory,

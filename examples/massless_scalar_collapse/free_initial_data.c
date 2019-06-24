@@ -25,7 +25,7 @@ static void set_array_val(int start, int end, double val, double* array)
 void initial_data_Gaussian(
 	double s_L,
 	int Nx, 	
-	double dt, double dx,
+	double dx,
 	double bbox[2],
 	char* direction,
 	double amp, double width, double center,
@@ -74,7 +74,7 @@ void initial_data_Gaussian(
 void initial_data_black_hole(
 	double s_L,
 	int Nx, 	
-	double dt, double dx,
+	double dx,
 	double bbox[2],
 	double mass,
 	int exc_jC,

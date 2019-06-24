@@ -10,7 +10,7 @@
 #define HOME_DIR "/home/jripley/one-dim-amr/examples/massless_scalar_collapse/" 
 
 /*==========================================================================*/
-static void get_int_val(char* line_val, char* token, char* comparison, char* delimeter, int* val)
+static void get_int_val(char* line_val, char* token, char* comparison, int* val)
 {
 	if ((token != NULL) && (strcmp(token,comparison)==0)) {
 		*val = strtod(line_val, NULL) ;
@@ -19,7 +19,7 @@ static void get_int_val(char* line_val, char* token, char* comparison, char* del
 	return ;
 }
 /*==========================================================================*/
-static void get_double_val(char* line_val, char* token, char* comparison, char* delimeter, double* val)
+static void get_double_val(char* line_val, char* token, char* comparison, double* val)
 {
 	if ((token != NULL) && (strcmp(token,comparison)==0)) {
 		*val = strtod(line_val, NULL) ;
@@ -28,7 +28,7 @@ static void get_double_val(char* line_val, char* token, char* comparison, char* 
 	return ;
 }
 /*==========================================================================*/
-static void get_string_val(char* line_val, char* token, char* comparison, char* delimeter, char** val)
+static void get_string_val(char* line_val, char* token, char* comparison, char** val)
 {
 	if ((token != NULL) && (strcmp(token,comparison)==0)) {
 		char* inter_val = strsep(&line_val, "\n") ;
@@ -76,23 +76,23 @@ void get_run_data(
 		char *line_val = line ;
                 token = strsep(&line_val, delimeter) ;
 
-		get_string_val(line_val, token, "theory", delimeter, theory) ;
-		get_string_val(line_val, token, "output_dir", delimeter, output_dir) ;
-		get_string_val(line_val, token, "solver_Ze", delimeter, solver_Ze) ;
+		get_string_val(line_val, token, "theory", theory) ;
+		get_string_val(line_val, token, "output_dir", output_dir) ;
+		get_string_val(line_val, token, "solver_Ze", solver_Ze) ;
 
-		get_int_val(line_val, token, "Nx", delimeter, Nx) ;
-		get_int_val(line_val, token, "Nt", delimeter, Nt) ;
-		get_int_val(line_val, token, "t_step_save", delimeter, t_step_save) ;
+		get_int_val(line_val, token, "Nx", Nx) ;
+		get_int_val(line_val, token, "Nt", Nt) ;
+		get_int_val(line_val, token, "t_step_save", t_step_save) ;
 
-		get_double_val(line_val, token, "cfl_num", delimeter, cfl_num) ;
-		get_double_val(line_val, token, "dx", delimeter, dx) ;
-		get_double_val(line_val, token, "dt", delimeter, dt) ;
+		get_double_val(line_val, token, "cfl_num", cfl_num) ;
+		get_double_val(line_val, token, "dx", dx) ;
+		get_double_val(line_val, token, "dt", dt) ;
 
-		get_double_val(line_val, token, "stereographic_L", delimeter, stereographic_L) ;
+		get_double_val(line_val, token, "stereographic_L", stereographic_L) ;
 
-		get_double_val(line_val, token, "coupling_gbs", delimeter, coupling_gbs) ;
+		get_double_val(line_val, token, "coupling_gbs", coupling_gbs) ;
 
-		get_double_val(line_val, token, "err_tolerance", delimeter, err_tolerance) ;
+		get_double_val(line_val, token, "err_tolerance", err_tolerance) ;
 	}
 /*	
 	this is for the coarsest grid so the bounding box (bbox)
@@ -129,14 +129,14 @@ void get_initial_data(
 		char *line_val = line ;
                 token = strsep(&line_val, delimeter) ;
 
-		get_string_val(line_val, token, "initial_data", delimeter, initial_data) ;
-		get_string_val(line_val, token, "direction", delimeter, direction) ;
+		get_string_val(line_val, token, "initial_data", initial_data) ;
+		get_string_val(line_val, token, "direction", direction) ;
 
-		get_double_val(line_val, token, "amp", delimeter, amp) ;
-		get_double_val(line_val, token, "width", delimeter, width) ;
-		get_double_val(line_val, token, "center", delimeter, center) ;
+		get_double_val(line_val, token, "amp", amp) ;
+		get_double_val(line_val, token, "width", width) ;
+		get_double_val(line_val, token, "center", center) ;
 
-		get_double_val(line_val, token, "initial_black_hole_mass", delimeter, initial_black_hole_mass) ;
+		get_double_val(line_val, token, "initial_black_hole_mass", initial_black_hole_mass) ;
 
 	}
 	free(line) ;

@@ -1,6 +1,6 @@
 CC = gcc -I/home/jripley/one-dim-amr
 
-CFLAGS = -g -fmax-errors=5 -Wall -O3
+CFLAGS = -g -O2 -Wall -Wextra -fmax-errors=5     
 
 LIBS = -lm -lamr -lbbhutil
 
