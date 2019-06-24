@@ -1,5 +1,5 @@
 #
-# link amr routines together to make a static linked library
+# link amr routines together to make a static linked library "libamr.a"
 #
 CC=gcc
 

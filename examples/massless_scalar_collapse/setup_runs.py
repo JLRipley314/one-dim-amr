@@ -52,8 +52,8 @@ run_data = {
 ###	Nx, Nt should be of the form 2**n + 1 with n an integer
 ###	cfl_num: Courant Friedrichs Lewy number (for hyperbolics)
 ###
-	"Nx"		: 2**8+1,
-	"Nt"		: 2**8+1,
+	"Nx"		: 2**7+1,
+	"Nt"		: 2**9+1,
 	"t_step_save"	: 2**0,
 	"cfl_num"	: 0.25,  
 	"err_tolerance"	: 1.0e-10, 
@@ -62,7 +62,7 @@ run_data = {
 ###
 ###	if initial_data is r4Exp
 ###
-	"amp"		: 0.00007,
+	"amp"		: 0.00006,
 	"width"		: 4.0,
 	"center"	: 10.0,
 	"direction"	: "stationary",#"ingoing",#"outgoing",#
