@@ -32,21 +32,17 @@ static inline double weighted_infty_norm(double weight, double val_1, double val
 /*==========================================================================*/
 static double compute_iteration_Al(
 	double s_L,	double c_gbs,
-	int Nx,
+	int size,
 	double dx,
 	int start_jC,
-	double bbox[2],
+	double x_lower,
 	double *Al, 	double *Ze, 
 	double  *P, 	double  *Q)
 {
-	int size = Nx ;
-/* to avoid problems with r=infty when x=s_L */
-	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ;
-
 	double res_infty_norm = 0 ; 
 
-        for (int jC=start_jC; jC<Nx-1; jC++) {
-                double x_joh = ((jC+1) + jC) * dx / 2 ;
+        for (int jC=start_jC; jC<size-1; jC++) {
+                double x_joh = x_lower + ((jC+1) + jC) * dx / 2 ;
 
                 double r_joh = stereographic_r(s_L, x_joh) ;
                 double dr = stereographic_dr(s_L, x_joh, dx) ;
@@ -111,7 +107,6 @@ static double compute_iteration_Al(
 		}
 /*---------------------------------------------------------------------------*/	
         }
-	if (size==Nx-1) Al[Nx-1] = Al[Nx-2] ;
 
         return res_infty_norm ;
 }
@@ -120,21 +115,17 @@ static double compute_iteration_Al(
 /*==========================================================================*/
 static double compute_iteration_Ze(
 	double s_L,	double c_gbs,
-	int Nx,
+	int size,
 	double dx,
 	int start_jC,
-	double bbox[2],
+	double x_lower,
 	double *Al, 	double *Ze, 
 	double * P, 	double * Q)
 {
-	int size = Nx ;
-/* to avoid problems with r=infty when x=s_L */	
-	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; 
-
         double res_infty_norm = 0 ; 
 
         for (int jC=start_jC; jC<size-1; jC++) {
-                double x_joh = ((jC+1) + jC) * dx / 2 ; 
+                double x_joh = x_lower + ((jC+1) + jC) * dx / 2 ; 
 
                 double x_jp1 = (jC+1) * dx ;
                 double x_j   = (jC+0) * dx ;
@@ -200,8 +191,6 @@ static double compute_iteration_Ze(
                 }
 /*---------------------------------------------------------------------------*/	
         }
-	if (size==Nx-1) Ze[Nx-1] = 0 ;
-
         return res_infty_norm ;
 }
 /*==========================================================================*/
@@ -238,11 +227,10 @@ static double compute_iteration_excision_boundary_condition_Ze(
 	double s_L,	double c_gbs,
 	double dt, 	double dx,
 	int exc_jC,
-	double bbox[2],
+	double x_lower,
 	double *Al_n,  double *Al_nm1, double *Ze_n, double *Ze_nm1,
 	double *P_n,   double *P_nm1,  double *Q_n,  double *Q_nm1)
 {
-	double x_lower = bbox[0] ;
         double x_j = x_lower + (dx * exc_jC) ;
         double r_j = stereographic_r( s_L, x_j) ;
         double dr  = stereographic_dr(s_L, x_j, dx) ;
@@ -318,6 +306,11 @@ void solve_Al_Ze_EdGB(
 		return ;
 	}
 	double res= 0 ;
+	double x_lower = bbox[0] ;
+/* to avoid problems with r=infty when x=s_L */	
+	int size = Nx ;
+	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; 
+
 	do {
 		res = 0 ;
 		if ((excision_on==true)
@@ -327,29 +320,33 @@ void solve_Al_Ze_EdGB(
 				s_L,	c_gbs,
 				dt, 	dx,
 				start_jC,
-				bbox,
+				x_lower,
 				Al_n,  Al_nm1, Ze_n, Ze_nm1,
 				 P_n,   P_nm1,  Q_n,  Q_nm1)
 			;
 		}
 		res += compute_iteration_Ze(
 			s_L,	c_gbs,
-			Nx,
+			size,
 			dx,
 			start_jC,
-			bbox,
+			x_lower,
 			Al_n, 	Ze_n, 
 			P_n, 	Q_n)
 		;
 		res += compute_iteration_Al(
 			s_L,	c_gbs,
-			Nx,
+			size,
 			dx,
 			start_jC,
-			bbox,
+			x_lower,
 			Al_n, 	Ze_n, 
 			P_n, 	Q_n)
 		;
+		if (size==Nx-1) {
+			Al_n[Nx-1] = Al_n[Nx-2] ;
+			Ze_n[Nx-1] = 0 ;
+		}
 	} while (res>err_tolerance) ;
 	return ;
 }
@@ -397,25 +394,21 @@ static double compute_jac_forward_eom_P(
 /*==========================================================================*/
 static double compute_iteration_Crank_Nicolson_PQ(
 	double s_L,	double c_gbs,
-	int Nx,
+	int size,
 	double dt, 	double dx,
 	bool excision_on,
 	int exc_jC,
-	double bbox[2],
+	double x_lower,
 	bool perim_interior[2],
 	double *Al_n, 	double *Al_nm1, double *Ze_n, double *Ze_nm1,
 	double *P_n, 	double  *P_nm1, double  *Q_n, double  *Q_nm1)
 {
-	double lower_x = bbox[0] ;
-
-	int size = Nx ;
-	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
 	double res_infty_norm = 0 ; /* returning this */
 
 	for (int jC=exc_jC+1;jC<size-1;jC++) {
-		double x_j   = lower_x + (dx * (jC)  ) ;
-		double x_jp1 = lower_x + (dx * (jC+1)) ;
-		double x_jm1 = lower_x + (dx * (jC-1)) ;
+		double x_j   = x_lower + (dx * (jC)  ) ;
+		double x_jp1 = x_lower + (dx * (jC+1)) ;
+		double x_jm1 = x_lower + (dx * (jC-1)) ;
 
 		double r_j   = stereographic_r(s_L, x_j  ) ;
 		double r_jp1 = stereographic_r(s_L, x_jp1) ;
@@ -521,9 +514,9 @@ static double compute_iteration_Crank_Nicolson_PQ(
 	else if ((exc_jC > 0) 
 	&&  (excision_on==true)
 	) {
-		double x_j   = lower_x + (dx * (exc_jC))   ;
-		double x_jp1 = lower_x + (dx * (exc_jC+1)) ;
-		double x_jp2 = lower_x + (dx * (exc_jC+2)) ;
+		double x_j   = x_lower + (dx * (exc_jC))   ;
+		double x_jp1 = x_lower + (dx * (exc_jC+1)) ;
+		double x_jp2 = x_lower + (dx * (exc_jC+2)) ;
 
 		double r_j   = stereographic_r(s_L, x_j  ) ;
 		double r_jp1 = stereographic_r(s_L, x_jp1) ;
@@ -643,14 +636,19 @@ void advance_tStep_PQ_massless_scalar_EdGB(
 	}
 	double res = 0 ;
 
+	double x_lower = bbox[0] ;
+/* to avoid problems with r=infty when x=s_L */
+	int size = Nx ;
+	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ;	
+
 	do {
 		res = compute_iteration_Crank_Nicolson_PQ(
 			s_L,	c_gbs,
-			Nx,
+			size,
 			dt, 	dx,
 			excision_on,
 			exc_jC,
-			bbox,
+			x_lower,
 			perim_interior,
 			Al_n, 	Al_nm1, Ze_n, Ze_nm1,
 			 P_n, 	 P_nm1,  Q_n,  Q_nm1)

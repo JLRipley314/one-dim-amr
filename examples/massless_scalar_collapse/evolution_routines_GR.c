@@ -31,19 +31,17 @@ static inline double weighted_infty_norm(double weight, double val_1, double val
 /*==========================================================================*/
 static double compute_iteration_Al(
 	double s_L,
-	int Nx,
+	int size,
 	double dx,
 	int start_jC,
-	double bbox[2],
+	double x_lower,
 	double* Al, 	double* Ze, 
 	double*  P, 	double*  Q)
 {
-	int size = Nx ;
-	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
         double res_infty_norm = 0 ; /* returning this */
  /* scalar field functions */
-        for (int jC=start_jC; jC<Nx-1; jC++) {
-                double x_joh = ((jC+1) + jC) * dx / 2 ;
+        for (int jC=start_jC; jC<size-1; jC++) {
+                double x_joh = x_lower + ((jC+1) + jC) * dx / 2 ;
 
                 double r_joh = stereographic_r(s_L, x_joh) ;
 
@@ -81,28 +79,22 @@ static double compute_iteration_Al(
 			res_infty_norm = weighted_infty_norm(1-x_joh/s_L, res_Al, res_infty_norm) ;
                 }
         }
-	if (size==Nx-1) Al[Nx-1] = Al[Nx-2] ;
-
         return res_infty_norm ;
 }
 /*==========================================================================*/
 static double compute_iteration_Ze(
 	double s_L,
-	int Nx,
+	int size,
 	double dx,
 	int start_jC,
-	double bbox[2],
+	double x_lower,
 	double* Al, 	double* Ze, 
 	double*  P, 	double*  Q)
 {
-	int size = Nx ;
-	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; /* to avoid problems with r=infty when x=s_L */
- /* scalar field functions */   
-
         double res_infty_norm = 0 ; /* returning this */
 
         for (int jC=start_jC; jC<size-1; jC++) {
-                double x_joh = ((jC+1) + jC) * dx / 2 ; 
+                double x_joh = x_lower + ((jC+1) + jC) * dx / 2 ; 
 
                 double x_jp1 = (jC+1) * dx ;
                 double x_j   = (jC+0) * dx ;
@@ -146,8 +138,6 @@ static double compute_iteration_Ze(
                 }
                 res_infty_norm = weighted_infty_norm(1-x_joh/s_L, res_Ze_sqrd, res_infty_norm) ;
         }
-	if (size==Nx-1) Ze[Nx-1] = 0 ;
-
         return res_infty_norm ;
 }
 /*==========================================================================*/
@@ -155,11 +145,10 @@ static double compute_iteration_excision_boundary_condition_Ze(
 	double s_L,
 	double dt, 	double dx,
 	int exc_jC,
-	double bbox[2],
+	double x_lower,
 	double* Al_n,  double* Al_nm1, double* Ze_n, double* Ze_nm1,
 	double* P_n,   double* P_nm1,  double* Q_n,  double* Q_nm1)
 {
-	double x_lower = bbox[0] ;
         double x_j = x_lower + (dx * exc_jC) ;
         double r_j = stereographic_r( s_L, x_j) ;
         double dr  = stereographic_dr(s_L, x_j, dx) ;
@@ -215,6 +204,10 @@ void solve_Al_Ze_GR(
 		return ;
 	}
 	double res = 0 ;
+	double x_lower = bbox[0] ;
+/* to avoid problems with r=infty when x=s_L */	
+	int size = Nx ;
+	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; 
 	do {
 		res = 0 ;
 		if ((excision_on==true)
@@ -224,29 +217,33 @@ void solve_Al_Ze_GR(
 				s_L,
 				dt, 	dx,
 				start_jC,
-				bbox,
+				x_lower,
 				Al_n,  Al_nm1, Ze_n, Ze_nm1,
 				 P_n,   P_nm1,  Q_n,  Q_nm1)
 			;
 		}
 		res += compute_iteration_Ze(
 			s_L,
-			Nx,
+			size,
 			dx,
 			start_jC,
-			bbox,
+			x_lower,
 			Al_n, 	Ze_n, 
 			P_n, 	Q_n)
 		;
 		res += compute_iteration_Al(
 			s_L,
-			Nx,
+			size,
 			dx,
 			start_jC,
-			bbox,
+			x_lower,
 			Al_n, 	Ze_n, 
 			P_n, 	Q_n)
 		;
+		if (size==Nx-1) {
+			Al_n[Nx-1] = Al_n[Nx-2] ;
+			Ze_n[Nx-1] = 0 ;
+		}
 	} while (res>err_tolerance) ;
 	return ;
 }
