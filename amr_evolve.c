@@ -295,6 +295,8 @@ static void set_finer_grid_ode_initial_condition(amr_field* fields, amr_grid* gr
 		if (strcmp(field->pde_type,ODE) == 0) {
 			int index = field->index ;
 			child->grid_funcs[index][0] = grid->grid_funcs[index][child_lower_jC] ;
+			printf("field %s\t", field->name) ;
+			printf("starting ode val %f\n", child->grid_funcs[index][0]) ;
 		}
 	}
 	return ; 
@@ -319,6 +321,7 @@ static void set_coarser_grid_ode_initial_condition(amr_field* fields, amr_grid* 
 static void solve_ode_fields(
 	amr_field* fields, amr_grid* grid, void (*solve_ode)(amr_grid*)) 
 {
+/* if finest grid then solve and exit */	
 	if ((grid->child)==NULL) {
 		solve_ode(grid) ;
 		return ;
@@ -326,21 +329,28 @@ static void solve_ode_fields(
 	int excised_jC = grid->excised_jC ;
 	int child_lower_jC = grid->child->perim_coords[0] ;
 	int child_upper_jC = grid->child->perim_coords[1] ;
+	int grid_upper_bbox = grid->bbox[1] ;
+	int child_lower_bbox = grid->child->bbox[0] ;
 	int Nx = grid->Nx ;
-	
+/* in case finer grid is completely excised then solve and exit */	
 	if (child_upper_jC<excised_jC) {
 		solve_ode(grid) ;
+		return ;
 	}
+/* solve to the left of the finer grid */	
 	if (child_lower_jC>excised_jC) {
-		grid->Nx = child_lower_jC ;
+		grid->bbox[1] = child_lower_bbox ;
+		grid->Nx = child_lower_jC+1 ;
 
 		solve_ode(grid) ;
 
+		grid->bbox[1] = grid_upper_bbox ;
 		grid->Nx = Nx ;
 	}
+/* solve finer grid */	
 	set_finer_grid_ode_initial_condition(fields, grid, grid->child) ; 
 	solve_ode_fields(fields, grid->child, solve_ode) ;
-
+/* solve to the right of the finer grid */	
 	if (child_upper_jC<(Nx-1)) {
 		(grid->excised_jC) = child_upper_jC ;
 		(grid->excision_on) = false ;

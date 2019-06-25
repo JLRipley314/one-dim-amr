@@ -39,7 +39,7 @@ static double compute_iteration_Al(
 	double*  P, 	double*  Q)
 {
         double res_infty_norm = 0 ; /* returning this */
- /* scalar field functions */
+
         for (int jC=start_jC; jC<size-1; jC++) {
                 double x_joh = x_lower + ((jC+1) + jC) * dx / 2 ;
 
@@ -69,13 +69,15 @@ static double compute_iteration_Al(
                                 Ze_joh/dr
                         -       r_joh*Jr_joh/4.
                         ;
-                        Al[jC+1] -= res_Al / jac_Al ;
+/*----------------------------------------------------------------------------*/
 			if ((isnan(res_Al) != 0)
 			||  (isnan(jac_Al) != 0)
 			) {
 				printf("jC:%d\tres_Al:%.e\tjac_Al:%.e\n", jC, res_Al, jac_Al) ;
 				exit(EXIT_FAILURE) ;
 			}
+/*----------------------------------------------------------------------------*/
+                        Al[jC+1] -= res_Al / jac_Al ;
 			res_infty_norm = weighted_infty_norm(1-x_joh/s_L, res_Al, res_infty_norm) ;
                 }
         }
@@ -117,7 +119,7 @@ static double compute_iteration_Ze(
                 double P_joh = (P[jC+1] + P[jC]) / 2. ;
 
                 double rho_joh = (1./2) * (pow(Q_joh,2) + pow(P_joh,2)) ;
-/*---------------------------------------------------------------------------*/
+
                 double res_Ze_sqrd = 
                         (       (r_jp1)*Al_sqrd_jp1*Ze_sqrd_jp1
                         -       (r_j  )*Al_sqrd_j  *Ze_sqrd_j
@@ -126,8 +128,6 @@ static double compute_iteration_Ze(
                 ;
                 double jac_Ze_sqrd = (r_jp1)*Al_sqrd_jp1/dr
                 ;
-                Ze_sqrd_jp1 -= res_Ze_sqrd/jac_Ze_sqrd ;
-                Ze[jC+1]  = sqrt(Ze_sqrd_jp1) ;
 /*---------------------------------------------------------------------------*/
                 if ((isnan(res_Ze_sqrd) != 0)    
                 ||  (isnan(jac_Ze_sqrd) != 0)
@@ -135,6 +135,9 @@ static double compute_iteration_Ze(
                         printf("jC:%d\tZe:%.6e\tres_Ze_sqrd:%.e\tjac_Ze_sqrd:%.e\n", jC, Ze[jC+1], res_Ze_sqrd, jac_Ze_sqrd) ;
                         exit(EXIT_FAILURE) ;
                 }
+/*---------------------------------------------------------------------------*/
+                Ze_sqrd_jp1 -= res_Ze_sqrd/jac_Ze_sqrd ;
+                Ze[jC+1]  = sqrt(Ze_sqrd_jp1) ;
                 res_infty_norm = weighted_infty_norm(1-x_joh/s_L, res_Ze_sqrd, res_infty_norm) ;
         }
         return res_infty_norm ;
@@ -239,11 +242,11 @@ void solve_Al_Ze_GR(
 			Al_n, 	Ze_n, 
 			P_n, 	Q_n)
 		;
-//		if (size==Nx-1) {
-//			Al_n[Nx-1] = Al_n[Nx-2] ;
-//			Ze_n[Nx-1] = 0 ;
-//		}
 	} while (res>err_tolerance) ;
+	if (size==(Nx-1)) {
+		Al_n[Nx-1] = Al_n[Nx-2] ;
+		Ze_n[Nx-1] = Ze_n[Nx-2] ;
+	}
 	return ;
 }
 /*==========================================================================*/
@@ -259,10 +262,7 @@ static double compute_iteration_Crank_Nicolson_PQ(
 	double*  P_n, 	double*  P_nm1, double*  Q_n, double*  Q_nm1)
 {
 	double res_infty_norm = 0 ; /* returning this */
-/*--------------------------------------------------------------------------*/
-/* interior: we go to Nx-2 as we do not want to actually include the point
-   at infinity in our computational domain */
-/*--------------------------------------------------------------------------*/
+
 	for (int jC=exc_jC+1;jC<size-1;jC++) {
 		double x_j   = x_lower + (dx * (jC)  ) ;
 		double x_jp1 = x_lower + (dx * (jC+1)) ;
