@@ -616,7 +616,7 @@ static void set_initial_data(
 		evolve_grid(
 			gh->fields, 
 			gh->grids,
-			2,
+			1,
 			evolve_hyperbolic_pde,
 			solve_ode) 
 		;
@@ -624,7 +624,7 @@ static void set_initial_data(
 		evolve_grid(
 			gh->fields, 
 			gh->grids,
-			2,
+			1,
 			evolve_hyperbolic_pde,
 			solve_ode) 
 		;
@@ -661,7 +661,6 @@ void amr_main(
 		solve_ode)
 	;
 	compute_all_grid_diagnostics(gh, compute_diagnostics) ;
-	save_all_grids(gh, save_to_file) ;
 	save_all_grids(gh, save_to_file) ;
 
 	for (int tC=1; tC<(gh->Nt); tC++) {
