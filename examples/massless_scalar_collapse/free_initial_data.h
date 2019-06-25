@@ -9,10 +9,11 @@ void initial_data_Gaussian(
 	int Nx, 	
 	double dx,
 	double bbox[2],
-	char* direction,
+	char *direction,
 	double amp, double width, double center,
-	double* Al, double* Ze, 
-	double*  P, double*  Q)
+	double *Al, double *Ze, 
+	double  *P, double  *Q,
+	double *phi_n, double *phi_nm1)
 ;
 /*==========================================================================*/
 /* Black hole with specified mass (in Painleve-Gullstrand coordinates). */ 

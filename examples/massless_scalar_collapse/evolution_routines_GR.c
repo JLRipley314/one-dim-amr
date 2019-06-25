@@ -454,4 +454,24 @@ void advance_tStep_PQ_massless_scalar_GR(
 		Kreiss_Oliger_left_inner_grid(Q_n) ;
 	}
 	return ;
-}	
+}
+/*===========================================================================*/
+void advance_tStep_phi(
+	int Nx, 
+	double dt, 
+	double *Al_n, double *Al_nm1, double *Ze_n, double *Ze_nm1,
+	double  *P_n, double  *P_nm1, double  *Q_n, double  *Q_nm1,
+	double *phi_n, double *phi_nm1)
+{
+	for (int jC=0; jC<Nx; jC++) {
+		double Al = (Al_n[jC] + Al_nm1[jC]) / 2 ;
+		double Ze = (Ze_n[jC] + Ze_nm1[jC]) / 2 ;
+
+		double P = (P_n[jC] + P_nm1[jC]) / 2 ;
+		double Q = (Q_n[jC] + Q_nm1[jC]) / 2 ;
+
+		phi_n[jC] += dt*Al*(P + Ze*Q) ;
+		phi_nm1[jC] = phi_n[jC] ;
+	}
+	return ;
+}

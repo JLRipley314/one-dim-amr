@@ -27,12 +27,13 @@ void initial_data_Gaussian(
 	int Nx, 	
 	double dx,
 	double bbox[2],
-	char* direction,
+	char *direction,
 	double amp, double width, double center,
-	double* Al, double* Ze, 
-	double*  P, double*  Q)
+	double *Al, double *Ze, 
+	double  *P, double  *Q,
+	double *phi_n, double *phi_nm1)
 {
-	double left_point = bbox[0] ;
+	double x_lower = bbox[0] ;
 
 	double x = 0 ;
 	double r = 0 ;
@@ -45,9 +46,15 @@ void initial_data_Gaussian(
 	printf("bbox[1]\t%f\ts_L\t%f\twhole grid\t%d\tNx\t%d\tend_jC\t%d\n", bbox[1], s_L, (fabs(bbox[1]-s_L)<ERR_TOLERANCE), Nx, end_jC) ;
 
 	for (int jC=0; jC<end_jC; jC++) {
-		x = (jC * dx) + left_point ;
+		x = (jC * dx) + x_lower ;
 		r = stereographic_r(s_L, x) ;
-		Q[jC] = amp * exp(-pow((r-center)/width,2)) * (
+
+		double gaussian = amp * exp(-pow((r-center)/width,2)) ;
+
+		phi_n[jC] = pow(r,4) * gaussian ; 
+		phi_nm1[jC] = phi_n[jC] ; 
+
+		Q[jC] = gaussian * (
 			(-(r-center)/pow(width,2)) * pow(r,4) 
 		+	4*pow(r,3)
 		) ;
@@ -63,8 +70,10 @@ void initial_data_Gaussian(
 		}
 	}
 	if (end_jC == Nx-1) {
-		P[Nx-1] = 0 ;
+		phi_n[Nx-1] = 0 ;
+		phi_nm1[Nx-1] = phi_n[Nx-1] ;
 		Q[Nx-1] = 0 ;
+		P[Nx-1] = 0 ;
 	}
 	return ;
 }
@@ -80,7 +89,7 @@ void initial_data_black_hole(
 	int exc_jC,
 	double* Al, double* Ze)
 {
-	double left_point = bbox[0] ;
+	double x_lower = bbox[0] ;
 
 	double x = 0 ;
 	double r = 0 ;
@@ -93,7 +102,7 @@ void initial_data_black_hole(
 	printf("exc_jC= %d\n", exc_jC) ;
 
 	for (int jC=exc_jC; jC<end_jC; jC++) {
-		x = (jC * dx) + left_point ;
+		x = (jC * dx) + x_lower ;
 		r = stereographic_r(s_L, x) ;
 
 		Ze[jC] = sqrt(2*mass/r) ;

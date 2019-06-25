@@ -28,4 +28,12 @@ void solve_Al_Ze_GR(
 	double *Al_n, 	double *Al_nm1, double *Ze_n, double *Ze_nm1,
 	double  *P_n, 	double  *P_nm1, double  *Q_n, double  *Q_nm1)
 ;
+/*===========================================================================*/
+void advance_tStep_phi(
+	int Nx, 
+	double dt, 
+	double *Al_n, double *Al_nm1, double *Ze_n, double *Ze_nm1,
+	double  *P_n, double  *P_nm1, double  *Q_n, double  *Q_nm1,
+	double *phi_n, double *phi_nm1)
+;
 #endif

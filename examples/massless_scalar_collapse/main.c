@@ -40,6 +40,7 @@ double  *Q_n,  *Q_nm1,  *Q_nm2 ;
 /*---------------------------------------------------------------------------*/
 /* diagnostics */
 /*---------------------------------------------------------------------------*/
+double *phi_n, *phi_nm1 ;
 double *mass_aspect ;
 double *ingoing_null_characteristic, *outgoing_null_characteristic ;
 double *ingoing_scalar_characteristic, *outgoing_scalar_characteristic ;
@@ -78,6 +79,8 @@ int 	Al_n_index, Al_nm1_index, Al_nm2_index, Al_extr_m1_index, Al_extr_m2_index,
 	P_n_index, P_nm1_index, P_nm2_index,
 	Q_n_index, Q_nm1_index, Q_nm2_index,
 
+	phi_n_index, phi_nm1_index,
+
 	mass_aspect_index,
 	ingoing_null_characteristic_index, outgoing_null_characteristic_index,
 	ingoing_scalar_characteristic_index, outgoing_scalar_characteristic_index,
@@ -90,6 +93,8 @@ char output_name_Al[MAX_NAME_LEN+1] ;
 char output_name_Ze[MAX_NAME_LEN+1] ;
 char output_name_P[MAX_NAME_LEN+1] ;
 char output_name_Q[MAX_NAME_LEN+1] ;
+
+char output_name_phi[MAX_NAME_LEN+1] ;
 
 char output_name_ingoing_null_characteristic[MAX_NAME_LEN+1] ;
 char output_name_outgoing_null_characteristic[MAX_NAME_LEN+1] ;
@@ -128,6 +133,8 @@ amr_field *set_fields(void)
 
 	amr_add_field(fields, "P", "hyperbolic", time_levels, 0) ;
 	amr_add_field(fields, "Q", "hyperbolic", time_levels, 0) ;
+
+	amr_add_field(fields, "phi", "diagnostic", 2, 0) ;
 
 	amr_add_field(fields, "mass_aspect",  "diagnostic", 1, 0) ;
 
@@ -168,6 +175,9 @@ void find_field_indices(amr_field* fields)
 	Q_nm1_index = Q_n_index + 1 ;
 	Q_nm2_index = Q_n_index + 2 ;
 
+	phi_n_index   = amr_return_field_index(fields, "phi") ;
+	phi_nm1_index = phi_n_index + 1 ;
+
 	mass_aspect_index  = amr_return_field_index(fields, "mass_aspect")  ;
 
 	ingoing_null_characteristic_index  = amr_return_field_index(fields, "ingoing_null_characteristic")  ;
@@ -186,7 +196,7 @@ void find_field_indices(amr_field* fields)
 	assert(Ze_n_index == Al_extr_m2_index+1) ;
 	assert(P_n_index == Ze_extr_m2_index+1) ;
 	assert(Q_n_index == P_nm2_index+1) ;
-	assert(mass_aspect_index == Q_nm2_index+1) ;
+	assert(mass_aspect_index == phi_nm1_index+1) ;
 
 	return ;
 }
@@ -215,6 +225,9 @@ void set_globals(amr_grid *grid)
 	Ze_nm2 = grid->grid_funcs[Ze_nm2_index] ;
 	Ze_extr_m1 = grid->grid_funcs[Ze_extr_m1_index] ;
 	Ze_extr_m2 = grid->grid_funcs[Ze_extr_m2_index] ;
+
+	phi_n   = grid->grid_funcs[phi_n_index  ] ;
+	phi_nm1 = grid->grid_funcs[phi_nm1_index] ;
 
 	mass_aspect = grid->grid_funcs[mass_aspect_index] ;
 
@@ -268,7 +281,8 @@ void set_free_initial_data(amr_grid* grid)
 			direction,
 			amp, width, center,
 			Al_n, Ze_n, 
-			P_n, Q_n)
+			P_n, Q_n,
+			phi_n, phi_nm1)
 		;
 	} else 
 	if (strcmp(initial_data,"initial_black_hole")==0) {
@@ -318,6 +332,7 @@ void rescale_Al(amr_grid *grid)
 /*===========================================================================*/
 void solve_ode(amr_grid *grid)
 {
+	return ;
 	set_globals(grid) ;
 	if (strcmp(theory, "massless_scalar_GR") == 0) {
 		solve_Al_Ze_GR(
@@ -370,7 +385,7 @@ void evolve_hyperbolic_pde(amr_grid *grid)
 		if (strcmp(solver_Ze,"free")==0) {
 			/* add routine later */
 		} else {
-			fprintf(stderr,"ERROR(main.c): solverZe=%s",solver_Ze) ;
+			fprintf(stderr,"ERROR(main.c): solverZe=%s\n",solver_Ze) ;
 			exit(EXIT_FAILURE) ;
 		}
 	} else 
@@ -392,10 +407,18 @@ void evolve_hyperbolic_pde(amr_grid *grid)
 		if (strcmp(solver_Ze,"free")==0) {
 			/* add routine later */
 		} else {
-			fprintf(stderr,"ERROR(main.c): solver_Ze=%s",solver_Ze) ;
+			fprintf(stderr,"ERROR(main.c): solver_Ze=%s\n",solver_Ze) ;
 			exit(EXIT_FAILURE) ;
 		}
-	}
+	} else { ; }
+	
+	advance_tStep_phi(
+		Nx, 
+		dt, 
+		Al_n, Al_nm1, Ze_n, Ze_nm1,
+		 P_n,  P_nm1,  Q_n,  Q_nm1,
+		phi_n, phi_nm1)
+	;
 	return ;
 }
 /*===========================================================================*/
@@ -473,7 +496,7 @@ void save_to_file(amr_grid *grid)
 {
 	set_globals(grid) ;
 
-	if (made_output_files == false) {
+	if (!made_output_files) {
 	/* 	confirm that output directory exists
 	*/
 		DIR* dir = opendir(output_dir) ;
@@ -494,6 +517,8 @@ void save_to_file(amr_grid *grid)
 		snprintf(output_name_Ze, MAX_NAME_LEN, "%sZe.sdf", output_dir) ;
 		snprintf(output_name_P,  MAX_NAME_LEN, "%sP.sdf",  output_dir) ;
 		snprintf(output_name_Q,  MAX_NAME_LEN, "%sQ.sdf",  output_dir) ;
+
+		snprintf(output_name_phi, MAX_NAME_LEN, "%sphi.sdf", output_dir) ;
 
 		snprintf(output_name_mass_aspect, MAX_NAME_LEN, "%smass_aspect.sdf", output_dir) ;
 
@@ -532,6 +557,8 @@ void save_to_file(amr_grid *grid)
 
 	free(test_1) ;
 	free(test_2) ;
+
+	gft_out_bbox(output_name_phi,  grid_time, &Nx, 1, bbox, phi_n) ;
 
 	gft_out_bbox(output_name_mass_aspect,  grid_time, &Nx, 1, bbox, mass_aspect) ;
 
