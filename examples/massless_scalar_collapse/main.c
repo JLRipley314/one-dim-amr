@@ -404,12 +404,15 @@ void evolve_hyperbolic_pde(amr_grid *grid)
 void compute_diagnostics(amr_grid *grid)
 {
 	set_globals(grid) ;
+
+	double x_lower = bbox[0] ;
 /*--------------------------------------------------------------------------*/
 	if (strcmp(theory,"massless_scalar_GR")==0) {
 		compute_diagnostics_massless_scalar_GR(
 			Nx, excised_jC, 
 			stereographic_L,
 			dt, dx,
+			x_lower,
 			Al_n, Al_nm1, Al_nm2,
 			Ze_n, Ze_nm1, Ze_nm2,
 			P_n, P_nm1, P_nm2,
@@ -425,6 +428,7 @@ void compute_diagnostics(amr_grid *grid)
 			stereographic_L,
 			coupling_gbs,
 			dt, dx,
+			x_lower,
 			Al_n, Al_nm1, Al_nm2,
 			Ze_n, Ze_nm1, Ze_nm2,
 			P_n, P_nm1, P_nm2,
@@ -446,6 +450,7 @@ void compute_diagnostics(amr_grid *grid)
 		Nx, 
 		stereographic_L,
 		dt, dx,
+		x_lower,
 		Al_n, Al_nm1, Al_nm2,
 		Ze_n, Ze_nm1, Ze_nm2,
 		&excised_jC,

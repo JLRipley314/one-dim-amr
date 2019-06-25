@@ -22,11 +22,13 @@ static void set_array_val(int start, int end, double val, double* array)
 static int compute_mass_aspect(
 	int Nx,
 	double s_L, double dx,
+	double x_lower,
 	double* Ze,
 	double* mass_aspect)
 {
 	for (int jC=0; jC<Nx; jC++) {
-		double r_j = stereographic_r(s_L, dx*jC) ;
+		double x_j = x_lower + (dx*jC) ;
+		double r_j = stereographic_r(s_L, x_j) ;
 		mass_aspect[jC] = (r_j/2) * pow(Ze[jC],2) ;
 	}
 	mass_aspect[Nx-1] = mass_aspect[Nx-2] ;
@@ -69,12 +71,13 @@ static int compute_Ricci_scalar(
 	int Nx, int exc_jC, 
 	double s_L,
 	double dt, double dx,
+	double x_lower,
 	double* Al_n, double* Al_nm1, double* Al_nm2,
 	double* Ze_n, double* Ze_nm1, double* Ze_nm2,
 	double* Ricci_scalar)
 {
 	for (int jC=exc_jC+1; jC<Nx-1; jC++) {
-		double x_j = jC * dx ;
+		double x_j = x_lower + (jC * dx) ;
                 double r_j = stereographic_r(s_L, x_j) ; 
 
 		double Al = Al_n[jC] ;
@@ -124,12 +127,13 @@ static int compute_Gauss_Bonnet_scalar(
 	int Nx, int exc_jC, 
 	double s_L,
 	double dt, double dx,
+	double x_lower,
 	double* Al_n, double* Al_nm1, double* Al_nm2,
 	double* Ze_n, double* Ze_nm1, double* Ze_nm2,
 	double* Gauss_Bonnet_scalar)
 {
 	for (int jC=exc_jC+1; jC<Nx-1; jC++) {
-		double x_j = jC * dx ;
+		double x_j = x_lower + (jC * dx) ;
                 double r_j = stereographic_r(s_L, x_j) ; 
 
 		double Al = Al_n[jC] ;
@@ -178,6 +182,7 @@ void compute_diagnostics_general(
 	int Nx, 
 	double s_L,
 	double dt, double dx,
+	double x_lower,
 	double* Al_n, double* Al_nm1, double* Al_nm2,
 	double* Ze_n, double* Ze_nm1, double* Ze_nm2,
 	int* exc_jC, 	
@@ -190,11 +195,13 @@ void compute_diagnostics_general(
 	compute_mass_aspect(
 		Nx,
 		s_L, dx,
+		x_lower,
 		Ze_n,
 		mass_aspect)
 	;
 	compute_null_characteristics(
-		Nx, Al_n, Ze_n,
+		Nx, 
+		Al_n, Ze_n,
 		ingoing_null_characteristic,
 		outgoing_null_characteristic)
 	;
@@ -202,6 +209,7 @@ void compute_diagnostics_general(
 		Nx, *exc_jC, 
 		s_L,
 		dt, dx,
+		x_lower,
 		Al_n, Al_nm1, Al_nm2,
 		Ze_n, Ze_nm1, Ze_nm2,
 		Ricci_scalar)
@@ -210,6 +218,7 @@ void compute_diagnostics_general(
 		Nx, *exc_jC, 
 		s_L,
 		dt, dx,
+		x_lower,
 		Al_n, Al_nm1, Al_nm2,
 		Ze_n, Ze_nm1, Ze_nm2,
 		Gauss_Bonnet_scalar)

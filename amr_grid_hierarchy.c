@@ -358,15 +358,16 @@ void regrid_finer_levels(amr_grid* grid)
 void add_self_similar_initial_grids(
 	amr_grid_hierarchy* gh, int grid_size_ratio, int num_grids) 
 {
-	amr_grid* grid = gh->grids->child ;
+	amr_grid* grid = gh->grids->child ; /* start at grid level=1 */
 	int Nx = grid->Nx ; 
 
 	for (int iC=0; iC<num_grids; iC++) {
-//		amr_add_finer_grid(0, (int)(Nx/grid_size_ratio), grid) ;
-		amr_add_finer_grid((int)(Nx/grid_size_ratio)/4, (int)(Nx/grid_size_ratio), grid) ;
+		amr_add_finer_grid(0, (int)(Nx/grid_size_ratio), grid) ;
+//		amr_add_finer_grid((int)(Nx/grid_size_ratio)/4, (int)(Nx/grid_size_ratio), grid) ;
 		grid = grid->child ;
 		Nx = grid->Nx ;
 	}
+	grid = grid->child ;
 	grid = NULL ;
 	return ; 
 }

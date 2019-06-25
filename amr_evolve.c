@@ -295,8 +295,6 @@ static void set_finer_grid_ode_initial_condition(amr_field* fields, amr_grid* gr
 		if (strcmp(field->pde_type,ODE) == 0) {
 			int index = field->index ;
 			child->grid_funcs[index][0] = grid->grid_funcs[index][child_lower_jC] ;
-			printf("field %s\t", field->name) ;
-			printf("starting ode val %f\n", child->grid_funcs[index][0]) ;
 		}
 	}
 	return ; 
@@ -347,9 +345,11 @@ static void solve_ode_fields(
 		grid->bbox[1] = grid_upper_bbox ;
 		grid->Nx = Nx ;
 	}
-/* solve finer grid */	
-	set_finer_grid_ode_initial_condition(fields, grid, grid->child) ; 
-	solve_ode_fields(fields, grid->child, solve_ode) ;
+/* solve finer grid if we had to reset the boundary condition */	
+	if (child_lower_jC>0) {
+		set_finer_grid_ode_initial_condition(fields, grid, grid->child) ; 
+		solve_ode_fields(fields, grid->child, solve_ode) ;
+	}
 /* solve to the right of the finer grid */	
 	if (child_upper_jC<(Nx-1)) {
 		(grid->excised_jC) = child_upper_jC ;
@@ -437,10 +437,7 @@ static void shift_grids_ode_extrap_levels(amr_grid_hierarchy* gh)
 static void solve_ode_initial_data(
 	amr_grid_hierarchy* gh, void (*solve_ode)(amr_grid*)) 
 {
-	printf("starting solve_ode_initial_data\n") ;
 	solve_ode_fields(gh->fields, gh->grids->child, solve_ode) ;
-	printf("done\n") ;
-	fflush(NULL) ;
 	amr_grid* grid = gh->grids ;
 	amr_set_to_tail(&grid) ;
 	do {
@@ -615,7 +612,7 @@ static void set_initial_data(
 	set_free_initial_data(gh, free_initial_data) ;
 	solve_ode_initial_data(gh, solve_ode) ; 	
 	set_past_t_data_first_order(gh) ;	
-	for (int iC=0; iC<1; iC++) {
+	for (int iC=0; iC<2; iC++) {
 		evolve_grid(
 			gh->fields, 
 			gh->grids,

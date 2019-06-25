@@ -138,7 +138,8 @@ static double compute_iteration_Ze(
 /*---------------------------------------------------------------------------*/
                 Ze_sqrd_jp1 -= res_Ze_sqrd/jac_Ze_sqrd ;
                 Ze[jC+1]  = sqrt(Ze_sqrd_jp1) ;
-                res_infty_norm = weighted_infty_norm(1-x_joh/s_L, res_Ze_sqrd, res_infty_norm) ;
+//                res_infty_norm = weighted_infty_norm(1-x_joh/s_L, res_Ze_sqrd, res_infty_norm) ;
+                res_infty_norm = weighted_infty_norm(1, res_Ze_sqrd, res_infty_norm) ;
         }
         return res_infty_norm ;
 }

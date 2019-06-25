@@ -21,13 +21,14 @@ static void set_array_val(int start, int end, double val, double* array)
 static void compute_SE_LL_components_massless_scalar(
 	int Nx,       double dx,
 	double s_L,   int exc_jC,
+	double x_lower,
 	double* Al_n, double* Ze_n,
 	double* P_n,  double* Q_n,
 	double* SE_LL_TR,
 	double* SE_LL_ThTh)
 {
 	for (int jC=exc_jC; jC<Nx; jC++) {
-		double x_j = dx*jC ;
+		double x_j = x_lower + (dx*jC) ;
 		double r_j = stereographic_r(s_L, x_j) ;
 
 		double Al = Al_n[jC] ;
@@ -48,6 +49,7 @@ static void compute_eom_TR(
 	double dt, double dx,
 	double s_L, double c_gbs,
 	int exc_jC, 
+	double x_lower,
 	double* Al_n, 
 	double* Ze_n, double* Ze_nm1, double* Ze_nm2,
 	double*  P_n, double*  P_nm1, double*  P_nm2,
@@ -56,7 +58,7 @@ static void compute_eom_TR(
 	double* eom_TR)
 {
 	for (int jC=exc_jC+1; jC<Nx-1; jC++) {
-		double x_j = jC * dx ;
+		double x_j = x_lower + (jC * dx) ;
                 double r_j = stereographic_r(s_L, x_j) ; 
 
 		double Al = Al_n[jC] ;
@@ -85,6 +87,7 @@ static void compute_eom_ThTh(
 	double dt, double dx,
 	double s_L, double c_gbs,
 	int exc_jC, 
+	double x_lower,
 	double* Al_n, double* Al_nm1, double* Al_nm2,
 	double* Ze_n, double* Ze_nm1, double* Ze_nm2,
 	double*  P_n, double*  P_nm1, double*  P_nm2,
@@ -93,7 +96,7 @@ static void compute_eom_ThTh(
 	double* eom_ThTh)
 {
 	for (int jC=exc_jC+1; jC<Nx-1; jC++) {
-		double x_j = jC * dx ;
+		double x_j = x_lower + (jC * dx) ;
                 double r_j = stereographic_r(s_L, x_j) ; 
 
 		double Al = Al_n[jC] ;
@@ -141,6 +144,7 @@ static void compute_eom_scalar(
 	double dt, double dx,
 	double s_L, double c_gbs,
 	int exc_jC, 
+	double x_lower,
 	double* Al_n, 
 	double* Ze_n,
 	double* P_n, double* P_nm1, double* P_nm2,
@@ -150,7 +154,7 @@ static void compute_eom_scalar(
 	double* eom_scalar)
 {
 	for (int jC=exc_jC+1; jC<Nx-1; jC++) {
-		double x_j = jC * dx ;
+		double x_j = x_lower + (jC * dx) ;
                 double r_j = stereographic_r(s_L, x_j) ; 
 
 		double Al = Al_n[jC] ;
@@ -252,6 +256,7 @@ static void computeArray_center_EdGB_characteristics(
 	double dt, double dx,
 	double s_L, double c_gbs,
 	int exc_jC, 
+	double x_lower,
 	double* Al_n, 
 	double* Ze_n, 
 	double*  P_n, double* P_nm1, double* P_nm2, 
@@ -264,7 +269,7 @@ static void computeArray_center_EdGB_characteristics(
 	double phiphi_Der_f = 0. ; 
 
 	for (int jC=exc_jC+1; jC<Nx-1; jC++) {
-		double x_j = dx * jC ;
+		double x_j = x_lower + (dx * jC) ;
 
 		double r_j = stereographic_r( s_L, x_j) ;
 		double dr  = stereographic_dr(s_L, x_j, dx) ;
@@ -339,6 +344,7 @@ void compute_diagnostics_massless_scalar_EdGB(
 	int Nx, int exc_jC, 
 	double s_L,double c_gbs,
 	double dt, double dx,
+	double x_lower,
 	double* Al_n, double* Al_nm1, double* Al_nm2,
 	double* Ze_n, double* Ze_nm1, double* Ze_nm2,
 	double* P_n, double* P_nm1, double* P_nm2,
@@ -355,6 +361,7 @@ void compute_diagnostics_massless_scalar_EdGB(
 	compute_SE_LL_components_massless_scalar(
 		Nx, dx,
 		s_L, exc_jC,
+		x_lower,
 		Al_n, Ze_n,
 		P_n,  Q_n,
 		SE_LL_TR,
@@ -365,6 +372,7 @@ void compute_diagnostics_massless_scalar_EdGB(
 		dt, dx,
 		s_L, c_gbs,
 		exc_jC, 
+		x_lower,
 		Al_n, 
 		Ze_n, Ze_nm1, Ze_nm2,
 		 P_n,  P_nm1,  P_nm2,
@@ -377,6 +385,7 @@ void compute_diagnostics_massless_scalar_EdGB(
 		dt, dx,
 		s_L, c_gbs,
 		exc_jC, 
+		x_lower,
 		Al_n, Al_nm1, Al_nm2,
 		Ze_n, Ze_nm1, Ze_nm2,
 		 P_n,  P_nm1,  P_nm2,
@@ -389,6 +398,7 @@ void compute_diagnostics_massless_scalar_EdGB(
 		dt, dx,
 		s_L, c_gbs,
 		exc_jC, 
+		x_lower,
 		Al_n, 
 		Ze_n,
 		P_n, P_nm1, P_nm2,
@@ -403,6 +413,7 @@ void compute_diagnostics_massless_scalar_EdGB(
 		dt, dx,
 		s_L, c_gbs,
 		exc_jC, 
+		x_lower,
 		Al_n,
 		Ze_n, 
 		P_n,   P_nm1,  P_nm2,

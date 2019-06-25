@@ -6,6 +6,7 @@ void compute_diagnostics_general(
 	int Nx,  
 	double s_L,
 	double dt, double dx,
+	double x_lower,
 	double* Al_n, double* Al_nm1, double* Al_nm2,
 	double* Ze_n, double* Ze_nm1, double* Ze_nm2,
 	int* exc_jC,	
