@@ -115,6 +115,10 @@ void Kreiss_Oliger_filter(
 	double* field)
 ;
 /*==========================================================================*/
+void Kreiss_Oliger_left_inner_grid(
+	double* field)
+;
+/*==========================================================================*/
 void Kreiss_Oliger_filter_origin(
 	double *field,
 	char *parity)

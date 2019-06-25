@@ -53,7 +53,7 @@ run_data = {
 ###	cfl_num: Courant Friedrichs Lewy number (for hyperbolics)
 ###
 	"Nx"		: 2**8+1,
-	"Nt"		: 2**9+1,
+	"Nt"		: 2**8+1,
 	"t_step_save"	: 2**0,
 	"cfl_num"	: 0.25,  
 	"err_tolerance"	: 1.0e-10, 
@@ -62,9 +62,9 @@ run_data = {
 ###
 ###	if initial_data is r4Exp
 ###
-	"amp"		: 0.0000002,
+	"amp"		: 0.0000001,
 	"width"		: 4.0,
-	"center"	: 25.0,
+	"center"	: 30.0,
 	"direction"	: "stationary",#"ingoing",#"outgoing",#
 ###
 ###	if initial_data is initial_black_hole

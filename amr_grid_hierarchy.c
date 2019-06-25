@@ -196,8 +196,11 @@ void amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent)
 
 	new_grid->Nx = REFINEMENT*(right_coord-left_coord) + 1 ;
 
-	new_grid->excised_jC = REFINEMENT*(parent->excised_jC-left_coord) ;
-
+	if ((parent->excised_jC)>left_coord) {
+		new_grid->excised_jC = REFINEMENT*((parent->excised_jC)-left_coord) ;
+	} else {
+		new_grid->excised_jC = 0 ;
+	}
 	new_grid->bbox[0] = parent->bbox[0] + (left_coord*(parent->dx)) ;
 	new_grid->bbox[1] = parent->bbox[0] + (right_coord*(parent->dx)) ;
 	
@@ -359,7 +362,8 @@ void add_self_similar_initial_grids(
 	int Nx = grid->Nx ; 
 
 	for (int iC=0; iC<num_grids; iC++) {
-		amr_add_finer_grid(0, (int)(Nx/grid_size_ratio), grid) ;
+//		amr_add_finer_grid(0, (int)(Nx/grid_size_ratio), grid) ;
+		amr_add_finer_grid((int)(Nx/grid_size_ratio)/4, (int)(Nx/grid_size_ratio), grid) ;
 		grid = grid->child ;
 		Nx = grid->Nx ;
 	}

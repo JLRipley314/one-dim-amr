@@ -79,6 +79,21 @@ void Kreiss_Oliger_filter(
 	return ;
 }
 /*==========================================================================*/
+void Kreiss_Oliger_left_inner_grid(
+	double* field)
+{
+	double epsilon_ko = 1.0 ;
+	field[1] += (epsilon_ko/16.) * (
+			field[0] 
+		+ 	(-4.*field[1]) 
+		+ 	(6.*field[2]) 
+		+ 	(-4.*field[3]) 
+		+ 	field[4] 
+	) ;
+
+	return ;
+}
+/*==========================================================================*/
 void Kreiss_Oliger_filter_origin(
 	double *field,
 	char *parity)

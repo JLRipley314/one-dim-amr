@@ -327,7 +327,7 @@ static void solve_ode_fields(
 	int child_lower_jC = grid->child->perim_coords[0] ;
 	int child_upper_jC = grid->child->perim_coords[1] ;
 	int Nx = grid->Nx ;
-
+	
 	if (child_upper_jC<excised_jC) {
 		solve_ode(grid) ;
 	}
@@ -654,6 +654,7 @@ void amr_main(
 		solve_ode)
 	;
 	compute_all_grid_diagnostics(gh, compute_diagnostics) ;
+	save_all_grids(gh, save_to_file) ;
 	save_all_grids(gh, save_to_file) ;
 
 	for (int tC=1; tC<(gh->Nt); tC++) {
