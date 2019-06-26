@@ -40,7 +40,7 @@ double  *Q_n,  *Q_nm1,  *Q_nm2 ;
 /*---------------------------------------------------------------------------*/
 /* diagnostics */
 /*---------------------------------------------------------------------------*/
-double *phi_n, *phi_nm1 ;
+double *phi_n, *phi_nm1, *phi_nm2 ;
 double *mass_aspect ;
 double *ingoing_null_characteristic, *outgoing_null_characteristic ;
 double *ingoing_scalar_characteristic, *outgoing_scalar_characteristic ;
@@ -79,7 +79,7 @@ int 	Al_n_index, Al_nm1_index, Al_nm2_index, Al_extr_m1_index, Al_extr_m2_index,
 	P_n_index, P_nm1_index, P_nm2_index,
 	Q_n_index, Q_nm1_index, Q_nm2_index,
 
-	phi_n_index, phi_nm1_index,
+	phi_n_index, phi_nm1_index, phi_nm2_index,
 
 	mass_aspect_index,
 	ingoing_null_characteristic_index, outgoing_null_characteristic_index,
@@ -134,7 +134,7 @@ amr_field *set_fields(void)
 	amr_add_field(fields, "P", "hyperbolic", time_levels, 0) ;
 	amr_add_field(fields, "Q", "hyperbolic", time_levels, 0) ;
 
-	amr_add_field(fields, "phi", "diagnostic", 2, 0) ;
+	amr_add_field(fields, "phi", "diagnostic", time_levels, 0) ;
 
 	amr_add_field(fields, "mass_aspect",  "diagnostic", 1, 0) ;
 
@@ -177,6 +177,7 @@ void find_field_indices(amr_field* fields)
 
 	phi_n_index   = amr_return_field_index(fields, "phi") ;
 	phi_nm1_index = phi_n_index + 1 ;
+	phi_nm2_index = phi_n_index + 2 ;
 
 	mass_aspect_index  = amr_return_field_index(fields, "mass_aspect")  ;
 
@@ -196,7 +197,7 @@ void find_field_indices(amr_field* fields)
 	assert(Ze_n_index == Al_extr_m2_index+1) ;
 	assert(P_n_index == Ze_extr_m2_index+1) ;
 	assert(Q_n_index == P_nm2_index+1) ;
-	assert(mass_aspect_index == phi_nm1_index+1) ;
+	assert(mass_aspect_index == phi_nm2_index+1) ;
 
 	return ;
 }
@@ -228,6 +229,7 @@ void set_globals(amr_grid *grid)
 
 	phi_n   = grid->grid_funcs[phi_n_index  ] ;
 	phi_nm1 = grid->grid_funcs[phi_nm1_index] ;
+	phi_nm2 = grid->grid_funcs[phi_nm2_index] ;
 
 	mass_aspect = grid->grid_funcs[mass_aspect_index] ;
 

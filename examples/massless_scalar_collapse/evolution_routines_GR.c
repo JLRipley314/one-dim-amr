@@ -470,8 +470,7 @@ void advance_tStep_phi(
 		double P = (P_n[jC] + P_nm1[jC]) / 2 ;
 		double Q = (Q_n[jC] + Q_nm1[jC]) / 2 ;
 
-		phi_n[jC] += dt*Al*(P + Ze*Q) ;
-		phi_nm1[jC] = phi_n[jC] ;
+		phi_n[jC] = phi_nm1[jC] + dt*Al*(P + Ze*Q) ;
 	}
 	return ;
 }

@@ -64,8 +64,8 @@ run_data = {
 ###
 	"amp"		: 0.00001,
 	"width"		: 4.0,
-	"center"	: 10.0,
-	"direction"	: "stationary",#"ingoing",#"outgoing",#
+	"center"	: 30.0,
+	"direction"	: "ingoing",#"stationary",#"outgoing",#
 ###
 ###	if initial_data is initial_black_hole
 ###

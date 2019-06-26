@@ -49,14 +49,14 @@ void initial_data_Gaussian(
 		x = (jC * dx) + x_lower ;
 		r = stereographic_r(s_L, x) ;
 
-		double gaussian = amp * exp(-pow((r-center)/width,2)) ;
+		double gaussian = pow(width,-4) * amp * exp(-pow((r-center)/width,2)) ;
 
 		phi_n[jC] = pow(r,4) * gaussian ; 
 		phi_nm1[jC] = phi_n[jC] ; 
 
 		Q[jC] = gaussian * (
-			(-(r-center)/pow(width,2)) * pow(r,4) 
-		+	4*pow(r,3)
+		-	2 * pow(r,4) * ((r-center)/pow(width,2))  
+		+	4 * pow(r,3)
 		) ;
 		if (strcmp(direction,"ingoing")==0) {
 			P[jC] = + Q[jC] ;
