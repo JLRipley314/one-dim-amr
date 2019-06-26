@@ -31,11 +31,11 @@ run_data = {
 
 	"param_search"	: "no",#"yes",#
 
-	"theory"	: "massless_scalar_GR",#"EdGB",#
+	"theory"	: "EdGB",#"massless_scalar_GR",#
 ###
 ###	EdGB: coupling for Gauss-Bonnet scalar (gbs)
 ###
-	"coupling_gbs"	: 0.0,
+	"coupling_gbs"	: 1.0,
 
 	"stereographic_L" : 100,
 	
@@ -61,7 +61,7 @@ run_data = {
 ###
 ###	if initial_data is r4Exp
 ###
-	"amp"		: 0.02,
+	"amp"		: 0.002,
 	"width"		: 4.0,
 	"center"	: 10.0,
 	"direction"	: "stationary",#"ingoing",#"outgoing",#
