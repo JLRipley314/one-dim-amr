@@ -42,6 +42,8 @@ typedef struct amr_field
 	int time_levels; /* number of time-levels (in AMR hierarchy), from 1 .. num_time_level */
 	int extrap_levels; /* for extrapolation (for ode/elliptic equations) */
 	char* pde_type;      /* either hyperbolic or elliptic */
+	int flagged_jC[2] ; /* upper (0) and lower (1) boundary of flagged region for adding finer grid */
+
 } amr_field 
 ;
 /*============================================================================*/

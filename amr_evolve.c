@@ -448,6 +448,56 @@ static void solve_ode_initial_data(
 	return ;
 }
 /*==========================================================================*/
+static void flag_regridding_points(amr_field *fields, amr_grid *parent, amr_grid *grid)
+{
+	double err_lim = 1e-4 ;
+	printf("level %d\n", grid->level) ;
+	for (amr_field *field=fields; field!=NULL; field=(field->next)) {
+		if (strcmp(field->pde_type,HYPERBOLIC)!=0) {
+			continue ;
+		}
+		int field_index = field->index ;
+		int lower_jC = grid->perim_coords[0] ;
+		int upper_jC = grid->perim_coords[1] ;
+		int lower_flagged_jC = 0 ;
+		int upper_flagged_jC = 0 ;
+		for (int jC=lower_jC; jC<upper_jC; jC++) {
+			int grid_index = REFINEMENT*(jC-lower_jC) ; 
+			double parent_val = parent->grid_funcs[field_index][jC] ;
+			double grid_val = grid->grid_funcs[field_index][grid_index] ;
+			double trunc_err = fabs(parent_val-grid_val) ;
+			if (trunc_err > err_lim) {
+				if (lower_flagged_jC==0) {
+					lower_flagged_jC = grid_index ;
+				} else {
+					upper_flagged_jC = grid_index ;
+				} 
+			}
+		}
+		field->flagged_jC[0] = lower_flagged_jC ;
+		field->flagged_jC[1] = upper_flagged_jC ;
+		printf("name %s\n", field->name) ;
+		printf("lower\t%d\tupper\t%d\n", lower_flagged_jC, upper_flagged_jC) ;
+	}
+	return ;
+}
+/*==========================================================================*/
+static void regrid_all_levels(amr_grid *grid)
+{
+/*
+	from finest_grid to grid
+		if finer_grid exists then
+			inject finer_grid to grid
+		for each grid_function
+			compute maximum and minimum flagged grid point
+		if flagged region not empty then
+			if finer grid esists then
+				destroy finer grid
+			make finer grid in flagged region
+*/	
+	return ;
+}
+/*==========================================================================*/
 /* Recursive routine to evolve amr (or fmr if no regridding) hierarchy
  * 
  * Hyperbolics solved as in Berger&Oliger: coarse step onwards to finer
@@ -498,9 +548,7 @@ static void evolve_grid(
 		}
 	}
 	if ((grid->child)!=NULL) {
-		/* 
-			TO DO: compute truncation error 
-		*/
+		flag_regridding_points(  fields, grid, grid->child) ;
 		inject_overlaping_fields(fields, grid, grid->child) ;	
 	}
 	set_grid_ode_extrap_levels(fields, grid) ;
