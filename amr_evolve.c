@@ -612,11 +612,11 @@ static void set_initial_data(
 	set_free_initial_data(gh, free_initial_data) ;
 	solve_ode_initial_data(gh, solve_ode) ; 	
 	set_past_t_data_first_order(gh) ;	
-	for (int iC=0; iC<2; iC++) {
+	for (int iC=0; iC<1; iC++) {
 		evolve_grid(
 			gh->fields, 
 			gh->grids,
-			1,
+			2,
 			evolve_hyperbolic_pde,
 			solve_ode) 
 		;
@@ -624,7 +624,7 @@ static void set_initial_data(
 		evolve_grid(
 			gh->fields, 
 			gh->grids,
-			1,
+			2,
 			evolve_hyperbolic_pde,
 			solve_ode) 
 		;

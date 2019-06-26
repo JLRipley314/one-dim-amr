@@ -166,6 +166,8 @@ static void compute_eom_scalar(
 		+	2*(Q/r_j+P*(Ze/r_j))
 		;
 		eom_scalar[jC] *= r_j ; 
+
+		eom_scalar[jC] = dt ;
 	}
 	return ;
 }

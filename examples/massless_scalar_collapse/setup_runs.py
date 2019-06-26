@@ -25,8 +25,7 @@ assert len(sys.argv) == 2, (
 	
 run_type = sys.argv[1]
 ##############################################################################
-### Initialize run data 
-##############################################################################
+### Initialize run data ##############################################################################
 run_data = {
 	"computer"	: "jlr_laptop",#"Feynman_cluster",#
 
@@ -53,7 +52,7 @@ run_data = {
 ###	cfl_num: Courant Friedrichs Lewy number (for hyperbolics)
 ###
 	"Nx"		: 2**8+1,
-	"Nt"		: 2**10+1,
+	"Nt"		: 2**9+1,
 	"t_step_save"	: 2**0,
 	"cfl_num"	: 0.25,  
 	"err_tolerance"	: 1.0e-10, 
@@ -62,10 +61,10 @@ run_data = {
 ###
 ###	if initial_data is r4Exp
 ###
-	"amp"		: 0.00001,
+	"amp"		: 0.000001,
 	"width"		: 4.0,
-	"center"	: 30.0,
-	"direction"	: "ingoing",#"stationary",#"outgoing",#
+	"center"	: 40.0,
+	"direction"	: "stationary",#"ingoing",#"outgoing",#
 ###
 ###	if initial_data is initial_black_hole
 ###
