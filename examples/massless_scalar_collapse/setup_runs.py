@@ -61,9 +61,9 @@ run_data = {
 ###
 ###	if initial_data is r4Exp
 ###
-	"amp"		: 0.000001,
+	"amp"		: 0.02,
 	"width"		: 4.0,
-	"center"	: 40.0,
+	"center"	: 10.0,
 	"direction"	: "stationary",#"ingoing",#"outgoing",#
 ###
 ###	if initial_data is initial_black_hole
@@ -128,7 +128,7 @@ if run_type == "basic_run":
 ##############################################################################
 elif (run_type == "convergence_test"): 
 	sim_number = int(input("Launch how many sims with different resolutions? (enter integer) "))
-	sleep_time = 5  
+	sleep_time = 15  
 	convergence_test(sleep_time, run_data, sim_number)
 ##############################################################################
 ### specify the param and range to search for edge of black hole formation
