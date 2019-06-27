@@ -126,9 +126,8 @@ static double compute_iteration_Ze(
 
         for (int jC=start_jC; jC<size-1; jC++) {
                 double x_joh = x_lower + ((jC+1) + jC) * dx / 2 ; 
-
-                double x_jp1 = (jC+1) * dx ;
-                double x_j   = (jC+0) * dx ;
+                double x_jp1 = x_lower + (jC+1) * dx ;
+                double x_j   = x_lower + (jC+0) * dx ;
 
                 double r_joh = stereographic_r(s_L, x_joh) ;
                 double r_jp1 = stereographic_r(s_L, x_jp1) ;
