@@ -445,7 +445,6 @@ void advance_tStep_PQ_massless_scalar_GR(
 			 P_n, 	 P_nm1,  Q_n,  Q_nm1)
 		;
 		iters += 1 ;
-		if (iters>2) printf("iters %d\tres %.2e\n", iters, res) ;
 	} while (
 	   (iters<3)
 	|| (res>err_tolerance)

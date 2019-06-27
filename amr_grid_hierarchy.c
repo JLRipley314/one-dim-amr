@@ -362,8 +362,8 @@ void add_self_similar_initial_grids(
 	int Nx = grid->Nx ; 
 
 	for (int iC=0; iC<num_grids; iC++) {
-//		amr_add_finer_grid(0, 1.5*(int)(Nx/grid_size_ratio), grid) ;
-//		amr_add_finer_grid((int)(Nx/grid_size_ratio)/10, (int)(Nx/grid_size_ratio), grid) ;
+//		amr_add_finer_grid(0, (int)(Nx/grid_size_ratio), grid) ;
+		amr_add_finer_grid((int)(Nx/grid_size_ratio)/10, (int)(Nx/grid_size_ratio), grid) ;
 		grid = grid->child ;
 		Nx = grid->Nx ;
 	}

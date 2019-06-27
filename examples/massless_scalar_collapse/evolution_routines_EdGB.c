@@ -7,7 +7,7 @@
 #include "evolution_routines_GR.h"
 #include "stencils.h"
 
-static const double machine_epsilon = 1e-14 ;
+static const double machine_epsilon = 1e-15 ;
 
 /*==========================================================================*/
 /* 	Notations:
@@ -310,7 +310,7 @@ void solve_Al_Ze_EdGB(
 /* to avoid problems with r=infty when x=s_L */	
 	int size = Nx ;
 	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; 
-
+	int iters = 0 ;
 	do {
 		res = 0 ;
 		if ((excision_on==true)
@@ -347,7 +347,11 @@ void solve_Al_Ze_EdGB(
 			Al_n[Nx-1] = Al_n[Nx-2] ;
 			Ze_n[Nx-1] = 0 ;
 		}
-	} while (res>err_tolerance) ;
+		iters += 1 ;
+	} while (
+	   (iters<3)
+	|| (res>err_tolerance)
+	) ;
 	return ;
 }
 /*==========================================================================*/
@@ -640,7 +644,7 @@ void advance_tStep_PQ_massless_scalar_EdGB(
 /* to avoid problems with r=infty when x=s_L */
 	int size = Nx ;
 	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ;	
-
+	int iters = 0 ;
 	do {
 		res = compute_iteration_Crank_Nicolson_PQ(
 			s_L,	c_gbs,
@@ -653,8 +657,11 @@ void advance_tStep_PQ_massless_scalar_EdGB(
 			Al_n, 	Al_nm1, Ze_n, Ze_nm1,
 			 P_n, 	 P_nm1,  Q_n,  Q_nm1)
 		;
-	} while (res>err_tolerance) ;
-
+		iters += 1 ;
+	} while (
+	   (iters<3)
+	|| (res>err_tolerance) 
+	);
 	Kreiss_Oliger_filter(Nx, exc_jC, P_n) ;
 	Kreiss_Oliger_filter(Nx, exc_jC, Q_n) ;
 
