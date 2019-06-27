@@ -16,7 +16,7 @@
 
 #define AMR_MAX_LEVELS 8 /* maximum number of grid levels */
 #define REFINEMENT 2 /* spatial and temporal refinement scale */
-#define REGRID 8 /* regrid every REGRID time steps */
+#define REGRID 32 /* regrid every REGRID time steps */
 
 #define TRUNC_ERR_TOLERANCE ((double)(1e-5)) /* when above this flag for finer grid */
 

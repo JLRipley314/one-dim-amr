@@ -450,7 +450,7 @@ static void solve_ode_initial_data(
 /*==========================================================================*/
 static void flag_regridding_points(amr_field *fields, amr_grid *parent, amr_grid *grid)
 {
-	double err_lim = 1e-4 ;
+	double regrid_err_lim = 1e-4 ;
 	for (amr_field *field=fields; field!=NULL; field=(field->next)) {
 		if (strcmp(field->pde_type,HYPERBOLIC)!=0) {
 			continue ;
@@ -465,7 +465,7 @@ static void flag_regridding_points(amr_field *fields, amr_grid *parent, amr_grid
 			double parent_val = parent->grid_funcs[field_index][jC] ;
 			double grid_val = grid->grid_funcs[field_index][grid_index] ;
 			double trunc_err = fabs(parent_val-grid_val) ;
-			if (trunc_err > err_lim) {
+			if (trunc_err > regrid_err_lim) {
 				if (lower_flagged_jC==0) {
 					lower_flagged_jC = grid_index ;
 					upper_flagged_jC = grid_index ;
