@@ -451,7 +451,6 @@ static void solve_ode_initial_data(
 static void flag_regridding_points(amr_field *fields, amr_grid *parent, amr_grid *grid)
 {
 	double err_lim = 1e-4 ;
-	printf("level %d\n", grid->level) ;
 	for (amr_field *field=fields; field!=NULL; field=(field->next)) {
 		if (strcmp(field->pde_type,HYPERBOLIC)!=0) {
 			continue ;
@@ -469,6 +468,7 @@ static void flag_regridding_points(amr_field *fields, amr_grid *parent, amr_grid
 			if (trunc_err > err_lim) {
 				if (lower_flagged_jC==0) {
 					lower_flagged_jC = grid_index ;
+					upper_flagged_jC = grid_index ;
 				} else {
 					upper_flagged_jC = grid_index ;
 				} 
@@ -476,8 +476,6 @@ static void flag_regridding_points(amr_field *fields, amr_grid *parent, amr_grid
 		}
 		field->flagged_jC[0] = lower_flagged_jC ;
 		field->flagged_jC[1] = upper_flagged_jC ;
-		printf("name %s\n", field->name) ;
-		printf("lower\t%d\tupper\t%d\n", lower_flagged_jC, upper_flagged_jC) ;
 	}
 	return ;
 }

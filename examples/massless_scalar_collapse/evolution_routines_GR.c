@@ -7,7 +7,7 @@
 #include "evolution_routines_GR.h"
 #include "stencils.h"
 
-static const double machine_epsilon = 1e-14 ;
+static const double machine_epsilon = 1e-15 ;
 
 /*==========================================================================*/
 /* 	Notations:
@@ -138,8 +138,7 @@ static double compute_iteration_Ze(
 /*---------------------------------------------------------------------------*/
                 Ze_sqrd_jp1 -= res_Ze_sqrd/jac_Ze_sqrd ;
                 Ze[jC+1]  = sqrt(Ze_sqrd_jp1) ;
-//                res_infty_norm = weighted_infty_norm(1-x_joh/s_L, res_Ze_sqrd, res_infty_norm) ;
-                res_infty_norm = weighted_infty_norm(1, res_Ze_sqrd, res_infty_norm) ;
+		res_infty_norm = weighted_infty_norm(1-x_joh/s_L, res_Ze_sqrd, res_infty_norm) ;
         }
         return res_infty_norm ;
 }
@@ -211,6 +210,7 @@ void solve_Al_Ze_GR(
 /* to avoid problems with r=infty when x=s_L */	
 	int size = Nx ;
 	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; 
+	int iters = 0 ;
 	do {
 		res = 0 ;
 		if ((excision_on==true)
@@ -243,7 +243,11 @@ void solve_Al_Ze_GR(
 			Al_n, 	Ze_n, 
 			P_n, 	Q_n)
 		;
-	} while (res>err_tolerance) ;
+		iters += 1 ;
+	} while (
+	   (iters<3)
+	|| (res>err_tolerance) 
+	) ;
 	if (size==(Nx-1)) {
 		Al_n[Nx-1] = Al_n[Nx-2] ;
 		Ze_n[Nx-1] = Ze_n[Nx-2] ;
@@ -427,6 +431,7 @@ void advance_tStep_PQ_massless_scalar_GR(
 	double x_lower = bbox[0] ;
 	int size = Nx ;
 	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ;
+	int iters = 0 ;
 	do {
 		res = compute_iteration_Crank_Nicolson_PQ(
 			s_L,
@@ -439,7 +444,12 @@ void advance_tStep_PQ_massless_scalar_GR(
 			Al_n, 	Al_nm1, Ze_n, Ze_nm1,
 			 P_n, 	 P_nm1,  Q_n,  Q_nm1)
 		;
-	} while (res>err_tolerance) ;
+		iters += 1 ;
+		if (iters>2) printf("iters %d\tres %.2e\n", iters, res) ;
+	} while (
+	   (iters<3)
+	|| (res>err_tolerance)
+	) ;
 
 	Kreiss_Oliger_filter(Nx, exc_jC, P_n) ;
 	Kreiss_Oliger_filter(Nx, exc_jC, Q_n) ;
