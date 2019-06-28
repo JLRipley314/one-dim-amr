@@ -307,49 +307,150 @@ amr_grid_hierarchy* amr_init_grid_hierarchy(
 	
 	return gh ;
 }
-/*============================================================================*/
-int amr_compute_truncation_error(int field_index, amr_grid* parent, amr_grid* grid) 
+/*==========================================================================*/
+/* restriction along shared grid points */
+/*==========================================================================*/
+static void inject_grid_func(
+	int Nx, int perim_coord_left, double *gf_parent, double *gf)
 {
-	int lower_jC = grid->perim_coords[0] ;
-
-	int trunc_lower_jC = 0 ;
-	int trunc_upper_jC = 0 ;
-
-	double trunc_err = 0 ;
-
-	double* field = grid->grid_funcs[field_index] ;
-	double* parent_field = parent->grid_funcs[field_index] ;
-
-	for (int jC=0; jC<(grid->Nx); jC++) {
-		if (jC%REFINEMENT==0) { 
-			trunc_err = fabs(field[jC]-parent_field[lower_jC+(jC/REFINEMENT)]) ;
-		}
-		if (trunc_err>TRUNC_ERR_TOLERANCE) {
-			if (trunc_lower_jC==0) {
-				trunc_lower_jC = jC ;
-			} else {
-				trunc_upper_jC = jC ;
-			}
+	for (int iC=0; iC<Nx; iC++) {
+		if (iC%REFINEMENT==0) {
+			gf_parent[perim_coord_left+(iC/REFINEMENT)] = gf[iC] ;
 		}
 	}
-	grid->new_child_coords[0] = trunc_lower_jC ;
-	grid->new_child_coords[1] = trunc_upper_jC ;
-
-	field=NULL ;
-	parent_field=NULL ;
-	return 0 ;
+	return ;
 }
-/*============================================================================*/
-void regrid_finer_levels(amr_grid* grid)
+/*==========================================================================*/
+/* injecting to parent grid */
+/*==========================================================================*/
+void inject_overlaping_fields(
+		amr_field *fields, amr_grid *grid, amr_grid *parent)
 {
-	amr_grid* tail = grid ;
-	amr_set_to_tail(&tail) ;
+	int index = 0 ;
+	for (amr_field *field=fields; field!=NULL; field=field->next) {
+		index = field->index ;
+		inject_grid_func(
+			grid->Nx, 
+			grid->perim_coords[0], 
+			parent->grid_funcs[index],
+			grid->grid_funcs[index]
+		) ;
+	}
+	return ;
+}
+/*==========================================================================*/
+/* flagging all hyperbolic and ode fields */
+/*==========================================================================*/
+static void flag_field_regridding_coords(amr_field *fields, amr_grid *parent, amr_grid *grid)
+{
+	double regrid_err_lim = (1e-6)*pow(grid->dt,2) ;
+	for (amr_field *field=fields; field!=NULL; field=(field->next)) {
+		if (strcmp(field->pde_type,HYPERBOLIC)!=0) {
+			field->flagged_coords[0] = (grid->Nx)-1 ;
+			field->flagged_coords[1] = 0 ;
+			continue ;
+		}
+		int field_index = field->index ;
+		int lower_jC = grid->perim_coords[0] ;
+		int upper_jC = grid->perim_coords[1] ;
+		int lower_flagged_coords = (-1) ;
+		int upper_flagged_coords = (-1) ;
+		for (int jC=lower_jC; jC<upper_jC; jC++) {
+			double parent_val = parent->grid_funcs[field_index][jC] ;
 
-	int field_index = 0 ;
+			int grid_index = REFINEMENT*(jC-lower_jC) ; 
+			double grid_val = grid->grid_funcs[field_index][grid_index] ;
 
-	for (amr_grid* iter=tail; iter!=grid->parent; iter=iter->parent)  {
-		amr_compute_truncation_error(field_index, iter->parent, iter) ; 	
-	}	
+			double trunc_err = fabs(parent_val-grid_val) ;
+
+			if (trunc_err > regrid_err_lim) {
+				if (lower_flagged_coords==(-1)) {
+					lower_flagged_coords = grid_index ;
+					upper_flagged_coords = grid_index ;
+				} else {
+					upper_flagged_coords = grid_index ;
+				} 
+			}
+		}
+		field->flagged_coords[0] = lower_flagged_coords ;
+		field->flagged_coords[1] = upper_flagged_coords ;
+		printf("field %s\t", field->name) ;
+		printf("lower %d\tupper %d\n", field->flagged_coords[0], field->flagged_coords[1]) ;
+	}
+	return ;
+}
+/*==========================================================================*/
+static inline double max_double(double val_1, double val_2) 
+{
+	return (val_1>val_2) ? val_1 : val_2 ;
+}
+static inline double min_double(double val_1, double val_2) 
+{
+	return (val_1<val_2) ? val_1 : val_2 ;
+}
+/*==========================================================================*/
+static void determine_grid_coords(
+	amr_field *fields, amr_grid *grid)
+{
+/* buffer coord space large enough so well outside domain of communication for regrid */
+	int lower_finer_grid_coord = (grid->Nx)-1 ; 
+	int upper_finer_grid_coord = 0 ; 
+
+	for (amr_field *field=fields; field!=NULL; field=(field->next)) {
+		int lower_coord = field->flagged_coords[0] ;
+		int upper_coord = field->flagged_coords[1] ;
+		if (lower_coord!=(-1) && upper_coord!=(-1)) {
+			lower_finer_grid_coord = min_double(lower_coord,lower_finer_grid_coord) ;
+			upper_finer_grid_coord = max_double(upper_coord,upper_finer_grid_coord) ;
+		}
+	}
+	if ((grid->child)!=NULL) {
+		int buffer_coord = REGRID ;
+		int lower_child_flagged_coord = 
+			grid->child->perim_coords[0] 
+		+ 	(int)(((grid->child->flagged_coords[0])-buffer_coord)/REFINEMENT) 	
+		;
+		int upper_child_flagged_coord = 
+			grid->child->perim_coords[0] 
+		+ 	(int)(((grid->child->flagged_coords[1])+buffer_coord)/REFINEMENT) 
+		;
+		assert(lower_child_flagged_coord>=0) ;
+		assert(upper_child_flagged_coord<=(grid->Nx)-1) ;
+
+		lower_finer_grid_coord = min_double(lower_child_flagged_coord,lower_finer_grid_coord) ;
+		upper_finer_grid_coord = min_double(upper_child_flagged_coord,upper_finer_grid_coord) ;
+	}
+	grid->flagged_coords[0] = lower_finer_grid_coord ;
+	grid->flagged_coords[1] = upper_finer_grid_coord ;
+
+	return ;
+}
+/*==========================================================================*/
+void regrid_all_finer_levels(amr_field *fields, amr_grid *base_grid)
+{
+	amr_grid *grid = base_grid ;
+	amr_set_to_tail(&grid) ;
+	while ((grid->level)>=(base_grid->level)) {
+		if ((grid->child)!=NULL) {
+			inject_overlaping_fields(fields, grid->child, grid) ;
+		}
+		flag_field_regridding_coords(fields, grid->parent, grid) ;
+		determine_grid_coords(fields, grid) ;
+		printf("level %d\n", grid->level) ;
+		printf("lower %d\tupper %d\n", grid->flagged_coords[0], grid->flagged_coords[1]) ;
+		fflush(NULL) ;
+
+		grid = grid->parent ;
+	} 
+/*
+		for each grid_function
+			compute maximum and minimum flagged grid point
+		if flagged region not empty then
+			if finer grid esists then
+				destroy finer grid
+			make finer grid in flagged region
+*/	
+	grid = NULL ;
 	return ;
 }
 /*============================================================================*/

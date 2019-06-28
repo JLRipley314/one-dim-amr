@@ -3,6 +3,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdbool.h>
+#include <assert.h>
 
 #include "amr_grid_hierarchy.h"
 #include "amr_evolve.h"
@@ -95,37 +96,6 @@ static void shift_grids_one_time_level(amr_grid_hierarchy *gh)
 				trunc_err_flags[1] = iC ;
 			}
 		}
-	}
-	return ;
-}
-/*==========================================================================*/
-/* restriction along shared grid points */
-/*==========================================================================*/
-static void inject_grid_func(
-	int Nx, int perim_coord_left, double *gf_parent, double *gf)
-{
-	for (int iC=0; iC<Nx; iC++) {
-		if (iC%REFINEMENT==0) {
-			gf_parent[perim_coord_left+(iC/REFINEMENT)] = gf[iC] ;
-		}
-	}
-	return ;
-}
-/*==========================================================================*/
-/* injecting to parent grid */
-/*==========================================================================*/
-static void inject_overlaping_fields(
-		amr_field *fields, amr_grid *grid, amr_grid *parent)
-{
-	int index = 0 ;
-	for (amr_field *field=fields; field!=NULL; field=field->next) {
-		index = field->index ;
-		inject_grid_func(
-			grid->Nx, 
-			grid->perim_coords[0], 
-			parent->grid_funcs[index],
-			grid->grid_funcs[index]
-		) ;
 	}
 	return ;
 }
@@ -450,68 +420,6 @@ static void solve_ode_initial_data(
 	return ;
 }
 /*==========================================================================*/
-/* flagging the grid, using the parent as shadow grid */
-/*==========================================================================*/
-static void flag_regridding_points(amr_field *fields, amr_grid *parent, amr_grid *grid)
-{
-	double regrid_err_lim = 1e-4 ;
-	for (amr_field *field=fields; field!=NULL; field=(field->next)) {
-		if (strcmp(field->pde_type,HYPERBOLIC)!=0) {
-			continue ;
-		}
-		int field_index = field->index ;
-		int lower_jC = grid->perim_coords[0] ;
-		int upper_jC = grid->perim_coords[1] ;
-		int lower_flagged_jC = 0 ;
-		int upper_flagged_jC = 0 ;
-		for (int jC=lower_jC; jC<upper_jC; jC++) {
-			int grid_index = REFINEMENT*(jC-lower_jC) ; 
-			double parent_val = parent->grid_funcs[field_index][jC] ;
-			double grid_val = grid->grid_funcs[field_index][grid_index] ;
-			double trunc_err = fabs(parent_val-grid_val) ;
-			if (trunc_err > regrid_err_lim) {
-				if (lower_flagged_jC==0) {
-					lower_flagged_jC = grid_index ;
-					upper_flagged_jC = grid_index ;
-				} else {
-					upper_flagged_jC = grid_index ;
-				} 
-			}
-		}
-		field->flagged_jC[0] = lower_flagged_jC ;
-		field->flagged_jC[1] = upper_flagged_jC ;
-	}
-	return ;
-}
-/*==========================================================================*/
-static void regrid_all_finer_levels(amr_field *fields, amr_grid *base_grid)
-{
-/*
-	from finest_grid to grid
-		if finer_grid exists then
-			inject finer_grid to grid
-*/
-	amr_grid *grid = base_grid ;
-	amr_set_to_tail(&grid) ;
-	do {
-		if ((grid->child)!=NULL) {
-			inject_overlaping_fields(fields, grid->child, grid) ;
-		}
-		flag_regridding_points(fields, grid->parent, grid) ;
-
-		grid = grid->parent ;
-	} while ((grid->level)!=(base_grid->level)) ;		
-/*
-		for each grid_function
-			compute maximum and minimum flagged grid point
-		if flagged region not empty then
-			if finer grid esists then
-				destroy finer grid
-			make finer grid in flagged region
-*/	
-	return ;
-}
-/*==========================================================================*/
 /* Recursive routine to evolve amr (or fmr if no regridding) hierarchy
  * 
  * Hyperbolics solved as in Berger&Oliger: coarse step onwards to finer
@@ -556,10 +464,10 @@ static void evolve_grid(
 			solve_ode_fields(fields, grid, solve_ode) ;
 		}
 	}
-	if ((grid->tC)%REGRID == 0) {
-		/* 
-			TO DO: regrid all finer levels 
-		*/
+	if ((grid->parent)!=NULL) {
+		if ((grid->tC)%REGRID == 0) {
+			regrid_all_finer_levels(fields, grid) ;
+		}
 	}
 	if ((grid->child)!=NULL) {
 		inject_overlaping_fields(fields, grid->child, grid) ;	

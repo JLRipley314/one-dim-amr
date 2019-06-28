@@ -42,7 +42,7 @@ typedef struct amr_field
 	int time_levels; /* number of time-levels (in AMR hierarchy), from 1 .. num_time_level */
 	int extrap_levels; /* for extrapolation (for ode/elliptic equations) */
 	char* pde_type;      /* either hyperbolic or elliptic */
-	int flagged_jC[2] ; /* upper (0) and lower (1) boundary of flagged region for adding finer grid */
+	int flagged_coords[2] ; /* upper (0) and lower (1) boundary of flagged region for adding finer grid */
 
 } amr_field 
 ;
@@ -67,7 +67,7 @@ typedef struct amr_grid
 
 	double bbox[2] ; /* physical coordinates bounding the grid */
 
-	int new_child_coords[2] ; /* from truncation error estimate */
+	int flagged_coords[2] ; /* for regridding-new coords for finer (child) grid */
 	int perim_coords[2] ; /* coordinates with respect to parent grid */
 	
 	int num_grid_funcs;	/* total number of grid functions */
@@ -121,7 +121,9 @@ amr_grid_hierarchy* amr_init_grid_hierarchy(
 	double bbox[2],
 	bool excision_on)
 ;
-int amr_compute_truncation_error(int field_index, amr_grid* parent, amr_grid* grid) ; 
+void inject_overlaping_fields(amr_field *fields, amr_grid *grid, amr_grid *parent) ;
+
+void regrid_all_finer_levels(amr_field *fields, amr_grid *base_grid) ;
 
 void add_self_similar_initial_grids(amr_grid_hierarchy* gh, int grid_size_ratio, int num_grids) ;
 
