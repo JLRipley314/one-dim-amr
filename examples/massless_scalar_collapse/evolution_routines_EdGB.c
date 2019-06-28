@@ -96,8 +96,6 @@ static double compute_iteration_Al(
 			+       (4*phi_Der_f*c_gbs*Q_joh*pow(Ze_joh,2))/r_joh
 		)/dr
 		;
-		Al[jC+1] -= res_Al / jac_Al ;
-		res_infty_norm = weighted_infty_norm(1-x_joh/s_L, res_Al, res_infty_norm) ;
 /*---------------------------------------------------------------------------*/	
 		if ((isnan(res_Al) != 0)
 		||  (isnan(jac_Al) != 0)
@@ -106,8 +104,9 @@ static double compute_iteration_Al(
 			exit(EXIT_FAILURE) ;
 		}
 /*---------------------------------------------------------------------------*/	
+		Al[jC+1] -= res_Al / jac_Al ;
+		res_infty_norm = weighted_infty_norm(1-x_joh/s_L, res_Al, res_infty_norm) ;
         }
-
         return res_infty_norm ;
 }
 /*==========================================================================*/
@@ -178,9 +177,6 @@ static double compute_iteration_Ze(
 			)/dr
 		)	
 		;
-                Ze_sqrd_jp1 -= res_Ze_sqrd/jac_Ze_sqrd ;
-                Ze[jC+1]  = sqrt(Ze_sqrd_jp1) ;
-                res_infty_norm = weighted_infty_norm(1-x_joh/s_L, res_Ze_sqrd, res_infty_norm) ;
 /*---------------------------------------------------------------------------*/	
                 if ((isnan(res_Ze_sqrd) != 0)    
                 ||  (isnan(jac_Ze_sqrd) != 0)
@@ -189,6 +185,9 @@ static double compute_iteration_Ze(
                         exit(EXIT_FAILURE) ;
                 }
 /*---------------------------------------------------------------------------*/	
+                Ze_sqrd_jp1 -= res_Ze_sqrd/jac_Ze_sqrd ;
+                Ze[jC+1]  = sqrt(Ze_sqrd_jp1) ;
+                res_infty_norm = weighted_infty_norm(1-x_joh/s_L, res_Ze_sqrd, res_infty_norm) ;
         }
         return res_infty_norm ;
 }
@@ -301,15 +300,16 @@ void solve_Al_Ze_EdGB(
 	double *Al_n, 	double *Al_nm1, double *Ze_n, double *Ze_nm1,
 	double * P_n, 	double * P_nm1, double * Q_n, double * Q_nm1)
 {
-	if (start_jC==Nx-1) { /* if interior to the excision point */
+/* if interior to the excision point */
+	if (start_jC==Nx-1) { 
 		return ;
 	}
 	double res= 0 ;
+	int iters = 0 ;
 	double x_lower = bbox[0] ;
 /* to avoid problems with r=infty when x=s_L */	
 	int size = Nx ;
 	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; 
-	int iters = 0 ;
 	do {
 		res = 0 ;
 		if ((excision_on==true)
@@ -612,8 +612,8 @@ static double compute_iteration_Crank_Nicolson_PQ(
 		res_infty_norm = weighted_infty_norm(1-x_j/s_L, res_P, res_infty_norm) ;
 	}
 	else {
-		fprintf(stderr,"ERROR(evolution_routines_EdGB.c):line 617") ;
-		exit(EXIT_FAILURE) ; 
+	/* do nothing as this is interior grid so bndry set by interpolation */
+		assert(perim_interior[0] == true) ;
 	}
 /*--------------------------------------------------------------------------*/
 /* Dirichlet outer boundary conditions if outermost level;

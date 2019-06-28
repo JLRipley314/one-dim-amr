@@ -55,31 +55,32 @@ static double compute_iteration_Al(
                 double r_Der_Al_joh = (Al[jC+1] - Al[jC]) / dr ;
 
                 double Jr_joh = - Q_joh * P_joh ;
-
+/*----------------------------------------------------------------------------*/
                 if ((fabs(Jr_joh) < 10*machine_epsilon)
                 &&  (fabs(Ze_joh) < 10*machine_epsilon)
                 ) {
                         Al[jC+1] = Al[jC] ;
-                } else {
-                        double res_Al =
-                        +       r_Der_Al_joh*Ze_joh
-                        -       (r_joh*Al_joh*Jr_joh)/2.
-                        ;
-                        double jac_Al =
-                                Ze_joh/dr
-                        -       r_joh*Jr_joh/4.
-                        ;
+			continue ;
+		}
 /*----------------------------------------------------------------------------*/
-			if ((isnan(res_Al) != 0)
-			||  (isnan(jac_Al) != 0)
-			) {
-				printf("jC:%d\tres_Al:%.e\tjac_Al:%.e\n", jC, res_Al, jac_Al) ;
-				exit(EXIT_FAILURE) ;
-			}
+		double res_Al =
+		+       r_Der_Al_joh*Ze_joh
+		-       (r_joh*Al_joh*Jr_joh)/2.
+		;
+		double jac_Al =
+			Ze_joh/dr
+		-       r_joh*Jr_joh/4.
+		;
 /*----------------------------------------------------------------------------*/
-                        Al[jC+1] -= res_Al / jac_Al ;
-			res_infty_norm = weighted_infty_norm(1-x_joh/s_L, res_Al, res_infty_norm) ;
-                }
+		if ((isnan(res_Al) != 0)
+		||  (isnan(jac_Al) != 0)
+		) {
+			printf("jC:%d\tres_Al:%.e\tjac_Al:%.e\n", jC, res_Al, jac_Al) ;
+			exit(EXIT_FAILURE) ;
+		}
+/*----------------------------------------------------------------------------*/
+		Al[jC+1] -= res_Al / jac_Al ;
+		res_infty_norm = weighted_infty_norm(1-x_joh/s_L, res_Al, res_infty_norm) ;
         }
         return res_infty_norm ;
 }
@@ -155,15 +156,17 @@ static double compute_iteration_excision_boundary_condition_Ze(
         double dr  = stereographic_dr(s_L, x_j, dx) ;
 
         double Al = (Al_n[exc_jC] + Al_nm1[exc_jC]) / 2. ;
-        double Ze = (Ze_n[exc_jC] + Ze_nm1[exc_jC]) / 2. ;
+
+        double Ze     = (Ze_n[exc_jC  ] + Ze_nm1[exc_jC  ]) / 2. ;
+        double Ze_jp1 = (Ze_n[exc_jC+1] + Ze_nm1[exc_jC+1]) / 2. ;
+        double Ze_jp2 = (Ze_n[exc_jC+2] + Ze_nm1[exc_jC+2]) / 2. ;
+
         double P  = (P_n[exc_jC]  + P_nm1[exc_jC])  / 2. ;
         double Q  = (Q_n[exc_jC]  + Q_nm1[exc_jC])  / 2. ;
 
         double t_Der_Ze = D1_CrankNicolson_2ndOrder(Ze_n[exc_jC], Ze_nm1[exc_jC], dt) ;
 
-        double	r_Der_Ze  = D1_forward_2ndOrder(Ze_n[exc_jC+2],   Ze_n[exc_jC+1],   Ze_n[exc_jC],   dr) ;
-		r_Der_Ze += D1_forward_2ndOrder(Ze_nm1[exc_jC+2], Ze_nm1[exc_jC+1], Ze_nm1[exc_jC], dr) ;
-		r_Der_Ze /= 2 ;
+        double r_Der_Ze = D1_forward_2ndOrder(Ze_jp2, Ze_jp1, Ze, dr) ;
 
         double SE_LL_TR        = (Al*(2*P*Q + (pow(P,2) + pow(Q,2))*Ze))/2. ;
         double Ze_Der_SE_LL_TR = (Al*(0     + (pow(P,2) + pow(Q,2))*1 ))/2. ;
@@ -184,7 +187,6 @@ static double compute_iteration_excision_boundary_condition_Ze(
 		-       2*Al*pow(Ze,3)
 	)/(4.*r_j*pow(Ze,2))
         ;
-
         Ze_n[exc_jC] -= res_Ze/jac_Ze ;
 
         return fabs(res_Ze) ;
@@ -201,15 +203,16 @@ void solve_Al_Ze_GR(
 	double* Al_n, 	double* Al_nm1, double* Ze_n, double* Ze_nm1,
 	double*  P_n, 	double*  P_nm1, double*  Q_n, double*  Q_nm1)
 {
-	if (start_jC==Nx-1) { /* if interior to the excision point */
+/* if interior to the excision point */
+	if (start_jC==Nx-1) { 
 		return ;
 	}
 	double res = 0 ;
+	int iters = 0 ;
 	double x_lower = bbox[0] ;
 /* to avoid problems with r=infty when x=s_L */	
 	int size = Nx ;
 	if (fabs(bbox[1]-s_L)<machine_epsilon) size = Nx-1 ; 
-	int iters = 0 ;
 	do {
 		res = 0 ;
 		if ((excision_on==true)
@@ -337,7 +340,7 @@ static double compute_iteration_Crank_Nicolson_PQ(
 		P_n[0] -= res_P / jac_P ;
 
 		res_infty_norm = weighted_infty_norm(1-x_j/s_L, res_P, res_infty_norm) ;
-	}
+	} else
 	if ((exc_jC > 0) 
 	&&  (excision_on==true)
 	) {
@@ -402,6 +405,9 @@ static double compute_iteration_Crank_Nicolson_PQ(
 
 		res_infty_norm = weighted_infty_norm(1-x_j/s_L, res_Q, res_infty_norm) ;
 		res_infty_norm = weighted_infty_norm(1-x_j/s_L, res_P, res_infty_norm) ;
+	} else {
+	/* do nothing as this is interior grid so bndry set by interpolation */
+		assert(perim_interior[0] == true) ;
 	}
 /*--------------------------------------------------------------------------*/
 /* dirichlet outer boundary conditions if outermost level;

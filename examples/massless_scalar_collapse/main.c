@@ -386,7 +386,7 @@ void evolve_hyperbolic_pde(amr_grid *grid)
 		if (strcmp(solver_Ze,"free")==0) {
 			/* add routine later */
 		} else {
-			fprintf(stderr,"ERROR(main.c): solverZe=%s\n",solver_Ze) ;
+			fprintf(stderr,"ERROR(main.c): solver_Ze=%s\n",solver_Ze) ;
 			exit(EXIT_FAILURE) ;
 		}
 	} else 

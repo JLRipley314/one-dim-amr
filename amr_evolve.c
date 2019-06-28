@@ -112,8 +112,10 @@ static void inject_grid_func(
 	return ;
 }
 /*==========================================================================*/
+/* injecting to parent grid */
+/*==========================================================================*/
 static void inject_overlaping_fields(
-		amr_field *fields, amr_grid *parent, amr_grid *grid)
+		amr_field *fields, amr_grid *grid, amr_grid *parent)
 {
 	int index = 0 ;
 	for (amr_field *field=fields; field!=NULL; field=field->next) {
@@ -441,12 +443,14 @@ static void solve_ode_initial_data(
 	amr_grid* grid = gh->grids ;
 	amr_set_to_tail(&grid) ;
 	do {
-		inject_overlaping_fields(gh->fields, grid->parent, grid) ;
+		inject_overlaping_fields(gh->fields, grid, grid->parent) ;
 		grid = grid->parent ;
 	} while ((grid->level)!=0) ;	
 
 	return ;
 }
+/*==========================================================================*/
+/* flagging the grid, using the parent as shadow grid */
 /*==========================================================================*/
 static void flag_regridding_points(amr_field *fields, amr_grid *parent, amr_grid *grid)
 {
@@ -480,12 +484,24 @@ static void flag_regridding_points(amr_field *fields, amr_grid *parent, amr_grid
 	return ;
 }
 /*==========================================================================*/
-static void regrid_all_levels(amr_grid *grid)
+static void regrid_all_finer_levels(amr_field *fields, amr_grid *base_grid)
 {
 /*
 	from finest_grid to grid
 		if finer_grid exists then
 			inject finer_grid to grid
+*/
+	amr_grid *grid = base_grid ;
+	amr_set_to_tail(&grid) ;
+	do {
+		if ((grid->child)!=NULL) {
+			inject_overlaping_fields(fields, grid->child, grid) ;
+		}
+		flag_regridding_points(fields, grid->parent, grid) ;
+
+		grid = grid->parent ;
+	} while ((grid->level)!=(base_grid->level)) ;		
+/*
 		for each grid_function
 			compute maximum and minimum flagged grid point
 		if flagged region not empty then
@@ -519,11 +535,6 @@ static void evolve_grid(
 		shift_fields_one_time_level(fields, grid) ;
 		grid->tC   += 1 ;
 		grid->time += grid->dt ;
-		if ((grid->tC)%REGRID == 0) {
-			/* 
-				TO DO: regrid all finer levels 
-			*/
-		}
 /* 	do not interpolate coarse grid (level 1) and  shadow (level 0),
 	both which span the entire domain so boundary conditions are physical 
 */	
@@ -545,9 +556,13 @@ static void evolve_grid(
 			solve_ode_fields(fields, grid, solve_ode) ;
 		}
 	}
+	if ((grid->tC)%REGRID == 0) {
+		/* 
+			TO DO: regrid all finer levels 
+		*/
+	}
 	if ((grid->child)!=NULL) {
-		flag_regridding_points(  fields, grid, grid->child) ;
-		inject_overlaping_fields(fields, grid, grid->child) ;	
+		inject_overlaping_fields(fields, grid->child, grid) ;	
 	}
 	set_grid_ode_extrap_levels(fields, grid) ;
 	return ;
