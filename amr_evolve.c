@@ -101,44 +101,6 @@ static void shift_grids_one_time_level(amr_grid_hierarchy *gh)
 }
 /*==========================================================================*/
 /* {ordered field_n, field_nm1, ...} */
-/*==========================================================================*/
-/*static*/ void set_interior_hyperbolic_boundary_linear_interp(
-	amr_field* field, amr_grid* parent, amr_grid* grid)
-{
-	double coef_0, coef_1 ; 
-
-	int perim ;
-
-	int tC = (grid->tC)%REFINEMENT ;
-
-	int index = field->index ;
-
-	if (grid->perim_interior[0] == true) {
-		perim  =  grid->perim_coords[0] ;
-		coef_0 =  parent->grid_funcs[index][perim] ;
-		coef_1 = (
-			parent->grid_funcs[index  ][perim]
-		-	parent->grid_funcs[index+1][perim]
-		)/REFINEMENT ;
-
-		grid->grid_funcs[index  ][0] = coef_0 + coef_1*(tC+1) ;
-		grid->grid_funcs[index+1][0] = coef_0 + coef_1*(tC  ) ;
-	}
-	if (grid->perim_interior[1] == true) {
-		perim  =  grid->perim_coords[1] ;
-		coef_0 =  parent->grid_funcs[index+1][perim] ;
-		coef_1 = (
-			parent->grid_funcs[index  ][perim]
-		-	parent->grid_funcs[index+1][perim]
-		)/REFINEMENT ;
-
-		grid->grid_funcs[index  ][grid->Nx-1] = coef_0 + coef_1*(tC+1) ;
-		grid->grid_funcs[index+1][grid->Nx-1] = coef_0 + coef_1*(tC  ) ;
-	}
-
-	return ;
-}
-/*==========================================================================*/
 /* We interpolate by computing the Taylor expansion about grid point nm1
    to second order (quadratic order) 
    We need at least three time levels for this to work */
@@ -146,22 +108,18 @@ static void shift_grids_one_time_level(amr_grid_hierarchy *gh)
 static void set_interior_hyperbolic_boundary_quad_interp(
 	amr_field* field, amr_grid* parent, amr_grid* grid)
 {
-	double coef_0, coef_1, coef_2 ; 
-
-	int perim ;
-
 	int tC = (grid->tC)%REFINEMENT ;
 
 	int index = field->index ;
 
 	if (grid->perim_interior[0] == true) {
-		perim  =  grid->perim_coords[0] ;
-		coef_0 =  parent->grid_funcs[index][perim] ;
-		coef_1 = (
+		int perim  =  grid->perim_coords[0] ;
+		double coef_0 =  parent->grid_funcs[index][perim] ;
+		double coef_1 = (
 			parent->grid_funcs[index  ][perim]
 		- 	parent->grid_funcs[index+2][perim]
 		)/(2*REFINEMENT) ;
-		coef_2 = (
+		double coef_2 = (
 			   parent->grid_funcs[index  ][perim]
 		- 	(2*parent->grid_funcs[index+1][perim])
 		+    	   parent->grid_funcs[index+2][perim]
@@ -171,13 +129,13 @@ static void set_interior_hyperbolic_boundary_quad_interp(
 		grid->grid_funcs[index+1][0] = coef_0 + coef_1*(tC  ) + 0.5*coef_2*pow(tC,2) ;
 	}
 	if (grid->perim_interior[1] == true) {
-		perim  =  grid->perim_coords[1] ;
-		coef_0 =  parent->grid_funcs[index][perim] ;
-		coef_1 = (
+		int perim  =  grid->perim_coords[1] ;
+		double coef_0 =  parent->grid_funcs[index][perim] ;
+		double coef_1 = (
 			parent->grid_funcs[index  ][perim]
 		- 	parent->grid_funcs[index+2][perim]
 		)/(2*REFINEMENT) ;
-		coef_2 = (
+		double coef_2 = (
 			   parent->grid_funcs[index  ][perim]
 		-	(2*parent->grid_funcs[index+1][perim])
 		+	   parent->grid_funcs[index+2][perim]

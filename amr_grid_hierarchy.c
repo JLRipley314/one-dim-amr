@@ -168,27 +168,23 @@ int amr_find_finest_grid(amr_grid_hierarchy* gh, amr_grid* grid)
 /* initializes new grid. all the grid functions ('grid_funcs')
    are initialized to zero */
 /*============================================================================*/
-void amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent)
+amr_grid *amr_make_finer_grid(int left_coord, int right_coord, amr_grid* grid)
 {
-	if ((parent->level)+1 >= AMR_MAX_LEVELS) {
+	if ((grid->level)+1 >= AMR_MAX_LEVELS) {
 		fprintf(stderr,"ERROR(amr_add_grid): level>=AMR_MAX_LEVELS\n") ;
 		exit(EXIT_FAILURE) ;
 	}
-	amr_grid* new_grid = malloc(sizeof(amr_grid)) ;
+	amr_grid *new_grid = malloc(sizeof(amr_grid)) ;
 	if (new_grid == NULL) {
 		fprintf(stderr,"ERROR(amr_add_grid): new_grid=NULL\n") ;
 		exit(EXIT_FAILURE) ;
 	}
 
-	parent->child = new_grid ;
-	new_grid->parent = parent ;
-	new_grid->child = NULL ;
+	new_grid->level = (grid->level)+1 ;
 
-	new_grid->level = (parent->level)+1 ;
-
-	new_grid->dt = (parent->dt)/REFINEMENT ;
-	new_grid->dx = (parent->dx)/REFINEMENT ;
-	new_grid->time = parent->time ;
+	new_grid->dt = (grid->dt)/REFINEMENT ;
+	new_grid->dx = (grid->dx)/REFINEMENT ;
+	new_grid->time = grid->time ;
 	new_grid->tC = 0 ;
 
 	new_grid->perim_coords[0] = left_coord ;
@@ -196,34 +192,34 @@ void amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent)
 
 	new_grid->Nx = REFINEMENT*(right_coord-left_coord) + 1 ;
 
-	if ((parent->excised_jC)>left_coord) {
-		new_grid->excised_jC = REFINEMENT*((parent->excised_jC)-left_coord) ;
+	if ((grid->excised_jC)>left_coord) {
+		new_grid->excised_jC = REFINEMENT*((grid->excised_jC)-left_coord) ;
 	} else {
 		new_grid->excised_jC = 0 ;
 	}
-	new_grid->bbox[0] = parent->bbox[0] + (left_coord*(parent->dx)) ;
-	new_grid->bbox[1] = parent->bbox[0] + (right_coord*(parent->dx)) ;
+	new_grid->bbox[0] = grid->bbox[0] + (left_coord*(grid->dx)) ;
+	new_grid->bbox[1] = grid->bbox[0] + (right_coord*(grid->dx)) ;
 	
-	new_grid->num_grid_funcs  = parent->num_grid_funcs ;
+	new_grid->num_grid_funcs  = grid->num_grid_funcs ;
 	new_grid->grid_funcs = allocate_double_2DArray(new_grid->num_grid_funcs, new_grid->Nx, 0.) ;
 
-	new_grid->excision_on = parent->excision_on ;
+	new_grid->excision_on = grid->excision_on ;
 
-	if ((parent->perim_interior[0] == false)
+	if ((grid->perim_interior[0] == false)
 	&&  (left_coord == 0)
 	) {
 		new_grid->perim_interior[0] = false ;
 	} else {
 		new_grid->perim_interior[0] = true ;
 	}
-	if ((parent->perim_interior[1] == false)
-	&&  (right_coord == parent->Nx-1)
+	if ((grid->perim_interior[1] == false)
+	&&  (right_coord == grid->Nx-1)
 	) {
 		new_grid->perim_interior[1] = false ;
 	} else {
 		new_grid->perim_interior[1] = true ;
 	}
-	printf("amr_add_finer_grid: made grid level %d\n", new_grid->level) ;
+	printf("amr_make_finer_grid: made grid level %d\n", new_grid->level) ;
 	printf("REFINEMENT %d\n", REFINEMENT) ;
 	printf("bbox[0]\t%f\n", new_grid->bbox[0]) ;
 	printf("bbox[1]\t%f\n", new_grid->bbox[1]) ;
@@ -235,6 +231,104 @@ void amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent)
 	printf("dx\t%f\n", new_grid->dx) ;
 	printf("dt\t%f\n", new_grid->dt) ;
 	printf("num_grid_funcs\t%d\n", new_grid->num_grid_funcs) ;
+
+	return new_grid ;
+}
+/*==========================================================================*/
+static inline int max_int(int val_1, int val_2) 
+{
+	return (val_1>val_2) ? val_1 : val_2 ;
+}
+/*==========================================================================*/
+static inline int min_int(int val_1, int val_2) 
+{
+	return (val_1<val_2) ? val_1 : val_2 ;
+}
+/*==========================================================================*/
+static void interpolate_fields(amr_grid *parent, amr_grid *child)
+{
+	int lower_coord = child->perim_coords[0] ;
+	int upper_coord = child->perim_coords[0] ;
+	int Nx = upper_coord - lower_coord ;
+	for (int iC=0; iC<(parent->num_grid_funcs); iC++) {
+		for (int jC=0; jC<Nx; jC++) {
+			if ((jC%REFINEMENT)==0) {
+				int index = lower_coord + jC/REFINEMENT ;
+				child->grid_funcs[iC][jC] = parent->grid_funcs[iC][index] ;
+			} else {
+
+			}
+		}
+	}
+	return ;
+}
+/*==========================================================================*/
+static void copy_overlapping_fields(amr_grid *old_grid, amr_grid *new_grid)
+{
+	int lower_coord_old_grid = old_grid->perim_coords[0] ;
+	int upper_coord_old_grid = old_grid->perim_coords[1] ;
+
+	int lower_coord_new_grid = new_grid->perim_coords[0] ;
+	int upper_coord_new_grid = new_grid->perim_coords[1] ;
+
+	int lower_coord = max_int(lower_coord_old_grid, lower_coord_new_grid) ; 
+	int upper_coord = min_int(upper_coord_old_grid, upper_coord_new_grid) ; 
+
+	int Nx = upper_coord-lower_coord ;
+
+	if (Nx<0) return ;
+
+	for (int iC=0; iC<(old_grid->num_grid_funcs); iC++) {
+		if (lower_coord>lower_coord_old_grid) {
+			int offset = lower_coord-lower_coord_old_grid ;
+			for (int jC=0; jC<Nx; jC++) {
+				new_grid->grid_funcs[iC][jC] = old_grid->grid_funcs[iC][offset+jC] ;
+			}
+		} else
+		if (lower_coord>lower_coord_new_grid) {
+			int offset = lower_coord-lower_coord_new_grid ;
+			for (int jC=0; jC<Nx; jC++) {
+				new_grid->grid_funcs[iC][offset+jC] = old_grid->grid_funcs[iC][jC] ;
+			}
+		} else {
+			for (int jC=0; jC<Nx; jC++) {
+				new_grid->grid_funcs[iC][jC] = old_grid->grid_funcs[iC][jC] ;
+			}
+		}
+	}
+	return ;
+}
+/*==========================================================================*/
+/* 	if finer grid already exists then copy over, otherwise
+	just make a new finer grid */
+/*==========================================================================*/
+static void amr_add_flagged_finer_grid(amr_grid *grid)
+{
+	amr_grid *old_child = grid->child ;
+
+	amr_grid *new_child = amr_make_finer_grid(
+		grid->flagged_coords[0], grid->flagged_coords[0], grid
+	) ;
+	interpolate_fields(grid, new_child) ;
+
+	if (old_child!=NULL) {
+		copy_overlapping_fields(old_child, new_child) ;
+
+		amr_destroy_grid(old_child) ; 
+		old_child = NULL ;	
+	} 
+	amr_insert_grid(new_child, grid) ;
+
+	return ;
+}
+/*============================================================================*/
+void amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent)
+{
+	amr_grid *new_grid = amr_make_finer_grid(left_coord, right_coord, parent) ;
+
+	parent->child = new_grid ;
+	new_grid->parent = parent ;
+	new_grid->child = NULL ;
 
 	return ;
 }
@@ -343,7 +437,7 @@ void inject_overlaping_fields(
 /*==========================================================================*/
 static void flag_field_regridding_coords(amr_field *fields, amr_grid *parent, amr_grid *grid)
 {
-	double regrid_err_lim = (1e-6)*pow(grid->dt,2) ;
+	double regrid_err_lim = (1e-3)*pow(grid->dt,2) ;
 	for (amr_field *field=fields; field!=NULL; field=(field->next)) {
 		if (strcmp(field->pde_type,HYPERBOLIC)!=0) {
 			field->flagged_coords[0] = (grid->Nx)-1 ;
@@ -409,14 +503,13 @@ static void determine_grid_coords(
 	&&   (lower_finer_grid_coord!=((grid->Nx)-1))
 	&&   (upper_finer_grid_coord!=(0)) 
 	) {
-		int buffer_coord = REGRID ;
 		int lower_child_flagged_coord = 
 			grid->child->perim_coords[0] 
-		+ 	(int)(((grid->child->flagged_coords[0])-buffer_coord)/REFINEMENT) 	
+		+ 	(int)(((grid->child->flagged_coords[0])-BUFFER_COORD)/REFINEMENT) 	
 		;
 		int upper_child_flagged_coord = 
 			grid->child->perim_coords[0] 
-		+ 	(int)(((grid->child->flagged_coords[1])+buffer_coord)/REFINEMENT) 
+		+ 	(int)(((grid->child->flagged_coords[1])+BUFFER_COORD)/REFINEMENT) 
 		;
 		assert(lower_child_flagged_coord>=0) ;
 		assert(upper_child_flagged_coord<=(grid->Nx)-1) ;
@@ -443,17 +536,10 @@ void regrid_all_finer_levels(amr_field *fields, amr_grid *base_grid)
 		printf("level %d\n", grid->level) ;
 		printf("lower %d\tupper %d\n", grid->flagged_coords[0], grid->flagged_coords[1]) ;
 		fflush(NULL) ;
+//		amr_add_flagged_finer_grid(grid) ;
 
 		grid = grid->parent ;
 	} 
-/*
-		for each grid_function
-			compute maximum and minimum flagged grid point
-		if flagged region not empty then
-			if finer grid esists then
-				destroy finer grid
-			make finer grid in flagged region
-*/	
 	grid = NULL ;
 	return ;
 }
@@ -467,7 +553,6 @@ void add_self_similar_initial_grids(
 	int Nx = grid->Nx ; 
 
 	for (int iC=0; iC<num_grids; iC++) {
-//		amr_add_finer_grid(0, (int)(Nx/grid_size_ratio), grid) ;
 		amr_add_finer_grid((int)(Nx/grid_size_ratio)/10, (int)(Nx/grid_size_ratio), grid) ;
 		grid = grid->child ;
 		Nx = grid->Nx ;
@@ -477,23 +562,35 @@ void add_self_similar_initial_grids(
 	return ; 
 }
 /*============================================================================*/
-int amr_destroy_grid(amr_grid* grid) 
+void amr_insert_grid(amr_grid *grid_to_insert, amr_grid* grid)
+{
+	if ((grid->child)!=NULL) {
+		(grid->child)->parent = grid_to_insert ;
+	}
+	grid_to_insert->child = grid->child ;
+	grid_to_insert->parent = grid ;
+	grid->child = grid_to_insert ;
+
+	return ;
+} 
+/*============================================================================*/
+void amr_destroy_grid(amr_grid* grid) 
 {	
 	free_double_2DArray(grid->grid_funcs) ;
 
-	if (grid->parent != NULL) {
-		grid->parent->child = grid->child  ;
+	if ((grid->parent)!=NULL) {
+		(grid->parent)->child = grid->child  ;
 	} 
-	if (grid->child != NULL) {
-		grid->child->parent = grid->parent ;
+	if ((grid->child)!=NULL) {
+		(grid->child)->parent = grid->parent ;
 	} 
 	free(grid) ;
 	grid = NULL ;
 
-	return 0 ;
+	return ;
 }
 /*============================================================================*/
-int amr_destroy_grid_hierarchy(amr_grid_hierarchy* gh) 
+void amr_destroy_grid_hierarchy(amr_grid_hierarchy* gh) 
 {
 	amr_grid* grid = gh->grids ;
 	amr_grid* child = NULL ;
@@ -508,5 +605,5 @@ int amr_destroy_grid_hierarchy(amr_grid_hierarchy* gh)
 	free(gh) ;
 	gh = NULL ;
 	
-	return 0 ;
+	return ;
 }
