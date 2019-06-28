@@ -392,7 +392,6 @@ static inline double min_double(double val_1, double val_2)
 static void determine_grid_coords(
 	amr_field *fields, amr_grid *grid)
 {
-/* buffer coord space large enough so well outside domain of communication for regrid */
 	int lower_finer_grid_coord = (grid->Nx)-1 ; 
 	int upper_finer_grid_coord = 0 ; 
 
@@ -404,7 +403,12 @@ static void determine_grid_coords(
 			upper_finer_grid_coord = max_double(upper_coord,upper_finer_grid_coord) ;
 		}
 	}
-	if ((grid->child)!=NULL) {
+/* need to have enough room for finer grid (if it exists) and buffer space for that finer grid 
+*/
+	if (((grid->child)!=NULL)
+	&&   (lower_finer_grid_coord!=((grid->Nx)-1))
+	&&   (upper_finer_grid_coord!=(0)) 
+	) {
 		int buffer_coord = REGRID ;
 		int lower_child_flagged_coord = 
 			grid->child->perim_coords[0] 
