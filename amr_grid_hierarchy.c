@@ -269,6 +269,24 @@ static void interpolate_fields(amr_grid *parent, amr_grid *child)
 	return ;
 }
 /*==========================================================================*/
+/* 	if the parent grid moved, then the finer grid should have different
+	bounding coordinates to not move itself in physical space */
+/*==========================================================================*/
+static void reset_finer_grid_perim_coords(
+	int old_lower_coord, amr_grid *base_grid)
+{
+	for (amr_grid *grid=(base_grid->child); grid!=NULL; grid=(grid->child)) {
+		int current_lower_coord = grid->parent->perim_coords[0] ;
+		int grid_lower_coord = grid->perim_coords[0] ;
+
+		grid->perim_coords[0] += REFINEMENT*(old_lower_coord-current_lower_coord) ;
+		grid->perim_coords[1] += REFINEMENT*(old_lower_coord-current_lower_coord) ;
+
+		old_lower_coord = grid_lower_coord ;
+	}
+	return ;
+}
+/*==========================================================================*/
 /* 	already injected old child grid, so no need to copy again */
 /*==========================================================================*/
 static void add_flagged_finer_grid(amr_grid *grid)
@@ -277,9 +295,12 @@ static void add_flagged_finer_grid(amr_grid *grid)
 	int new_upper_coord = grid->flagged_coords[1] ;
 
 	amr_grid *old_child = grid->child ;
-
+	int old_lower_coord = 0 ;
+	if (old_child!=NULL) {
+		old_lower_coord = old_child->perim_coords[0] ;
+	}
 	if (new_upper_coord-new_lower_coord<2*BUFFER_COORD) {
-		if ((old_child !=NULL)
+		if ((old_child!=NULL)
 		&& ((old_child->child)==NULL)
 		) {
 			amr_destroy_grid(old_child) ;
@@ -297,6 +318,7 @@ static void add_flagged_finer_grid(amr_grid *grid)
 		old_child = NULL ;	
 	} 
 	amr_insert_grid(new_child, grid) ;
+	reset_finer_grid_perim_coords(old_lower_coord, grid->child) ;
 
 	return ;
 }
