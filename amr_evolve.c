@@ -423,7 +423,7 @@ static void evolve_grid(
 		}
 	}
 	if ((grid->parent)!=NULL) {
-		if ((grid->tC)%REGRID == 0) {
+		if ((grid->tC)%REGRID==0) {
 			regrid_all_finer_levels(fields, grid) ;
 		}
 	}
@@ -577,9 +577,9 @@ void amr_main(
 /* 
 	add_initial...: for the fixed amr grid hierarchy 
 */
-	int grid_size_ratio = 2 ;
-	int grid_levels = 1 ;
-	add_self_similar_initial_grids(gh, grid_size_ratio, grid_levels) ;
+//	int grid_size_ratio = 2 ;
+//	int grid_levels = 1 ;
+//	add_self_similar_initial_grids(gh, grid_size_ratio, grid_levels) ;
 
 	set_initial_data(
 		gh, 

@@ -16,10 +16,10 @@
 
 #define AMR_MAX_LEVELS 8 /* maximum number of grid levels */
 #define REFINEMENT 2 /* spatial and temporal refinement scale */
-#define REGRID 16 /* regrid every REGRID time steps */
+#define REGRID 32 /* regrid every REGRID time steps */
 #define BUFFER_COORD (2*REGRID) /* regrid every REGRID time steps */
 
-#define TRUNC_ERR_TOLERANCE ((double)(1e-5)) /* when above this flag for finer grid */
+#define TRUNC_ERR_TOLERANCE ((double)(1e-4)) /* when above this flag for finer grid */
 
 #define MIN_GRID_SHAPE ((double)(20)) /* number of coarser grid points before making new grid */
 

@@ -206,7 +206,6 @@ void find_field_indices(amr_field* fields)
 /*===========================================================================*/
 void set_globals(amr_grid *grid)
 {	
-
 	P_n   = grid->grid_funcs[P_n_index  ] ;
 	P_nm1 = grid->grid_funcs[P_nm1_index] ;
 	P_nm2 = grid->grid_funcs[P_nm2_index] ;
@@ -334,6 +333,7 @@ void rescale_Al(amr_grid *grid)
 /*===========================================================================*/
 void solve_ode(amr_grid *grid)
 {
+	return ;
 	set_globals(grid) ;
 	if (strcmp(theory, "massless_scalar_GR") == 0) {
 		solve_Al_Ze_GR(
