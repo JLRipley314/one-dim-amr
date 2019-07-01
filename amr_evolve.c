@@ -375,10 +375,10 @@ static void evolve_grid(
 		if ((grid->level)>0) { /* all grids finer than shadow grid */
 			solve_ode_fields(fields, grid, solve_ode) ;
 		}
-		if (((grid->child)!=NULL) 
+		if (((grid->parent)!=NULL) 
 		&&  ((grid->tC+1)%REGRID==0) 
 		) {
-			flag_field_regridding_coords(fields, grid, grid->child) ;
+			flag_field_regridding_coords(fields, grid->parent, grid) ;
 		}
 	}
 	if ((grid->child)!=NULL) {
