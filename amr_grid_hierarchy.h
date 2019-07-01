@@ -12,23 +12,19 @@
 	do not add anything for multigrid
 */ 
 /*============================================================================*/
-
-
-#define AMR_MAX_LEVELS 4 /* maximum number of grid levels */
-#define REFINEMENT 2 /* spatial and temporal refinement scale */
-#define REGRID 64 /* regrid every REGRID time steps */
-#define BUFFER_COORD (REGRID) /* regrid every REGRID time steps */
-
-#define TRUNC_ERR_TOLERANCE ((double)(1e-3)) /* when above this flag for finer grid */
-
-#define MIN_GRID_SHAPE ((double)(20)) /* number of coarser grid points before making new grid */
-
-#define HYPERBOLIC "hyperbolic"
-#define ELLIPTIC "elliptic"
-#define ODE "ode"
-#define DIAGNOSTIC "diagnostic"
-
 #include <stdbool.h>
+
+extern const int amr_max_levels; /* maximum number of grid levels */
+extern const int refinement ; /* spatial and temporal refinement scale */
+extern const int regrid ; /* regrid every regrid time steps */
+extern const int buffer_coord ; /* regrid every regrid time steps */
+
+extern const double trunc_err_tolerance ; /* when above this flag for finer grid */
+
+extern const char HYPERBOLIC[] ;
+extern const char ELLIPTIC[] ;
+extern const char ODE[] ;
+extern const char DIAGNOSTIC[] ;
 
 /*============================================================================*/
 /* 	keeps track of where variable is located in storage on each grid,
@@ -41,8 +37,8 @@ typedef struct amr_field
 	char *name;    
 	int index;           /* index of 0th time level */
 	int time_levels; /* number of time-levels (in AMR hierarchy), from 1 .. num_time_level */
-	int extrap_levels; /* for extrapolation (for ode/elliptic equations) */
-	char* pde_type;      /* either hyperbolic or elliptic */
+	int extrap_levels; /* for extrapolation (for ode/ELLIPTIC equations) */
+	char* pde_type;      /* either HYPERBOLIC or ELLIPTIC */
 	int flagged_coords[2] ; /* upper (0) and lower (1) boundary of flagged region for adding finer grid */
 
 } amr_field 

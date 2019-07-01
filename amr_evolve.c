@@ -57,7 +57,7 @@ static void shift_grids_one_time_level(amr_grid_hierarchy *gh)
 static void set_interior_hyperbolic_boundary_quad_interp(
 	amr_field* field, amr_grid* parent, amr_grid* grid)
 {
-	int tC = (grid->tC)%REFINEMENT ;
+	int tC = (grid->tC)%refinement ;
 
 	int index = field->index ;
 
@@ -67,12 +67,12 @@ static void set_interior_hyperbolic_boundary_quad_interp(
 		double coef_1 = (
 			parent->grid_funcs[index  ][perim]
 		- 	parent->grid_funcs[index+2][perim]
-		)/(2*REFINEMENT) ;
+		)/(2*refinement) ;
 		double coef_2 = (
 			   parent->grid_funcs[index  ][perim]
 		- 	(2*parent->grid_funcs[index+1][perim])
 		+    	   parent->grid_funcs[index+2][perim]
-		)/pow(REFINEMENT,2) ;
+		)/pow(refinement,2) ;
 
 		grid->grid_funcs[index  ][0] = coef_0 + coef_1*(tC+1) + 0.5*coef_2*pow(tC,2) ;
 		grid->grid_funcs[index+1][0] = coef_0 + coef_1*(tC  ) + 0.5*coef_2*pow(tC,2) ;
@@ -83,12 +83,12 @@ static void set_interior_hyperbolic_boundary_quad_interp(
 		double coef_1 = (
 			parent->grid_funcs[index  ][perim]
 		- 	parent->grid_funcs[index+2][perim]
-		)/(2*REFINEMENT) ;
+		)/(2*refinement) ;
 		double coef_2 = (
 			   parent->grid_funcs[index  ][perim]
 		-	(2*parent->grid_funcs[index+1][perim])
 		+	   parent->grid_funcs[index+2][perim]
-		)/pow(REFINEMENT,2) ;
+		)/pow(refinement,2) ;
 
 		grid->grid_funcs[index  ][grid->Nx-1] = coef_0 + coef_1*(tC+1) + 0.5*coef_2*pow(tC,2) ;
 		grid->grid_funcs[index+1][grid->Nx-1] = coef_0 + coef_1*(tC  ) + 0.5*coef_2*pow(tC,2) ;
@@ -137,16 +137,16 @@ static void linear_extrapapolate_level_n_field(amr_field* field, amr_grid* grid)
 	int extrap_index = (field_index)+(field->time_levels) ;
 	double p_0, p_1 ;
 	int step ;
-	if ((grid->tC)==(grid->parent->tC)*REFINEMENT) {
-		step = REFINEMENT ;
+	if ((grid->tC)==(grid->parent->tC)*refinement) {
+		step = refinement ;
 	} else {
-		step = (grid->tC)%REFINEMENT ;
+		step = (grid->tC)%refinement ;
 	}
 	for (int jC=0; jC<(grid->Nx); jC++) {
 		p_0 = grid->grid_funcs[extrap_index][jC] ;
 		p_1 = (
 			(grid->grid_funcs[extrap_index][jC])-(grid->grid_funcs[extrap_index+1][jC])
-		) / REFINEMENT ;
+		) / refinement ;
 
 		grid->grid_funcs[field_index][jC] = p_0 + p_1*step ;
 	}	
@@ -332,11 +332,11 @@ static void solve_ode_initial_data(
  * Hyperbolics solved as in Berger&Oliger: coarse step onwards to finer
  * levels, and inject on overlapping grids.
  *
- * We solve the ODE fields as outlined in gr-qc/0508110: we extrapapolate
- * from previous solutions, then resolve the ODE over the whole hierarchy
- * when all levels align. The previous ODE level used for extrapapoaltion
+ * We solve the ode fields as outlined in gr-qc/0508110: we extrapapolate
+ * from previous solutions, then resolve the ode over the whole hierarchy
+ * when all levels align. The previous ode level used for extrapapoaltion
  * is then reset to make it agree with linear extrapapolation with resolved
- * ODE values. 
+ * ode values. 
  * Do not interpolate coarse grid (level 1) and  shadow (level 0),
  * both which span the entire domain so boundary conditions are physical 
  */
@@ -350,7 +350,7 @@ static void evolve_grid(
 {
 	for (int tC=0; tC<num_t_steps; tC++) {
 		if (((grid->parent)!=NULL) 
-		&&  ((grid->tC)%REGRID==0) 
+		&&  ((grid->tC)%regrid==0) 
 		) {
 			regrid_all_finer_levels(fields, grid) ;
 		}
@@ -366,7 +366,7 @@ static void evolve_grid(
 			evolve_grid(
 				fields,
 				grid->child,
-				REFINEMENT,
+				refinement,
 				evolve_hyperbolic_pde,
 				solve_ode)
 			;
@@ -401,6 +401,9 @@ static void save_all_grids(
 	amr_grid_hierarchy* gh, void (*save_to_file)(amr_grid*))
 {
 	for (amr_grid* grid=gh->grids; grid != NULL; grid=grid->child) {
+		printf("level %d\t %.10e\t %.4e\t %.4e\n",
+			grid->level, grid->time, grid->bbox[0], grid->bbox[1]
+		) ;
 		save_to_file(grid) ;
 	}
 	return ;
@@ -415,7 +418,7 @@ void set_excision_point(amr_grid* grid)
 	&&  ((grid->parent->excised_jC) > (grid->perim_coords[0]))
 	) {
 		if ((grid->parent->excised_jC) < (grid->perim_coords[1])) {
-			grid->excised_jC = REFINEMENT * (
+			grid->excised_jC = refinement * (
 				grid->parent->excised_jC - grid->perim_coords[0]
 			) ;
 		} else {
