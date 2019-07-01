@@ -333,7 +333,6 @@ void rescale_Al(amr_grid *grid)
 /*===========================================================================*/
 void solve_ode(amr_grid *grid)
 {
-	return ;
 	set_globals(grid) ;
 	if (strcmp(theory, "massless_scalar_GR") == 0) {
 		solve_Al_Ze_GR(

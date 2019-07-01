@@ -87,8 +87,7 @@ void amr_reset_field_pde_type(amr_field *fields, char *name, char *new_pde_type)
 		}
 	}
 	if (found_name==false) {
-		fprintf(stderr,"ERROR(amr_grid_hierarchy). amr_reset_field_pde_type: name %s not found\n",name) ;
-		exit(EXIT_FAILURE) ;
+		assert(found_name==true) ;
 	}
 	current->pde_type = new_pde_type ;
 
@@ -138,17 +137,12 @@ static int amr_delete_fields(amr_field** fields)
 /*============================================================================*/
 void amr_find_grid(int level, amr_grid_hierarchy* gh, amr_grid* grid) 
 {
-	if (level>AMR_MAX_LEVELS-1) {
-		fprintf(stderr,"ERROR(find_grid): level>AMR_MAX_LEVELS-1\n") ;
-		exit(EXIT_FAILURE) ;
-	} 
+	assert(level<AMR_MAX_LEVELS-1) ;
+				
 	grid = gh->grids ;
-	while (grid->level != level) {
+	while ((grid->level)!=level) {
 		grid = grid->child ;
-		if (grid == NULL) {
-			fprintf(stderr,"ERROR(find_grid): grid==NULL\n") ;
-			exit(EXIT_FAILURE) ;
-		}
+		assert(grid!=NULL) ;
 	}
 	return ;
 }
@@ -170,15 +164,9 @@ int amr_find_finest_grid(amr_grid_hierarchy* gh, amr_grid* grid)
 /*============================================================================*/
 amr_grid *amr_make_finer_grid(int left_coord, int right_coord, amr_grid* grid)
 {
-	if ((grid->level)+1 >= AMR_MAX_LEVELS) {
-		fprintf(stderr,"ERROR(amr_add_grid): level>=AMR_MAX_LEVELS\n") ;
-		exit(EXIT_FAILURE) ;
-	}
+	assert((grid->level)+1<AMR_MAX_LEVELS) ;
 	amr_grid *new_grid = malloc(sizeof(amr_grid)) ;
-	if (new_grid == NULL) {
-		fprintf(stderr,"ERROR(amr_add_grid): new_grid=NULL\n") ;
-		exit(EXIT_FAILURE) ;
-	}
+	assert(new_grid!=NULL) ;
 
 	new_grid->level = (grid->level)+1 ;
 
@@ -233,16 +221,6 @@ amr_grid *amr_make_finer_grid(int left_coord, int right_coord, amr_grid* grid)
 	printf("num_grid_funcs\t%d\n", new_grid->num_grid_funcs) ;
 
 	return new_grid ;
-}
-/*==========================================================================*/
-static inline int max_int(int val_1, int val_2) 
-{
-	return (val_1>val_2) ? val_1 : val_2 ;
-}
-/*==========================================================================*/
-static inline int min_int(int val_1, int val_2) 
-{
-	return (val_1<val_2) ? val_1 : val_2 ;
 }
 /*==========================================================================*/
 /* linearly interpolate coarser grid to finer grid */
@@ -488,14 +466,8 @@ static void flag_field_regridding_coords(amr_field *fields, amr_grid *parent, am
 	return ;
 }
 /*==========================================================================*/
-static inline double max_double(double val_1, double val_2) 
-{
-	return (val_1>val_2) ? val_1 : val_2 ;
-}
-static inline double min_double(double val_1, double val_2) 
-{
-	return (val_1<val_2) ? val_1 : val_2 ;
-}
+#define MAXIMUM(val_1, val_2) ((val_1)>(val_2)) ? (val_1) : (val_2) ;
+#define MINIMUM(val_1, val_2) ((val_1)<(val_2)) ? (val_1) : (val_2) ;
 /*==========================================================================*/
 static void find_field_bounding_coords(
 	amr_field *fields, 
@@ -507,8 +479,8 @@ static void find_field_bounding_coords(
 		if ((strcmp(field->pde_type,HYPERBOLIC)==0) 
 		&&  (lower_coord!=(-1) && upper_coord!=(-1)) 
 		) {
-			*lower_finer_grid_coord = min_double(lower_coord,*lower_finer_grid_coord) ;
-			*upper_finer_grid_coord = max_double(upper_coord,*upper_finer_grid_coord) ;
+			*lower_finer_grid_coord = MINIMUM(lower_coord,*lower_finer_grid_coord) ;
+			*upper_finer_grid_coord = MAXIMUM(upper_coord,*upper_finer_grid_coord) ;
 		}
 	}
 	return ;
@@ -517,39 +489,32 @@ static void find_field_bounding_coords(
 static void determine_grid_coords(
 	amr_field *fields, amr_grid *grid)
 {
-	int lower_finer_grid_coord = (grid->Nx)-1 ; 
-	int upper_finer_grid_coord = 0 ; 
+	int Nx = grid->Nx ;
+	int lower_child_grid_coord = Nx-1 ; 
+	int upper_child_grid_coord = 0 ; 
 
 	find_field_bounding_coords(
 		fields, 
-		&lower_finer_grid_coord, &upper_finer_grid_coord
+		&lower_child_grid_coord, &upper_child_grid_coord
 	) ; 
-/* need to have enough room for finer grid (if it exists) and buffer space for that finer grid 
+/* set buffer space from grid boundaries  
 */
-	if (((grid->child)!=NULL)
-	&&   (lower_finer_grid_coord!=((grid->Nx)-1))
-	&&   (upper_finer_grid_coord!=(0)) 
-	) {
-		if ((grid->perim_interior[0])==true) {
-			int lower_child_flagged_coord = 
-				grid->child->perim_coords[0] 
-			+ 	(int)(((grid->child->perim_coords[0])-BUFFER_COORD)/REFINEMENT) 	
-			;
-			assert(lower_child_flagged_coord>=0) ;
-			lower_finer_grid_coord = min_double(lower_child_flagged_coord,lower_finer_grid_coord) ;
-		}
-		if ((grid->perim_interior[1])==true) {
-			int upper_child_flagged_coord = 
-				grid->child->perim_coords[0] 
-			+ 	(int)(((grid->child->perim_coords[1])+BUFFER_COORD)/REFINEMENT) 
-			;
-			assert(upper_child_flagged_coord<=(grid->Nx)-1) ;
-
-			upper_finer_grid_coord = min_double(upper_child_flagged_coord,upper_finer_grid_coord) ;
+	if ((grid->perim_interior[0])==true) {
+		lower_child_grid_coord = MAXIMUM(BUFFER_COORD,lower_child_grid_coord) ;
+	} else {
+		if (lower_child_grid_coord<BUFFER_COORD) {
+			lower_child_grid_coord= 0 ;
 		}
 	}
-	grid->flagged_coords[0] = lower_finer_grid_coord ;
-	grid->flagged_coords[1] = upper_finer_grid_coord ;
+	if ((grid->perim_interior[1])==true) {
+		upper_child_grid_coord = MINIMUM(Nx-1-BUFFER_COORD,upper_child_grid_coord) ;
+	} else {
+		if (upper_child_grid_coord>Nx-1-BUFFER_COORD) {
+			lower_child_grid_coord= Nx-1 ;
+		}
+	}
+	grid->flagged_coords[0] = lower_child_grid_coord ;
+	grid->flagged_coords[1] = upper_child_grid_coord ;
 
 	return ;
 }
