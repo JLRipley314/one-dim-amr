@@ -462,8 +462,8 @@ void flag_field_regridding_coords(amr_field *fields, amr_grid *parent, amr_grid 
 		}
 		field->flagged_coords[0] = lower_flagged_coords ;
 		field->flagged_coords[1] = upper_flagged_coords ;
-		printf("field %s\t", field->name) ;
-		printf("lower %d\tupper %d\n", field->flagged_coords[0], field->flagged_coords[1]) ;
+//		printf("field %s\t", field->name) ;
+//		printf("lower %d\tupper %d\n", field->flagged_coords[0], field->flagged_coords[1]) ;
 	}
 	return ;
 }

@@ -375,11 +375,6 @@ static void evolve_grid(
 		if ((grid->level)>0) { /* all grids finer than shadow grid */
 			solve_ode_fields(fields, grid, solve_ode) ;
 		}
-		if (((grid->parent)!=NULL) 
-		&&  ((grid->tC+1)%REGRID==0) 
-		) {
-			flag_field_regridding_coords(fields, grid->parent, grid) ;
-		}
 	}
 	if ((grid->child)!=NULL) {
 		inject_overlaping_fields(fields, grid->child, grid) ;	
@@ -407,6 +402,7 @@ static void save_all_grids(
 	amr_grid_hierarchy* gh, void (*save_to_file)(amr_grid*))
 {
 	for (amr_grid* grid=gh->grids; grid != NULL; grid=grid->child) {
+		printf("grid level %d\n", grid->level) ;
 		save_to_file(grid) ;
 	}
 	return ;
@@ -557,7 +553,7 @@ void amr_main(
 		) {
 			compute_all_grid_diagnostics(gh, compute_diagnostics) ;
 		}
-		if (tC%(gh->t_step_save)==0) {
+		if (tC%(gh->t_step_save)==0) {	
 			save_all_grids(gh, save_to_file) ;
 		}
 	}
