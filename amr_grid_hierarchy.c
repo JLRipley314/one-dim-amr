@@ -247,24 +247,31 @@ static inline int min_int(int val_1, int val_2)
 /*==========================================================================*/
 /* linearly interpolate coarser grid to finer grid */
 /*==========================================================================*/
-static void interpolate_fields(amr_grid *parent, amr_grid *child)
+static void interpolate_grid_func(
+	int lower_coord, int Nx, double *parent_gf, double *child_gf)
+{
+	for (int jC=0; jC<(Nx-1); jC++) {
+		double p0 = parent_gf[jC+lower_coord] ; 
+		double p1 = (
+			parent_gf[jC+lower_coord+1]
+		-	parent_gf[jC+lower_coord]
+		)/REFINEMENT ; 
+		for (int kC=0; kC<REFINEMENT; kC++) {
+			child_gf[2*jC+kC] = p0 + kC*p1 ;
+		}
+	}
+	child_gf[2*(Nx-1)] = parent_gf[Nx-1] ;
+}
+/*==========================================================================*/
+static void interpolate_all_grid_funcs(amr_grid *parent, amr_grid *child)
 {
 	int lower_coord = child->perim_coords[0] ;
 	int upper_coord = child->perim_coords[1] ;
 	int Nx = upper_coord - lower_coord + 1 ;
 	for (int iC=0; iC<(parent->num_grid_funcs); iC++) {
-		printf("grid function %d\tNx %d\n", iC, Nx) ;
-		for (int jC=0; jC<(Nx-1); jC++) {
-			double p0 = parent->grid_funcs[iC][jC+lower_coord] ; 
-			double p1 = (
-				parent->grid_funcs[iC][jC+lower_coord+1]
-			-	parent->grid_funcs[iC][jC+lower_coord]
-			)/REFINEMENT ; 
-			for (int kC=0; kC<REFINEMENT; kC++) {
-				child->grid_funcs[iC][2*jC+kC] = p0 + kC*p1 ;
-			}
-		}
-		child->grid_funcs[iC][2*(Nx-1)] = parent->grid_funcs[iC][Nx-1] ;
+		interpolate_grid_func(
+			lower_coord, Nx, parent->grid_funcs[iC], child->grid_funcs[iC])
+		;
 	}
 	return ;
 }
@@ -272,7 +279,7 @@ static void interpolate_fields(amr_grid *parent, amr_grid *child)
 /* 	if the parent grid moved, then the finer grid should have different
 	bounding coordinates to not move itself in physical space */
 /*==========================================================================*/
-static void reset_finer_grid_perim_coords(
+static void reset_child_grid_perim_coords(
 	int old_lower_coord, amr_grid *base_grid)
 {
 	for (amr_grid *grid=(base_grid->child); grid!=NULL; grid=(grid->child)) {
@@ -289,7 +296,7 @@ static void reset_finer_grid_perim_coords(
 /*==========================================================================*/
 /* 	already injected old child grid, so no need to copy again */
 /*==========================================================================*/
-static void add_flagged_finer_grid(amr_grid *grid)
+static void add_flagged_child_grid(amr_grid *grid)
 {
 	int new_lower_coord = grid->flagged_coords[0] ;
 	int new_upper_coord = grid->flagged_coords[1] ;
@@ -299,7 +306,7 @@ static void add_flagged_finer_grid(amr_grid *grid)
 	if (old_child!=NULL) {
 		old_lower_coord = old_child->perim_coords[0] ;
 	}
-	if (new_upper_coord-new_lower_coord<2*BUFFER_COORD) {
+	if ((new_upper_coord-new_lower_coord)<2*BUFFER_COORD) {
 		if ((old_child!=NULL)
 		&& ((old_child->child)==NULL)
 		) {
@@ -311,14 +318,14 @@ static void add_flagged_finer_grid(amr_grid *grid)
 	amr_grid *new_child = amr_make_finer_grid(
 		new_lower_coord, new_upper_coord, grid
 	) ;
-	interpolate_fields(grid, new_child) ;
+	interpolate_all_grid_funcs(grid, new_child) ;
 
 	if (old_child!=NULL) {
 		amr_destroy_grid(old_child) ; 
 		old_child = NULL ;	
 	} 
 	amr_insert_grid(new_child, grid) ;
-	reset_finer_grid_perim_coords(old_lower_coord, grid->child) ;
+	reset_child_grid_perim_coords(old_lower_coord, grid->child) ;
 
 	return ;
 }
@@ -446,10 +453,16 @@ static void flag_field_regridding_coords(amr_field *fields, amr_grid *parent, am
 			continue ;
 		}
 		int field_index = field->index ;
-		int lower_jC = grid->perim_coords[0] ;
-		int upper_jC = grid->perim_coords[1] ;
 		int lower_flagged_coords = (-1) ;
 		int upper_flagged_coords = (-1) ;
+		int lower_jC = grid->perim_coords[0] ;
+		int upper_jC = grid->perim_coords[1] ;
+		if (parent->perim_interior[0]==true) {
+			lower_jC += BUFFER_COORD ;
+		}
+		if (parent->perim_interior[1]==true) {
+			upper_jC -= BUFFER_COORD ;
+		}
 		for (int jC=lower_jC; jC<upper_jC; jC++) {
 			double parent_val = parent->grid_funcs[field_index][jC] ;
 
@@ -484,39 +497,56 @@ static inline double min_double(double val_1, double val_2)
 	return (val_1<val_2) ? val_1 : val_2 ;
 }
 /*==========================================================================*/
+static void find_field_bounding_coords(
+	amr_field *fields, 
+	int *lower_finer_grid_coord, int *upper_finer_grid_coord) 
+{
+	for (amr_field *field=fields; field!=NULL; field=(field->next)) {
+		int lower_coord = field->flagged_coords[0] ;
+		int upper_coord = field->flagged_coords[1] ;
+		if ((strcmp(field->pde_type,HYPERBOLIC)==0) 
+		&&  (lower_coord!=(-1) && upper_coord!=(-1)) 
+		) {
+			*lower_finer_grid_coord = min_double(lower_coord,*lower_finer_grid_coord) ;
+			*upper_finer_grid_coord = max_double(upper_coord,*upper_finer_grid_coord) ;
+		}
+	}
+	return ;
+}
+/*==========================================================================*/
 static void determine_grid_coords(
 	amr_field *fields, amr_grid *grid)
 {
 	int lower_finer_grid_coord = (grid->Nx)-1 ; 
 	int upper_finer_grid_coord = 0 ; 
 
-	for (amr_field *field=fields; field!=NULL; field=(field->next)) {
-		int lower_coord = field->flagged_coords[0] ;
-		int upper_coord = field->flagged_coords[1] ;
-		if (lower_coord!=(-1) && upper_coord!=(-1)) {
-			lower_finer_grid_coord = min_double(lower_coord,lower_finer_grid_coord) ;
-			upper_finer_grid_coord = max_double(upper_coord,upper_finer_grid_coord) ;
-		}
-	}
+	find_field_bounding_coords(
+		fields, 
+		&lower_finer_grid_coord, &upper_finer_grid_coord
+	) ; 
 /* need to have enough room for finer grid (if it exists) and buffer space for that finer grid 
 */
 	if (((grid->child)!=NULL)
 	&&   (lower_finer_grid_coord!=((grid->Nx)-1))
 	&&   (upper_finer_grid_coord!=(0)) 
 	) {
-		int lower_child_flagged_coord = 
-			grid->child->perim_coords[0] 
-		+ 	(int)(((grid->child->flagged_coords[0])-BUFFER_COORD)/REFINEMENT) 	
-		;
-		int upper_child_flagged_coord = 
-			grid->child->perim_coords[0] 
-		+ 	(int)(((grid->child->flagged_coords[1])+BUFFER_COORD)/REFINEMENT) 
-		;
-		assert(lower_child_flagged_coord>=0) ;
-		assert(upper_child_flagged_coord<=(grid->Nx)-1) ;
+		if ((grid->perim_interior[0])==true) {
+			int lower_child_flagged_coord = 
+				grid->child->perim_coords[0] 
+			+ 	(int)(((grid->child->perim_coords[0])-BUFFER_COORD)/REFINEMENT) 	
+			;
+			assert(lower_child_flagged_coord>=0) ;
+			lower_finer_grid_coord = min_double(lower_child_flagged_coord,lower_finer_grid_coord) ;
+		}
+		if ((grid->perim_interior[1])==true) {
+			int upper_child_flagged_coord = 
+				grid->child->perim_coords[0] 
+			+ 	(int)(((grid->child->perim_coords[1])+BUFFER_COORD)/REFINEMENT) 
+			;
+			assert(upper_child_flagged_coord<=(grid->Nx)-1) ;
 
-		lower_finer_grid_coord = min_double(lower_child_flagged_coord,lower_finer_grid_coord) ;
-		upper_finer_grid_coord = min_double(upper_child_flagged_coord,upper_finer_grid_coord) ;
+			upper_finer_grid_coord = min_double(upper_child_flagged_coord,upper_finer_grid_coord) ;
+		}
 	}
 	grid->flagged_coords[0] = lower_finer_grid_coord ;
 	grid->flagged_coords[1] = upper_finer_grid_coord ;
@@ -537,8 +567,9 @@ void regrid_all_finer_levels(amr_field *fields, amr_grid *base_grid)
 		printf("level %d\n", grid->level) ;
 		printf("lower %d\tupper %d\n", grid->flagged_coords[0], grid->flagged_coords[1]) ;
 		fflush(NULL) ;
-		add_flagged_finer_grid(grid) ;
-
+		if ((grid->level)<AMR_MAX_LEVELS-1) {
+			add_flagged_child_grid(grid) ;
+		}
 		grid = grid->parent ;
 	} 
 	grid = NULL ;
@@ -565,11 +596,11 @@ void add_self_similar_initial_grids(
 /*============================================================================*/
 void amr_insert_grid(amr_grid *grid_to_insert, amr_grid* grid)
 {
+	grid_to_insert->child  = grid->child ;
+	grid_to_insert->parent = grid ;
 	if ((grid->child)!=NULL) {
 		(grid->child)->parent = grid_to_insert ;
 	}
-	grid_to_insert->child = grid->child ;
-	grid_to_insert->parent = grid ;
 	grid->child = grid_to_insert ;
 
 	return ;
