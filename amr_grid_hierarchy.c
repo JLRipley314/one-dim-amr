@@ -435,13 +435,15 @@ static void flag_field_regridding_coords(amr_field *fields, amr_grid *parent, am
 		int upper_flagged_coords = (-1) ;
 		int lower_jC = grid->perim_coords[0] ;
 		int upper_jC = grid->perim_coords[1] ;
-		if (parent->perim_interior[0]==true) {
-			lower_jC += BUFFER_COORD ;
-		}
-		if (parent->perim_interior[1]==true) {
-			upper_jC -= BUFFER_COORD ;
-		}
-		for (int jC=lower_jC; jC<upper_jC; jC++) {
+		int start_jC = (grid->perim_interior[0]==true) 
+		?	lower_jC + BUFFER_COORD
+		:	lower_jC 
+		;
+		int end_jC = (grid->perim_interior[1]==true) 
+		?	upper_jC - BUFFER_COORD
+		:	upper_jC 
+		;
+		for (int jC=start_jC; jC<end_jC; jC++) {
 			double parent_val = parent->grid_funcs[field_index][jC] ;
 
 			int grid_index = REFINEMENT*(jC-lower_jC) ; 
@@ -499,20 +501,6 @@ static void determine_grid_coords(
 	) ; 
 /* set buffer space from grid boundaries  
 */
-	if ((grid->perim_interior[0])==true) {
-		lower_child_grid_coord = MAXIMUM(BUFFER_COORD,lower_child_grid_coord) ;
-	} else {
-		if (lower_child_grid_coord<BUFFER_COORD) {
-			lower_child_grid_coord= 0 ;
-		}
-	}
-	if ((grid->perim_interior[1])==true) {
-		upper_child_grid_coord = MINIMUM(Nx-1-BUFFER_COORD,upper_child_grid_coord) ;
-	} else {
-		if (upper_child_grid_coord>Nx-1-BUFFER_COORD) {
-			lower_child_grid_coord= Nx-1 ;
-		}
-	}
 	grid->flagged_coords[0] = lower_child_grid_coord ;
 	grid->flagged_coords[1] = upper_child_grid_coord ;
 

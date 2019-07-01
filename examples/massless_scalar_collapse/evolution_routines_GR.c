@@ -431,18 +431,6 @@ void advance_tStep_PQ_massless_scalar_GR(
 	if (exc_jC==Nx-1) {
 		return ;
 	}
-	Kreiss_Oliger_filter(Nx, exc_jC, P_n) ;
-	Kreiss_Oliger_filter(Nx, exc_jC, Q_n) ;
-
-	if ((fabs(bbox[0])<machine_epsilon)
-	&&  (exc_jC>0)
-	) {
-		Kreiss_Oliger_filter_origin(P_n, "even") ;
-		Kreiss_Oliger_filter_origin(Q_n, "odd") ;
-	} else {
-		Kreiss_Oliger_left_inner_grid(P_n) ;
-		Kreiss_Oliger_left_inner_grid(Q_n) ;
-	}
 	double res = 0 ;
 /* to avoid problems with r=infty when x=s_L */	
 	double x_lower = bbox[0] ;
@@ -466,7 +454,18 @@ void advance_tStep_PQ_massless_scalar_GR(
 	   (iters<3)
 	|| (res>err_tolerance)
 	) ;
+	Kreiss_Oliger_filter(Nx, exc_jC, P_n) ;
+	Kreiss_Oliger_filter(Nx, exc_jC, Q_n) ;
 
+	if ((fabs(bbox[0])<machine_epsilon)
+	&&  (exc_jC>0)
+	) {
+		Kreiss_Oliger_filter_origin(P_n, "even") ;
+		Kreiss_Oliger_filter_origin(Q_n, "odd") ;
+	} else {
+		Kreiss_Oliger_left_inner_grid(P_n) ;
+		Kreiss_Oliger_left_inner_grid(Q_n) ;
+	}
 	return ;
 }
 /*===========================================================================*/
