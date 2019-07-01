@@ -350,6 +350,11 @@ static void evolve_grid(
 		shift_fields_one_time_level(fields, grid) ;
 		grid->tC   += 1 ;
 		grid->time += grid->dt ;
+		if (((grid->parent)!=NULL) 
+		&&  ((grid->tC)%REGRID==0) 
+		) {
+			regrid_all_finer_levels(fields, grid) ;
+		}
 /* 	do not interpolate coarse grid (level 1) and  shadow (level 0),
 	both which span the entire domain so boundary conditions are physical 
 */	
@@ -370,15 +375,15 @@ static void evolve_grid(
 		if ((grid->level)>0) { /* all grids finer than shadow grid */
 			solve_ode_fields(fields, grid, solve_ode) ;
 		}
-	}
-	if ((grid->parent)!=NULL) {
-		if ((grid->tC)%REGRID==0) {
-			regrid_all_finer_levels(fields, grid) ;
+		if (((grid->child)!=NULL) 
+		&&  ((grid->tC+1)%REGRID==0) 
+		) {
+			flag_field_regridding_coords(fields, grid, grid->child) ;
 		}
 	}
 	if ((grid->child)!=NULL) {
 		inject_overlaping_fields(fields, grid->child, grid) ;	
-	}
+	} 
 	set_grid_ode_extrap_levels(fields, grid) ;
 	return ;
 }

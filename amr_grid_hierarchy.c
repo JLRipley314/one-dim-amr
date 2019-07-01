@@ -421,7 +421,7 @@ void inject_overlaping_fields(
 /*==========================================================================*/
 /* flagging all hyperbolic and ode fields */
 /*==========================================================================*/
-static void flag_field_regridding_coords(amr_field *fields, amr_grid *parent, amr_grid *grid)
+void flag_field_regridding_coords(amr_field *fields, amr_grid *parent, amr_grid *grid)
 {
 	double regrid_err_lim = TRUNC_ERR_TOLERANCE*pow(grid->dt,2) ;
 	for (amr_field *field=fields; field!=NULL; field=(field->next)) {
@@ -462,8 +462,8 @@ static void flag_field_regridding_coords(amr_field *fields, amr_grid *parent, am
 		}
 		field->flagged_coords[0] = lower_flagged_coords ;
 		field->flagged_coords[1] = upper_flagged_coords ;
-		printf("field %s\t", field->name) ;
-		printf("lower %d\tupper %d\n", field->flagged_coords[0], field->flagged_coords[1]) ;
+//		printf("field %s\t", field->name) ;
+//		printf("lower %d\tupper %d\n", field->flagged_coords[0], field->flagged_coords[1]) ;
 	}
 	return ;
 }
@@ -515,7 +515,6 @@ void regrid_all_finer_levels(amr_field *fields, amr_grid *base_grid)
 		if ((grid->child)!=NULL) {
 			inject_overlaping_fields(fields, grid->child, grid) ;
 		}
-		flag_field_regridding_coords(fields, grid->parent, grid) ;
 		determine_grid_coords(fields, grid) ;
 		printf("level %d\n", grid->level) ;
 		printf("lower %d\tupper %d\n", grid->flagged_coords[0], grid->flagged_coords[1]) ;

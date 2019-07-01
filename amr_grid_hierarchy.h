@@ -16,8 +16,8 @@
 
 #define AMR_MAX_LEVELS 4 /* maximum number of grid levels */
 #define REFINEMENT 2 /* spatial and temporal refinement scale */
-#define REGRID 32 /* regrid every REGRID time steps */
-#define BUFFER_COORD (2*REGRID) /* regrid every REGRID time steps */
+#define REGRID 64 /* regrid every REGRID time steps */
+#define BUFFER_COORD (REGRID) /* regrid every REGRID time steps */
 
 #define TRUNC_ERR_TOLERANCE ((double)(1e-6)) /* when above this flag for finer grid */
 
@@ -116,6 +116,8 @@ void amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent) ;
 void amr_insert_grid(amr_grid *grid_to_insert, amr_grid* grid) ;
 
 void amr_destroy_grid(amr_grid* grid) ;
+
+void flag_field_regridding_coords(amr_field *fields, amr_grid *parent, amr_grid *grid) ;
 
 amr_grid_hierarchy* amr_init_grid_hierarchy(
 	amr_field* fields,
