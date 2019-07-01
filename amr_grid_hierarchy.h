@@ -19,7 +19,7 @@
 #define REGRID 64 /* regrid every REGRID time steps */
 #define BUFFER_COORD (REGRID) /* regrid every REGRID time steps */
 
-#define TRUNC_ERR_TOLERANCE ((double)(1e-4)) /* when above this flag for finer grid */
+#define TRUNC_ERR_TOLERANCE ((double)(1e-3)) /* when above this flag for finer grid */
 
 #define MIN_GRID_SHAPE ((double)(20)) /* number of coarser grid points before making new grid */
 

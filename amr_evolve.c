@@ -401,7 +401,6 @@ static void save_all_grids(
 	amr_grid_hierarchy* gh, void (*save_to_file)(amr_grid*))
 {
 	for (amr_grid* grid=gh->grids; grid != NULL; grid=grid->child) {
-		printf("grid level %d\t time %.10e\n", grid->level, grid->time) ;
 		save_to_file(grid) ;
 	}
 	return ;
