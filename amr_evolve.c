@@ -337,6 +337,8 @@ static void solve_ode_initial_data(
  * when all levels align. The previous ODE level used for extrapapoaltion
  * is then reset to make it agree with linear extrapapolation with resolved
  * ODE values. 
+ * Do not interpolate coarse grid (level 1) and  shadow (level 0),
+ * both which span the entire domain so boundary conditions are physical 
  */
 /*==========================================================================*/
 static void evolve_grid(
@@ -347,20 +349,17 @@ static void evolve_grid(
 	void (*solve_ode)(amr_grid*))
 {
 	for (int tC=0; tC<num_t_steps; tC++) {
-		shift_fields_one_time_level(fields, grid) ;
-		grid->tC   += 1 ;
-		grid->time += grid->dt ;
 		if (((grid->parent)!=NULL) 
 		&&  ((grid->tC)%REGRID==0) 
 		) {
 			regrid_all_finer_levels(fields, grid) ;
 		}
-/* 	do not interpolate coarse grid (level 1) and  shadow (level 0),
-	both which span the entire domain so boundary conditions are physical 
-*/	
 		if ((grid->level)>1) {
 			set_interior_hyperbolic_boundary(fields, grid->parent, grid) ;
 		}
+		shift_fields_one_time_level(fields, grid) ;
+		grid->tC   += 1 ;
+		grid->time += grid->dt ;
 		amr_extrapolate_ode_fields(fields, grid) ;
 		evolve_hyperbolic_pde(grid) ;
 		if ((grid->child)!=NULL) {
@@ -402,7 +401,7 @@ static void save_all_grids(
 	amr_grid_hierarchy* gh, void (*save_to_file)(amr_grid*))
 {
 	for (amr_grid* grid=gh->grids; grid != NULL; grid=grid->child) {
-		printf("grid level %d\n", grid->level) ;
+		printf("grid level %d\t time %.10e\n", grid->level, grid->time) ;
 		save_to_file(grid) ;
 	}
 	return ;
