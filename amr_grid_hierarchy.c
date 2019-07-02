@@ -12,8 +12,9 @@ const int amr_max_levels = 6 ;
 const int refinement = 2 ; 
 const int regrid = 64 ; 
 const int buffer_coord = 64 ; 
+const int min_grid_size = 32 ;
 
-const double trunc_err_tolerance = 1e-3 ; 
+const double trunc_err_tolerance = 1e-5 ; 
 
 const char HYPERBOLIC[] = "hyperbolic" ;
 const char ELLIPTIC[] = "elliptic" ;
@@ -296,7 +297,7 @@ static void add_flagged_child_grid(amr_grid *grid)
 	if (old_child!=NULL) {
 		old_lower_coord = old_child->perim_coords[0] ;
 	}
-	if ((new_upper_coord-new_lower_coord)<2*buffer_coord) {
+	if ((new_upper_coord-new_lower_coord)<min_grid_size) {
 		if ((old_child!=NULL)
 		&& ((old_child->child)==NULL)
 		) {
