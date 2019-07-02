@@ -61,7 +61,7 @@ run_data = {
 ###
 ###	if initial_data is r4Exp
 ###
-	"amp"		: 0.0044,
+	"amp"		: 0.0042,
 	"width"		: 4.0,
 	"center"	: 10.0,
 	"direction"	: "ingoing",#"stationary",#"outgoing",#
@@ -98,6 +98,11 @@ dt = float(float(run_data["cfl_num"]) * dx)
 
 run_data["dx"] = dx
 run_data["dt"] = dt
+##############################################################################
+### machine eps: machine epsilon
+##############################################################################
+from numpy import finfo
+run_data["machine_eps"] = finfo(float).eps,
 ##############################################################################
 ### correct formatting for printing
 ##############################################################################
