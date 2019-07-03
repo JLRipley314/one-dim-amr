@@ -35,7 +35,7 @@ run_data = {
 ###
 ###	EdGB: coupling for Gauss-Bonnet scalar (gbs)
 ###
-	"coupling_gbs"	: 1.0,
+	"coupling_gbs"	: -0.1,
 
 	"stereographic_L" : 100,
 	
@@ -55,15 +55,15 @@ run_data = {
 	"Nt"		: 2**10+1,
 	"t_step_save"	: 2**0,
 	"cfl_num"	: 0.25,  
-	"err_tolerance"	: 1.0e-12, 
+	"err_tolerance"	: 1.0e-10, 
 	
 	"initial_data" : "r4Exp",#"initial_black_hole",#"initial_black_hole_with_r4Exp",#"presetPQPhi",# 
 ###
 ###	if initial_data is r4Exp
 ###
-	"amp"		: 0.0042,
+	"amp"		: 0.0109,
 	"width"		: 4.0,
-	"center"	: 10.0,
+	"center"	: 8.0,
 	"direction"	: "ingoing",#"stationary",#"outgoing",#
 ###
 ###	if initial_data is initial_black_hole

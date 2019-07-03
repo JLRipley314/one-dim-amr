@@ -166,26 +166,24 @@ static double compute_iteration_excision_boundary_condition_Ze(
 
         double t_Der_Ze = D1_CrankNicolson_2ndOrder(Ze_n[exc_jC], Ze_nm1[exc_jC], dt) ;
 
-        double r_Der_Ze = D1_forward_2ndOrder(Ze_jp2, Ze_jp1, Ze, dr) ;
+        double	r_Der_Ze_sqrd = D1_forward_2ndOrder(pow(Ze_jp2,2), pow(Ze_jp1,2), pow(Ze,2), dr) ;
 
         double SE_LL_TR        = (Al*(2*P*Q + (pow(P,2) + pow(Q,2))*Ze))/2. ;
         double Ze_Der_SE_LL_TR = (Al*(0     + (pow(P,2) + pow(Q,2))*1 ))/2. ;
 
         double res_Ze = 
 		t_Der_Ze
-	-       (r_j*SE_LL_TR)/(2.*Ze)
-	-       r_Der_Ze*Al*Ze
+	-       Al*r_Der_Ze_sqrd/2.
 	-       (Al*pow(Ze,2))/(2.*r_j)
+	-       (r_j*SE_LL_TR)/(2.*Ze)
 
         ;
         double jac_Ze = 
 		1/dt
-	-       (r_Der_Ze*Al)/2.
-	+       (
-			pow(r_j,2)*SE_LL_TR
-		-       pow(r_j,2)*Ze_Der_SE_LL_TR*Ze
-		-       2*Al*pow(Ze,3)
-	)/(4.*r_j*pow(Ze,2))
+	-	(Al*(-3/(2.*dr))*Ze)/2.
+	-	(Al*2*Ze)/(2.*r_j)
+	+	((r_j*SE_LL_TR)/2)*pow(Ze,-2)
+	-	(r_j*Ze_Der_SE_LL_TR)/(2.*Ze)
         ;
         Ze_n[exc_jC] -= res_Ze/jac_Ze ;
 

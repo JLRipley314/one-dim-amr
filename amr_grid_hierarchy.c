@@ -438,7 +438,11 @@ void flag_field_regridding_coords(amr_field *fields, amr_grid *parent, amr_grid 
 {
 	double regrid_err_lim = trunc_err_tolerance*pow(grid->dt,2) ;
 	for (amr_field *field=fields; field!=NULL; field=(field->next)) {
-		if (strcmp(field->pde_type,HYPERBOLIC)!=0) {
+		if ((strcmp(field->pde_type,HYPERBOLIC)==0)
+		||  (strcmp(field->pde_type,ODE)==0) 
+		) {
+			/* keep on going */
+		} else {
 			field->flagged_coords[0] = (grid->Nx)-1 ;
 			field->flagged_coords[1] = 0 ;
 			continue ;
@@ -500,8 +504,9 @@ static void determine_grid_coords(
 	for (amr_field *field=fields; field!=NULL; field=(field->next)) {
 		int lower_coord = field->flagged_coords[0] ;
 		int upper_coord = field->flagged_coords[1] ;
-		if ((strcmp(field->pde_type,HYPERBOLIC)==0) 
-		&&  (lower_coord!=(-1) && upper_coord!=(-1)) 
+		if ((	(strcmp(field->pde_type,HYPERBOLIC)==0) 
+		     || (strcmp(field->pde_type,ODE)==0)
+		) &&  	(lower_coord!=(-1) && upper_coord!=(-1)) 
 		) {
 			lower_child_grid_coord = min_double(lower_coord,lower_child_grid_coord) ;
 			upper_child_grid_coord = max_double(upper_coord,upper_child_grid_coord) ;

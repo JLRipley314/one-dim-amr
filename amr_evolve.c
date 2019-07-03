@@ -349,7 +349,8 @@ static void evolve_grid(
 	void (*solve_ode)(amr_grid*))
 {
 	for (int tC=0; tC<num_t_steps; tC++) {
-		if (((grid->parent)!=NULL) 
+		if (((grid->parent)!=NULL)
+		&&  ((grid->tC)!=0) 
 		&&  ((grid->tC)%regrid==0) 
 		) {
 			regrid_all_finer_levels(fields, grid) ;
@@ -498,6 +499,7 @@ static void set_initial_data(
 			evolve_hyperbolic_pde,
 			solve_ode) 
 		;
+		regrid_all_finer_levels(gh->fields, gh->grids->child) ;
 		flip_dt(gh->fields,gh->grids) ;
 		evolve_grid(
 			gh->fields, 
