@@ -539,10 +539,12 @@ void save_to_file(amr_grid *grid)
 	made_output_files = true ;
 /* 	save to file-see man pages for bbhutil utilities on Choptuik's website 
 */
-	gft_out_bbox(output_name_Al, grid_time, &Nx, 1, bbox, Al_n) ;
-	gft_out_bbox(output_name_Ze, grid_time, &Nx, 1, bbox, Ze_n) ;
-	gft_out_bbox(output_name_P,  grid_time, &Nx, 1, bbox,  P_n) ;
-	gft_out_bbox(output_name_Q,  grid_time, &Nx, 1, bbox,  Q_n) ;
+	int rank = 1 ;
+
+	gft_out_bbox(output_name_Al, grid_time, &Nx, rank, bbox, Al_n) ;
+	gft_out_bbox(output_name_Ze, grid_time, &Nx, rank, bbox, Ze_n) ;
+	gft_out_bbox(output_name_P,  grid_time, &Nx, rank, bbox,  P_n) ;
+	gft_out_bbox(output_name_Q,  grid_time, &Nx, rank, bbox,  Q_n) ;
 
 	double *test_1 = calloc(Nx,sizeof(double)) ;
 	double *test_2 = calloc(Nx,sizeof(double)) ;
@@ -552,26 +554,26 @@ void save_to_file(amr_grid *grid)
 		test_2[jC] = P_nm2[jC] ;
 	}
 
-	gft_out_bbox(output_name_test_1, grid_time, &Nx, 1, bbox, test_1) ;
-	gft_out_bbox(output_name_test_2, grid_time, &Nx, 1, bbox, test_2) ;
+	gft_out_bbox(output_name_test_1, grid_time, &Nx, rank, bbox, test_1) ;
+	gft_out_bbox(output_name_test_2, grid_time, &Nx, rank, bbox, test_2) ;
 
 	free(test_1) ;
 	free(test_2) ;
 
-	gft_out_bbox(output_name_phi,  grid_time, &Nx, 1, bbox, phi_n) ;
+	gft_out_bbox(output_name_phi,  grid_time, &Nx, rank, bbox, phi_n) ;
 
-	gft_out_bbox(output_name_mass_aspect,  grid_time, &Nx, 1, bbox, mass_aspect) ;
+	gft_out_bbox(output_name_mass_aspect,  grid_time, &Nx, rank, bbox, mass_aspect) ;
 
-	gft_out_bbox(output_name_ingoing_null_characteristic,  grid_time, &Nx, 1, bbox, ingoing_null_characteristic) ;
-	gft_out_bbox(output_name_outgoing_null_characteristic, grid_time, &Nx, 1, bbox, outgoing_null_characteristic) ;
-	gft_out_bbox(output_name_ingoing_scalar_characteristic,  grid_time, &Nx, 1, bbox, ingoing_scalar_characteristic) ;
-	gft_out_bbox(output_name_outgoing_scalar_characteristic, grid_time, &Nx, 1, bbox, outgoing_scalar_characteristic) ;
-	gft_out_bbox(output_name_Ricci_scalar,        grid_time, &Nx, 1, bbox,  Ricci_scalar) ;
-	gft_out_bbox(output_name_Gauss_Bonnet_scalar, grid_time, &Nx, 1, bbox,  Gauss_Bonnet_scalar) ;
+	gft_out_bbox(output_name_ingoing_null_characteristic,  grid_time, &Nx, rank, bbox, ingoing_null_characteristic) ;
+	gft_out_bbox(output_name_outgoing_null_characteristic, grid_time, &Nx, rank, bbox, outgoing_null_characteristic) ;
+	gft_out_bbox(output_name_ingoing_scalar_characteristic,  grid_time, &Nx, rank, bbox, ingoing_scalar_characteristic) ;
+	gft_out_bbox(output_name_outgoing_scalar_characteristic, grid_time, &Nx, rank, bbox, outgoing_scalar_characteristic) ;
+	gft_out_bbox(output_name_Ricci_scalar,        grid_time, &Nx, rank, bbox,  Ricci_scalar) ;
+	gft_out_bbox(output_name_Gauss_Bonnet_scalar, grid_time, &Nx, rank, bbox,  Gauss_Bonnet_scalar) ;
 
-	gft_out_bbox(output_name_eom_TR, grid_time, &Nx, 1, bbox, eom_TR) ;
-	gft_out_bbox(output_name_eom_ThTh, grid_time, &Nx, 1, bbox, eom_ThTh) ;
-	gft_out_bbox(output_name_eom_scalar, grid_time, &Nx, 1, bbox, eom_scalar) ;
+	gft_out_bbox(output_name_eom_TR, grid_time, &Nx, rank, bbox, eom_TR) ;
+	gft_out_bbox(output_name_eom_ThTh, grid_time, &Nx, rank, bbox, eom_ThTh) ;
+	gft_out_bbox(output_name_eom_scalar, grid_time, &Nx, rank, bbox, eom_scalar) ;
 
 	fflush(NULL) ;
 	

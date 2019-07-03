@@ -248,10 +248,10 @@ static void interpolate_grid_func(
 		-	parent_gf[jC+lower_coord]
 		)/refinement ; 
 		for (int kC=0; kC<refinement; kC++) {
-			child_gf[2*jC+kC] = p0 + kC*p1 ;
+			child_gf[refinement*jC+kC] = p0 + kC*p1 ;
 		}
 	}
-	child_gf[2*(Nx-1)] = parent_gf[Nx-1] ;
+	child_gf[refinement*(Nx-1)] = parent_gf[Nx-1+lower_coord] ;
 }
 /*==========================================================================*/
 static void interpolate_all_grid_funcs(amr_grid *parent, amr_grid *child)
