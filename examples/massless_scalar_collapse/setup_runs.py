@@ -31,11 +31,11 @@ run_data = {
 
 	"param_search"	: "no",#"yes",#
 
-	"theory"	: "massless_scalar_GR",#"EdGB",#
+	"theory"	: "EdGB",#"massless_scalar_GR",#
 ###
 ###	EdGB: coupling for Gauss-Bonnet scalar (gbs)
 ###
-	"coupling_gbs"	: 0.0,
+	"coupling_gbs"	: 1.0,
 
 	"stereographic_L" : 100,
 	
@@ -102,7 +102,7 @@ run_data["dt"] = dt
 ### machine eps: machine epsilon
 ##############################################################################
 from numpy import finfo
-run_data["machine_eps"] = finfo(float).eps,
+run_data["machine_eps"] = finfo(float).eps
 ##############################################################################
 ### correct formatting for printing
 ##############################################################################

@@ -481,24 +481,13 @@ void flag_field_regridding_coords(amr_field *fields, amr_grid *parent, amr_grid 
 	return ;
 }
 /*==========================================================================*/
-#define MAXIMUM(val_1, val_2) ((val_1)>(val_2)) ? (val_1) : (val_2) ;
-#define MINIMUM(val_1, val_2) ((val_1)<(val_2)) ? (val_1) : (val_2) ;
-/*==========================================================================*/
-static void find_field_bounding_coords(
-	amr_field *fields, 
-	int *lower_finer_grid_coord, int *upper_finer_grid_coord) 
+static inline double max_double(double val_1, double val_2) 
 {
-	for (amr_field *field=fields; field!=NULL; field=(field->next)) {
-		int lower_coord = field->flagged_coords[0] ;
-		int upper_coord = field->flagged_coords[1] ;
-		if ((strcmp(field->pde_type,HYPERBOLIC)==0) 
-		&&  (lower_coord!=(-1) && upper_coord!=(-1)) 
-		) {
-			*lower_finer_grid_coord = MINIMUM(lower_coord,*lower_finer_grid_coord) ;
-			*upper_finer_grid_coord = MAXIMUM(upper_coord,*upper_finer_grid_coord) ;
-		}
-	}
-	return ;
+	return (val_1>val_2) ? val_1 : val_2 ;
+}
+static inline double min_double(double val_1, double val_2) 
+{
+	return (val_1<val_2) ? val_1 : val_2 ;
 }
 /*==========================================================================*/
 static void determine_grid_coords(
@@ -507,13 +496,29 @@ static void determine_grid_coords(
 	int Nx = grid->Nx ;
 	int lower_child_grid_coord = Nx-1 ; 
 	int upper_child_grid_coord = 0 ; 
+/* find min and max cords */
+	for (amr_field *field=fields; field!=NULL; field=(field->next)) {
+		int lower_coord = field->flagged_coords[0] ;
+		int upper_coord = field->flagged_coords[1] ;
+		if ((strcmp(field->pde_type,HYPERBOLIC)==0) 
+		&&  (lower_coord!=(-1) && upper_coord!=(-1)) 
+		) {
+			lower_child_grid_coord = min_double(lower_coord,lower_child_grid_coord) ;
+			upper_child_grid_coord = max_double(upper_coord,upper_child_grid_coord) ;
+		}
+	}
+/* if too close to physical boundary place adjacent to boundary */
+	if ((grid->perim_interior[0]==false)
+	&&  (lower_child_grid_coord<buffer_coord)
+	) {
+		lower_child_grid_coord = 0 ;
+	}
+	if ((grid->perim_interior[1]==false)
+	&&  (upper_child_grid_coord>(Nx-1-buffer_coord))
+	) {
+		upper_child_grid_coord = Nx-1 ;
+	}
 
-	find_field_bounding_coords(
-		fields, 
-		&lower_child_grid_coord, &upper_child_grid_coord
-	) ; 
-/* set buffer space from grid boundaries  
-*/
 	grid->flagged_coords[0] = lower_child_grid_coord ;
 	grid->flagged_coords[1] = upper_child_grid_coord ;
 
