@@ -20,6 +20,25 @@ const char HYPERBOLIC[] = "hyperbolic" ;
 const char ELLIPTIC[] = "elliptic" ;
 const char ODE[] = "ode" ;
 const char DIAGNOSTIC[] = "diagnostic" ;
+
+/*==========================================================================*/
+static inline double max_double(double val_1, double val_2) 
+{
+	return (val_1>val_2) ? val_1 : val_2 ;
+}
+static inline double min_double(double val_1, double val_2) 
+{
+	return (val_1<val_2) ? val_1 : val_2 ;
+}
+/*==========================================================================*/
+static inline int max_int(int val_1, int val_2) 
+{
+	return (val_1>val_2) ? val_1 : val_2 ;
+}
+static inline int min_int(int val_1, int val_2) 
+{
+	return (val_1<val_2) ? val_1 : val_2 ;
+}
 /*============================================================================*/
 /* arrays called as array[row][column] */
 /*============================================================================*/
@@ -238,6 +257,66 @@ amr_grid *amr_make_finer_grid(int left_coord, int right_coord, amr_grid* grid)
 /*==========================================================================*/
 /* linearly interpolate coarser grid to finer grid */
 /*==========================================================================*/
+inline static double cubic_polynomial(
+	double p0, double p1, double p2, double p3, int kC)
+{
+	double step = (double)kC/(double)refinement ;
+	return p0 + p1*step + (p2*pow(step,2)/2.) + (p3*pow(step,3)/6.) ;
+}
+/*==========================================================================*/
+static void interpolate_cubic_grid_func(
+	int lower_coord, int Nx, double *parent_gf, double *child_gf)
+{
+/* lower */
+	int jC = 0 ;
+	double vj   = parent_gf[jC+lower_coord] ;
+	double vjp1 = parent_gf[jC+lower_coord+1] ;
+	double vjp2 = parent_gf[jC+lower_coord+2] ;
+	double vjp3 = parent_gf[jC+lower_coord+3] ;
+
+	double p0 = vj ;
+	double p1 = (-11*vj)/6. + 3*vjp1 - (3*vjp2)/2. + vjp3/3. ;
+	double p2 = 2*vj - 5*vjp1 + 4*vjp2 - vjp3 ;
+	double p3 = - vj + 3*vjp1 - 3*vjp2 + vjp3 ;
+	for (int kC=0; kC<refinement; kC++) {
+		child_gf[refinement*jC+kC] = cubic_polynomial(p0,p1,p2,p3,kC) ; 
+		printf("%d\t%f\n", refinement*jC+kC, child_gf[refinement*jC+kC]) ;
+	}
+/* upper */
+	jC = Nx-1 ;
+	       vj   = parent_gf[jC+lower_coord] ;
+	double vjm1 = parent_gf[jC+lower_coord-1] ;
+	double vjm2 = parent_gf[jC+lower_coord-2] ;
+	double vjm3 = parent_gf[jC+lower_coord-3] ;
+
+	p0 = vj ;
+	p1 = (11*vj)/6. - 3*vjm1 + (3*vjm2)/2. - vjm3/3. ;
+	p2 = 2*vj - 5*vjm1 + 4*vjm2 - vjm3 ;
+	p3 =   vj - 3*vjm1 + 3*vjm2 - vjm3 ;
+	for (int kC=0; kC<refinement; kC++) {
+		child_gf[refinement*jC-kC] = cubic_polynomial(p0,p1,p2,p3,-kC) ; 
+		printf("%d\t%f\n", refinement*jC-kC, child_gf[refinement*jC-kC]) ;
+	}
+/* interior */
+	for (jC=1; jC<Nx-2; jC++) {
+		vjm1 = parent_gf[jC+lower_coord-1] ;
+		vj   = parent_gf[jC+lower_coord] ;
+		vjp1 = parent_gf[jC+lower_coord+1] ;
+		vjp2 = parent_gf[jC+lower_coord+2] ;
+
+		p0 = vj ;
+		p1 = -vj/2. - vjm1/3. + vjp1 - vjp2/6. ;
+		p2 = -2*vj + vjm1 + vjp1 ;
+		p3 = 3*vj - vjm1 - 3*vjp1 + vjp2 ;
+
+		for (int kC=0; kC<refinement; kC++) {
+			child_gf[refinement*jC+kC] = cubic_polynomial(p0,p1,p2,p3,kC) ;
+			printf("%d\t%f\n", refinement*jC+kC, child_gf[refinement*jC+kC]) ;
+		}
+	}
+	return ;
+}
+/*==========================================================================*/
 static void interpolate_grid_func(
 	int lower_coord, int Nx, double *parent_gf, double *child_gf)
 {
@@ -252,6 +331,8 @@ static void interpolate_grid_func(
 		}
 	}
 	child_gf[refinement*(Nx-1)] = parent_gf[Nx-1+lower_coord] ;
+
+	return ;
 }
 /*==========================================================================*/
 static void interpolate_all_grid_funcs(amr_grid *parent, amr_grid *child)
@@ -260,6 +341,9 @@ static void interpolate_all_grid_funcs(amr_grid *parent, amr_grid *child)
 	int upper_coord = child->perim_coords[1] ;
 	int Nx = upper_coord - lower_coord + 1 ;
 	for (int iC=0; iC<(parent->num_grid_funcs); iC++) {
+//		interpolate_cubic_grid_func(
+//			lower_coord, Nx, parent->grid_funcs[iC], child->grid_funcs[iC])
+//		;
 		interpolate_grid_func(
 			lower_coord, Nx, parent->grid_funcs[iC], child->grid_funcs[iC])
 		;
@@ -285,7 +369,38 @@ static void reset_child_grid_perim_coords(
 	return ;
 }
 /*==========================================================================*/
-/* 	already injected old child grid, so no need to copy again */
+/* inject grid functions if overlapping */
+/*==========================================================================*/
+static void inject_old_child_vals(amr_grid *old_child, amr_grid *new_child)
+{
+	int old_lower_coord = old_child->perim_coords[0] ;
+	int new_lower_coord = new_child->perim_coords[0] ;
+	int old_upper_coord = old_child->perim_coords[1] ;
+	int new_upper_coord = new_child->perim_coords[1] ;
+
+	int Nx = refinement*(
+		min_int(old_upper_coord,new_upper_coord) - max_int(old_lower_coord,new_lower_coord)
+	) + 1 
+	;
+	if (Nx<=0) return ;
+	int offset = refinement * (old_lower_coord-new_lower_coord) ;
+
+	if (offset>0) {
+		for (int iC=0; iC<(old_child->num_grid_funcs); iC++) {
+			for (int jC=0; jC<Nx; jC++) {
+				new_child->grid_funcs[iC][jC+offset] = old_child->grid_funcs[iC][jC] ; 
+			}
+		}
+	} else  {
+		offset *= -1 ;
+		for (int iC=0; iC<(old_child->num_grid_funcs); iC++) {
+			for (int jC=0; jC<Nx; jC++) {
+				new_child->grid_funcs[iC][jC] = old_child->grid_funcs[iC][jC+offset] ; 
+			}
+		}
+	}
+	return ;
+}
 /*==========================================================================*/
 static void add_flagged_child_grid(amr_grid *grid)
 {
@@ -312,6 +427,7 @@ static void add_flagged_child_grid(amr_grid *grid)
 	interpolate_all_grid_funcs(grid, new_child) ;
 
 	if (old_child!=NULL) {
+		inject_old_child_vals(old_child,new_child) ;
 		amr_destroy_grid(old_child) ; 
 		old_child = NULL ;	
 	} 
@@ -483,15 +599,6 @@ void flag_field_regridding_coords(amr_field *fields, amr_grid *parent, amr_grid 
 //		printf("lower %d\tupper %d\n", field->flagged_coords[0], field->flagged_coords[1]) ;
 	}
 	return ;
-}
-/*==========================================================================*/
-static inline double max_double(double val_1, double val_2) 
-{
-	return (val_1>val_2) ? val_1 : val_2 ;
-}
-static inline double min_double(double val_1, double val_2) 
-{
-	return (val_1<val_2) ? val_1 : val_2 ;
 }
 /*==========================================================================*/
 static void determine_grid_coords(
