@@ -8,10 +8,10 @@
 #include <assert.h>
 
 /*============================================================================*/
-const int amr_max_levels = 5 ; 
+const int amr_max_levels = 6 ; 
 const int refinement = 2 ; 
-const int regrid = 64 ; 
-const int buffer_coord = 64 ; 
+const int regrid = 32 ; 
+const int buffer_coord = 32 ; 
 const int min_grid_size = 32 ;
 
 const double trunc_err_tolerance = 1e-5 ; 
@@ -417,7 +417,6 @@ static void add_flagged_child_grid(amr_grid *grid)
 		&& ((old_child->child)==NULL)
 		) {
 			amr_destroy_grid(old_child) ;
-			old_child = NULL ;
 		}
 		return ;
 	}
@@ -429,9 +428,14 @@ static void add_flagged_child_grid(amr_grid *grid)
 	if (old_child!=NULL) {
 		inject_old_child_vals(old_child,new_child) ;
 		amr_destroy_grid(old_child) ; 
-		old_child = NULL ;	
 	} 
+	if (grid->child!=NULL) {
+		printf("grid->child->level %d\n", grid->child->level) ;
+	}
 	amr_insert_grid(new_child, grid) ;
+	if (new_child->child!=NULL) {
+		printf("new_child->child->level %d\n", new_child->child->level) ;
+	}
 	reset_child_grid_perim_coords(old_lower_coord, grid->child) ;
 
 	return ;
@@ -640,8 +644,8 @@ static void determine_grid_coords(
 void regrid_all_finer_levels(amr_field *fields, amr_grid *base_grid)
 {
 	amr_grid *grid = base_grid ;
-	amr_set_to_tail(&grid) ;
-	while ((grid->level)>=(base_grid->level)) {
+//	amr_set_to_tail(&grid) ;
+//	while ((grid->level)>=(base_grid->level)) {
 		if ((grid->child)!=NULL) {
 			inject_overlaping_fields(fields, grid->child, grid) ;
 		}
@@ -654,7 +658,7 @@ void regrid_all_finer_levels(amr_field *fields, amr_grid *base_grid)
 			add_flagged_child_grid(grid) ;
 		}
 		grid = grid->parent ;
-	} 
+//	} 
 	grid = NULL ;
 	return ;
 }
@@ -691,6 +695,7 @@ void amr_insert_grid(amr_grid *grid_to_insert, amr_grid* grid)
 /*============================================================================*/
 void amr_destroy_grid(amr_grid* grid) 
 {	
+	printf("destroying level %d\n", grid->level) ;
 	free_double_2DArray(grid->grid_funcs) ;
 
 	if ((grid->parent)!=NULL) {

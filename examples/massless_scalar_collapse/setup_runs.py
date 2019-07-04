@@ -51,8 +51,8 @@ run_data = {
 ###	Nx, Nt should be of the form 2**n + 1 with n an integer
 ###	cfl_num: Courant Friedrichs Lewy number (for hyperbolics)
 ###
-	"Nx"		: 2**9+1,
-	"Nt"		: 2**9+1,
+	"Nx"		: 2**8+1,
+	"Nt"		: 2**7+1,
 	"t_step_save"	: 2**0,
 	"cfl_num"	: 0.25,  
 	"err_tolerance"	: 1.0e-10, 
@@ -141,7 +141,7 @@ elif (run_type == "convergence_test"):
 elif (run_type) == "critical_param_search":
 
 	param = "amp"	
-	param_range = [0.0006,0.0007]	
+	param_range = [0.00065,0.0007]	
 	critical_param_search(run_data, param, param_range)
 ##############################################################################
 else:
