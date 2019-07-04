@@ -405,6 +405,7 @@ static void inject_old_child_vals(amr_grid *old_child, amr_grid *new_child)
 static void add_flagged_child_grid(amr_grid *grid)
 {
 	int new_lower_coord = grid->flagged_coords[0] ;
+	new_lower_coord = 0 ;
 	int new_upper_coord = grid->flagged_coords[1] ;
 
 	amr_grid *old_child = grid->child ;
@@ -436,7 +437,7 @@ static void add_flagged_child_grid(amr_grid *grid)
 	if (new_child->child!=NULL) {
 		printf("new_child->child->level %d\n", new_child->child->level) ;
 	}
-	reset_child_grid_perim_coords(old_lower_coord, grid->child) ;
+//	reset_child_grid_perim_coords(old_lower_coord, grid->child) ;
 
 	return ;
 }
