@@ -18,23 +18,22 @@ from make_read_write_files_dirs import (
 	make_directory_name_current_time
 )
 
-CRITICAL_PARAM_SEARCH_OUTPUT = (
-	'/home/jripley/EdGB_HorizonPenetrating/critical_param_search_output/'
-)
+CRITICAL_PARAM_ERROR = 1e-6
+OUTPUT_DIR = "/home/jripley/one-dim-amr/examples/massless_scalar_collapse/output"
 
+###############################################################################
+def compute_normalized_difference(lower:float,upper:float)->float:
+	return (
+		2*(upper-lower)/(upper+lower)
+	)
 ###############################################################################
 ### if finds black hole in output then True, otherwise False
 ###############################################################################
 def check_output_black_hole_formed(output_file: str) -> bool:
 	with open(output_file, 'r') as f:
 		for line in f:
-			line = line.split('\t')
-			for component in line:
-				component = component.split(':')
-				if ((str(component[0]) == 'outer_null')
-				and (int(component[1]) > 0)
-				):
-					return True
+			if (line.split(':')[0]  == "outermost trapped jC"):
+				return True
 	return False
 ###############################################################################
 ### if run finsihed then True, otherwise False
@@ -42,7 +41,7 @@ def check_output_black_hole_formed(output_file: str) -> bool:
 def check_output_run_finished(output_file: str) -> bool:
 	with open(output_file, 'r') as f:
 		for line in f:
-			if line.split(':')[0] == 'Total sim time (sec)':
+			if (line.split(':')[0] == "time evolving sim (sec)"):
 				return True
 	return False
 ###############################################################################
@@ -51,9 +50,7 @@ def check_output_run_finished(output_file: str) -> bool:
 def check_output_code_crashed(output_file: str) -> bool:
 	with open(output_file, 'r') as f:
 		for line in f:
-			if ((line.split(':')[0] == 'ERROR')
-			or  (line.split(':')[0] == 'jC')
-			):
+			if (line.split(':')[0] == 'ERROR'):
 				return True
 	return False
 ###############################################################################
@@ -62,29 +59,30 @@ def critical_param_search(
 	run_data: dict, param: str, param_range:list ### List[float]
 ) -> None:
 
-	critical_param_error = 1e-8
 	found_critical_param = False
 
-	param_search_file_output = CRITICAL_PARAM_SEARCH_OUTPUT + 'critical_value_{}_{}_{}.txt'.format(param,run_data['Ny'],run_data['coupling_gbs'])
+	param_search_file_output = "{}/critical_param_search.txt".format(OUTPUT_DIR)
 	make_new_file(param_search_file_output)
 
 	while found_critical_param == False:
 
 		run_data[param] = (param_range[0] + param_range[1]) / 2
+		run_data["output_dir"] = make_directory_name_current_time(run_data)
+		os.makedirs(run_data["output_dir"])
+		output_file = run_data['output_dir'] + 'output.txt'
+
+		normalized_difference = compute_normalized_difference(param_range[0],param_range[1])
 
 		append_to_file(param_search_file_output, param + ' value: ' + str(run_data[param]) + '\n') 
 		append_to_file(param_search_file_output, 'range: [{},{}] \n'.format(param_range[0], param_range[1])) 
-		append_to_file(param_search_file_output, 'difference: {:.2e} \n'.format(param_range[1]-param_range[0])) 
+		append_to_file(param_search_file_output, 'difference: {:.2e} \n'.format(normalized_difference)) 
 
-		run_data['output_dir'] = make_directory_name_current_time(run_data['output_dir'])
-		os.makedirs(run_data["output_dir"])
-
-		output_file = run_data['output_dir'] + 'output.out'
-
-		write_txtFiles_initialData(run_data)
-		write_txtFiles_basicRunParams(run_data)
-		write_slurmScript(run_data)
-		subprocess.call("sbatch run_TEdGB_collapse.slurm", shell="True")  
+		write_initial_data(run_data)
+		write_run_data(run_data)
+		this_run = subprocess.call(
+			"./sim >{}/output.txt 2>&1 &".format(
+				run_data["output_dir"],run_data["theory"]),
+		 shell="True")  
 
 		black_hole_formed = False 
 		code_crashed = False 
@@ -116,7 +114,7 @@ def critical_param_search(
 		else:
 			raise ValueError('black_hole_formed, code_crashed, run_finished all are False!')
 
-		if 2*(param_range[1] - param_range[0])/(param_range[1] + param_range[0]) < critical_param_error:
+		if (normalized_difference < CRITICAL_PARAM_ERROR):
 			found_critical_param = True
 		else:
 			continue 

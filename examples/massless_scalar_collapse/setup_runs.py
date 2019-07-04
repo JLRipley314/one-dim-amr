@@ -51,8 +51,8 @@ run_data = {
 ###	Nx, Nt should be of the form 2**n + 1 with n an integer
 ###	cfl_num: Courant Friedrichs Lewy number (for hyperbolics)
 ###
-	"Nx"		: 2**8+1,
-	"Nt"		: 2**10+1,
+	"Nx"		: 2**9+1,
+	"Nt"		: 2**9+1,
 	"t_step_save"	: 2**0,
 	"cfl_num"	: 0.25,  
 	"err_tolerance"	: 1.0e-10, 
@@ -61,9 +61,9 @@ run_data = {
 ###
 ###	if initial_data is r4Exp
 ###
-	"amp"		: 0.0109,
-	"width"		: 4.0,
-	"center"	: 8.0,
+	"amp"		: 0.001,
+	"width"		: 3.0,
+	"center"	: 10.0,
 	"direction"	: "ingoing",#"stationary",#"outgoing",#
 ###
 ###	if initial_data is initial_black_hole
@@ -122,7 +122,7 @@ if run_type == "basic_run":
 		subprocess.call("sbatch run_TEdGB_collapse.slurm", shell="True")  
 	else:
 		subprocess.call(
-			"./sim >{}/output_{}.txt 2>&1 &".format(
+			"./sim >{}/output.txt 2>&1 &".format(
 				run_data["output_dir"],run_data["theory"]),
 		 shell="True")  
 ##############################################################################
@@ -140,6 +140,9 @@ elif (run_type == "convergence_test"):
 ##############################################################################
 elif (run_type) == "critical_param_search":
 
-	param = "r4Exp_amp"	
-	param_range = [0.1208984375,0.12109375]	
+	param = "amp"	
+	param_range = [0.0006,0.0007]	
 	critical_param_search(run_data, param, param_range)
+##############################################################################
+else:
+	print("ERROR: run_type = {}".format(run_type))

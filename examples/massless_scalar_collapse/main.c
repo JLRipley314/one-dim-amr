@@ -468,7 +468,7 @@ void compute_diagnostics(amr_grid *grid)
 	}
 /*--------------------------------------------------------------------------*/
 /* ''_general: includes setting excised_jC */ 
-/*--------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------*/	
 	compute_diagnostics_general(
 		Nx, 
 		stereographic_L,
@@ -483,6 +483,15 @@ void compute_diagnostics(amr_grid *grid)
 		Ricci_scalar,
 		Gauss_Bonnet_scalar)
 	;
+	int outermost_trapped_jC = -1 ;
+	for (int jC=0; jC<Nx; jC++) {
+		if (outgoing_null_characteristic[jC]<0) {
+			outermost_trapped_jC = jC ;
+		}
+	}
+	if (outermost_trapped_jC!=-1) {
+		printf("outermost trapped jC:%d on level\t%d\n", outermost_trapped_jC, grid->level) ;
+	}
 	if ((grid->level)==0) { 
 		grid->excised_jC = excised_jC ;
 		printf("t\t%f\tMA\t%f\texc_jC\t%d\n", (grid->time), mass_aspect[Nx-1], excised_jC) ;

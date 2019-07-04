@@ -19,7 +19,7 @@ static void set_array_val(int start, int end, double val, double* array)
 /*==========================================================================*/
 /* general checks and diagnostics */
 /*==========================================================================*/
-static int compute_mass_aspect(
+static void compute_mass_aspect(
 	int Nx,
 	double s_L, double dx,
 	double x_lower,
@@ -32,10 +32,10 @@ static int compute_mass_aspect(
 		mass_aspect[jC] = (r_j/2) * pow(Ze[jC],2) ;
 	}
 	mass_aspect[Nx-1] = mass_aspect[Nx-2] ;
-	return 0 ;
+	return ;
 } 
 /*==========================================================================*/
-static int compute_null_characteristics(
+static void compute_null_characteristics(
 	int Nx, double* Al, double* Ze,
 	double* ingoing_null_characteristic,
 	double* outgoing_null_characteristic)
@@ -44,7 +44,7 @@ static int compute_null_characteristics(
 		ingoing_null_characteristic[jC]  = - Al[jC] * (1 + Ze[jC]) ;
 		outgoing_null_characteristic[jC] = + Al[jC] * (1 - Ze[jC]) ;
 	}
-	return 0 ;
+	return ;
 } 
 /*==========================================================================*/
 static int compute_excision_point(
@@ -67,7 +67,7 @@ static int compute_excision_point(
 	return exc_jC ;
 }
 /*==========================================================================*/
-static int compute_Ricci_scalar(
+static void compute_Ricci_scalar(
 	int Nx, int exc_jC, 
 	double s_L,
 	double dt, double dx,
@@ -120,10 +120,10 @@ static int compute_Ricci_scalar(
 	Ricci_scalar[exc_jC] = Ricci_scalar[exc_jC+1] ; 
 	Ricci_scalar[Nx-1]   = Ricci_scalar[Nx-2] ; 
 
-	return 0 ;
+	return ;
 }
 /*==========================================================================*/
-static int compute_Gauss_Bonnet_scalar(
+static void compute_Gauss_Bonnet_scalar(
 	int Nx, int exc_jC, 
 	double s_L,
 	double dt, double dx,
@@ -175,7 +175,7 @@ static int compute_Gauss_Bonnet_scalar(
 	}
 	Gauss_Bonnet_scalar[exc_jC] = Gauss_Bonnet_scalar[exc_jC+1] ; 
 	Gauss_Bonnet_scalar[Nx-1]   = Gauss_Bonnet_scalar[Nx-2] ; 
-	return 0 ;
+	return ;
 }
 /*==========================================================================*/
 void compute_diagnostics_general(
