@@ -642,25 +642,23 @@ static void determine_grid_coords(
 	return ;
 }
 /*==========================================================================*/
-void regrid_all_finer_levels(amr_field *fields, amr_grid *base_grid)
+/* only regrid one grid as others have already be syncronised-so 
+ * estimated truncation error would be zero. when evolving the finer
+ * grid they will be regrided anyways so this is not a problem. */
+/*==========================================================================*/
+void regrid_all_finer_levels(amr_field *fields, amr_grid *grid)
 {
-	amr_grid *grid = base_grid ;
-//	amr_set_to_tail(&grid) ;
-//	while ((grid->level)>=(base_grid->level)) {
-		if ((grid->child)!=NULL) {
-			inject_overlaping_fields(fields, grid->child, grid) ;
-		}
-		flag_field_regridding_coords(fields, grid->parent, grid) ;
-		determine_grid_coords(fields, grid) ;
-		printf("level %d\n", grid->level) ;
-		printf("lower %d\tupper %d\n", grid->flagged_coords[0], grid->flagged_coords[1]) ;
-		fflush(NULL) ;
-		if ((grid->level)<amr_max_levels-1) {
-			add_flagged_child_grid(grid) ;
-		}
-		grid = grid->parent ;
-//	} 
-	grid = NULL ;
+	if ((grid->child)!=NULL) {
+		inject_overlaping_fields(fields, grid->child, grid) ;
+	}
+	flag_field_regridding_coords(fields, grid->parent, grid) ;
+	determine_grid_coords(fields, grid) ;
+	printf("level %d\n", grid->level) ;
+	printf("lower %d\tupper %d\n", grid->flagged_coords[0], grid->flagged_coords[1]) ;
+	fflush(NULL) ;
+	if ((grid->level)<amr_max_levels-1) {
+		add_flagged_child_grid(grid) ;
+	}
 	return ;
 }
 /*============================================================================*/

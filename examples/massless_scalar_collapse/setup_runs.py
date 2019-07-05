@@ -35,7 +35,7 @@ run_data = {
 ###
 ###	EdGB: coupling for Gauss-Bonnet scalar (gbs)
 ###
-	"coupling_gbs"	: 0.0,
+	"coupling_gbs"	: 1.0,
 
 	"stereographic_L" : 100,
 	
@@ -141,7 +141,7 @@ elif (run_type == "convergence_test"):
 elif (run_type) == "critical_param_search":
 
 	param = "amp"	
-	param_range = [0.00065,0.0007]	
+	param_range = [0.0000,0.001]	
 	critical_param_search(run_data, param, param_range)
 ##############################################################################
 else:
