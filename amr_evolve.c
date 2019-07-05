@@ -358,9 +358,9 @@ static void evolve_grid(
 		if ((grid->level)>1) {
 			set_interior_hyperbolic_boundary(fields, grid->parent, grid) ;
 		}
-		shift_fields_one_time_level(fields, grid) ;
 		grid->tC   += 1 ;
 		grid->time += grid->dt ;
+		shift_fields_one_time_level(fields, grid) ;
 		amr_extrapolate_ode_fields(fields, grid) ;
 		evolve_hyperbolic_pde(grid) ;
 		if ((grid->child)!=NULL) {

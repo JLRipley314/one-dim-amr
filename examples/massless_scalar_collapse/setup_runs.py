@@ -31,11 +31,11 @@ run_data = {
 
 	"param_search"	: "no",#"yes",#
 
-	"theory"	: "EdGB",#"massless_scalar_GR",#
+	"theory"	: "massless_scalar_GR",#"EdGB",#
 ###
 ###	EdGB: coupling for Gauss-Bonnet scalar (gbs)
 ###
-	"coupling_gbs"	: 1.0,
+	"coupling_gbs"	: 0.0,
 
 	"stereographic_L" : 100,
 	
@@ -141,7 +141,7 @@ elif (run_type == "convergence_test"):
 elif (run_type) == "critical_param_search":
 
 	param = "amp"	
-	param_range = [0.0000,0.001]	
+	param_range = [0.000678,0.00069]	
 	critical_param_search(run_data, param, param_range)
 ##############################################################################
 else:

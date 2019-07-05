@@ -8,13 +8,13 @@
 #include <assert.h>
 
 /*============================================================================*/
-const int amr_max_levels = 6 ; 
+const int amr_max_levels = 9 ; 
 const int refinement = 2 ; 
 const int regrid = 32 ; 
 const int buffer_coord = 32 ; 
 const int min_grid_size = 32 ;
 
-const double trunc_err_tolerance = 1e-5 ; 
+const double trunc_err_tolerance = 1e-1;//1e-3 ; 
 
 const char HYPERBOLIC[] = "hyperbolic" ;
 const char ELLIPTIC[] = "elliptic" ;
@@ -410,8 +410,17 @@ static void add_flagged_child_grid(amr_grid *grid)
 
 	amr_grid *old_child = grid->child ;
 	int old_lower_coord = 0 ;
+	int old_upper_coord = 0 ;
 	if (old_child!=NULL) {
 		old_lower_coord = old_child->perim_coords[0] ;
+		old_upper_coord = old_child->perim_coords[1] ;
+/* do not regrid if the new grid takes the same place as the old grid 
+*/
+		if ((old_lower_coord==new_lower_coord)
+		&&  (old_upper_coord==new_upper_coord)
+		) {
+			return ;
+		}
 	}
 	if ((new_upper_coord-new_lower_coord)<min_grid_size) {
 		if ((old_child!=NULL)
