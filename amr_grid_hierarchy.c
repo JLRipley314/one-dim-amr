@@ -8,7 +8,7 @@
 #include <assert.h>
 
 /*============================================================================*/
-const int amr_max_levels = 9 ; 
+const int amr_max_levels = 6 ; 
 const int refinement = 2 ; 
 const int regrid = 32 ; 
 const int buffer_coord = 32 ; 
