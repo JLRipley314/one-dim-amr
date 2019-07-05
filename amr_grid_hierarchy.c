@@ -8,7 +8,7 @@
 #include <assert.h>
 
 /*============================================================================*/
-const int amr_max_levels = 6 ; 
+const int amr_max_levels = 9 ; 
 const int refinement = 2 ; 
 const int regrid = 32 ; 
 const int buffer_coord = 32 ; 
@@ -402,6 +402,73 @@ static void inject_old_child_vals(amr_grid *old_child, amr_grid *new_child)
 	return ;
 }
 /*==========================================================================*/
+/* if cannot fit into parent grid + buffer and if grandchild (if exists)
+   cannot fit into this grid then send back new/lower coords with -1 */
+/*==========================================================================*/
+static void make_coords_fit_into_parent_and_fit_grandchild(
+		amr_grid *grid, int *new_lower_coord, int *new_upper_coord) 
+{
+	int Nx = grid->Nx ;
+	int parent_bounding_lower_coord = 0 ;
+	if (grid->perim_interior[0]==true) {
+		parent_bounding_lower_coord += buffer_coord ;
+	}
+	int parent_bounding_upper_coord = Nx-1 ;
+	if (grid->perim_interior[1]==true) {
+		parent_bounding_lower_coord -= buffer_coord ;
+	}
+	if (parent_bounding_lower_coord>=parent_bounding_upper_coord) {
+		*new_lower_coord = -1 ;
+		*new_upper_coord = -1 ;
+		return ;
+	} 
+/* if there is no grandchild then does not constrain the new grid */
+	int grandchild_bounding_lower_coord = *new_lower_coord ;
+	int grandchild_bounding_upper_coord = *new_upper_coord ;
+
+	if ((grid->child!=NULL)
+	&&  (grid->child->child!=NULL)
+	) {
+		amr_grid *grandchild = grid->child->child ;
+		grandchild_bounding_lower_coord = grandchild->perim_coords[0]/refinement ;
+		grandchild_bounding_upper_coord = grandchild->perim_coords[1]/refinement ;
+
+		if (grandchild->perim_interior[0]==true) {
+			grandchild_bounding_lower_coord -= buffer_coord/refinement ;
+		}
+		if (grandchild->perim_interior[1]==true) {
+			grandchild_bounding_upper_coord += buffer_coord/refinement ;
+		}
+		if ((grandchild_bounding_lower_coord<parent_bounding_lower_coord) 
+		||  (grandchild_bounding_upper_coord>parent_bounding_upper_coord) 
+		) {
+			*new_lower_coord = -1 ;
+			*new_upper_coord = -1 ;
+			return ; 
+		}
+		grandchild = NULL ;
+	}
+/* format:
+	parent_lower_coord | new_lower_coord | grandchild_lower_coord
+ and
+	grandchild_upper_coord | new_upper_coord | parent_upper_coord	
+*/	
+	if (*new_lower_coord < parent_bounding_lower_coord) {
+		*new_lower_coord = parent_bounding_lower_coord ;
+	}
+	if (*new_lower_coord > grandchild_bounding_lower_coord) {
+		*new_lower_coord = grandchild_bounding_lower_coord ;
+	}
+	if (*new_upper_coord > parent_bounding_upper_coord) {
+		*new_upper_coord = parent_bounding_upper_coord ;
+	}
+	if (*new_upper_coord < grandchild_bounding_upper_coord) {
+		*new_upper_coord = grandchild_bounding_upper_coord ;
+	}
+
+	return ;
+}
+/*==========================================================================*/
 static void add_flagged_child_grid(amr_grid *grid)
 {
 	int new_lower_coord = grid->flagged_coords[0] ;
@@ -422,7 +489,12 @@ static void add_flagged_child_grid(amr_grid *grid)
 			return ;
 		}
 	}
-	if ((new_upper_coord-new_lower_coord)<min_grid_size) {
+	make_coords_fit_into_parent_and_fit_grandchild(grid, &new_lower_coord, &new_upper_coord) ; 
+
+	if (((new_upper_coord-new_lower_coord)<min_grid_size) 
+	||  (new_lower_coord==-1)
+	||  (new_upper_coord==-1)
+	) {
 		if ((old_child!=NULL)
 		&& ((old_child->child)==NULL)
 		) {
