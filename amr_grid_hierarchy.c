@@ -8,13 +8,13 @@
 #include <assert.h>
 
 /*============================================================================*/
-const int amr_max_levels = 9 ; 
+const int amr_max_levels = 8 ; 
 const int refinement = 2 ; 
 const int regrid = 32 ; 
 const int buffer_coord = 32 ; 
 const int min_grid_size = 32 ;
 
-const double trunc_err_tolerance = 1e-1;//1e-3 ; 
+const double trunc_err_tolerance = 1e-2 ; 
 
 const char HYPERBOLIC[] = "hyperbolic" ;
 const char ELLIPTIC[] = "elliptic" ;
@@ -61,8 +61,10 @@ double** allocate_double_2DArray(int rows, int columns, double initializeValue)
 /*============================================================================*/
 void free_double_2DArray(double** array)  
 {
+	assert(array[0]!=NULL) ;
         free(array[0]) ;    
         array[0] = NULL ;    
+	assert(array!=NULL) ;
         free(array) ;    
         array    = NULL ;    
 
@@ -95,6 +97,7 @@ void amr_add_field(amr_field* fields, char* name, char* pde_type, int time_level
 		current = current->next ;
 	}
 	current->next = malloc(sizeof(amr_field)) ;
+	assert((current->next)!=NULL) ;
 
 	current->next->name = name ;
 	current->next->pde_type = pde_type ;
@@ -169,6 +172,7 @@ static int amr_delete_fields(amr_field** fields)
 /*============================================================================*/
 void amr_find_grid(int level, amr_grid_hierarchy* gh, amr_grid* grid) 
 {
+	assert(grid!=NULL) ; 
 	assert(level<amr_max_levels-1) ;
 				
 	grid = gh->grids ;
@@ -183,6 +187,7 @@ void amr_find_grid(int level, amr_grid_hierarchy* gh, amr_grid* grid)
 /*============================================================================*/
 int amr_find_finest_grid(amr_grid_hierarchy* gh, amr_grid* grid) 
 {
+	assert(grid!=NULL) ;
 	grid = gh->grids ;
 	while (grid->child != NULL) {
 		grid = grid->child ;
@@ -196,6 +201,7 @@ int amr_find_finest_grid(amr_grid_hierarchy* gh, amr_grid* grid)
 /*============================================================================*/
 amr_grid *amr_make_finer_grid(int left_coord, int right_coord, amr_grid* grid)
 {
+	assert(grid!=NULL) ;
 	assert((grid->level)+1<amr_max_levels) ;
 	amr_grid *new_grid = malloc(sizeof(amr_grid)) ;
 	assert(new_grid!=NULL) ;
@@ -267,6 +273,8 @@ inline static double cubic_polynomial(
 static void interpolate_cubic_grid_func(
 	int lower_coord, int Nx, double *parent_gf, double *child_gf)
 {
+	assert(parent_gf!=NULL) ;
+	assert(child_gf!=NULL) ;
 /* lower */
 	int jC = 0 ;
 	double vj   = parent_gf[jC+lower_coord] ;
@@ -320,6 +328,8 @@ static void interpolate_cubic_grid_func(
 static void interpolate_grid_func(
 	int lower_coord, int Nx, double *parent_gf, double *child_gf)
 {
+	assert(parent_gf!=NULL) ;
+	assert(child_gf!=NULL) ;
 	for (int jC=0; jC<(Nx-1); jC++) {
 		double p0 = parent_gf[jC+lower_coord] ; 
 		double p1 = (
@@ -337,6 +347,8 @@ static void interpolate_grid_func(
 /*==========================================================================*/
 static void interpolate_all_grid_funcs(amr_grid *parent, amr_grid *child)
 {
+	assert(parent!=NULL) ;
+	assert(child!=NULL) ;
 	int lower_coord = child->perim_coords[0] ;
 	int upper_coord = child->perim_coords[1] ;
 	int Nx = upper_coord - lower_coord + 1 ;
@@ -357,6 +369,7 @@ static void interpolate_all_grid_funcs(amr_grid *parent, amr_grid *child)
 static void reset_child_grid_perim_coords(
 	int old_lower_coord, amr_grid *base_grid)
 {
+	assert(base_grid!=NULL) ;
 	for (amr_grid *grid=(base_grid->child); grid!=NULL; grid=(grid->child)) {
 		int current_lower_coord = grid->parent->perim_coords[0] ;
 		int grid_lower_coord = grid->perim_coords[0] ;
@@ -373,6 +386,8 @@ static void reset_child_grid_perim_coords(
 /*==========================================================================*/
 static void inject_old_child_vals(amr_grid *old_child, amr_grid *new_child)
 {
+	assert(old_child!=NULL) ;
+	assert(new_child!=NULL) ;
 	int old_lower_coord = old_child->perim_coords[0] ;
 	int new_lower_coord = new_child->perim_coords[0] ;
 	int old_upper_coord = old_child->perim_coords[1] ;
@@ -471,6 +486,7 @@ static void make_coords_fit_into_parent_and_fit_grandchild(
 /*==========================================================================*/
 static void add_flagged_child_grid(amr_grid *grid)
 {
+	assert(grid!=NULL) ;
 	int new_lower_coord = grid->flagged_coords[0] ;
 	new_lower_coord = 0 ;
 	int new_upper_coord = grid->flagged_coords[1] ;
@@ -525,6 +541,7 @@ static void add_flagged_child_grid(amr_grid *grid)
 /*============================================================================*/
 void amr_add_finer_grid(int left_coord, int right_coord, amr_grid* parent)
 {
+	assert(parent!=NULL) ;
 	amr_grid *new_grid = amr_make_finer_grid(left_coord, right_coord, parent) ;
 
 	parent->child = new_grid ;
@@ -608,6 +625,8 @@ amr_grid_hierarchy* amr_init_grid_hierarchy(
 static void inject_grid_func(
 	int Nx, int perim_coord_left, double *gf_parent, double *gf)
 {
+	assert(gf_parent!=NULL) ;
+	assert(gf!=NULL) ;
 	for (int iC=0; iC<Nx; iC++) {
 		if (iC%refinement==0) {
 			gf_parent[perim_coord_left+(iC/refinement)] = gf[iC] ;
@@ -621,6 +640,8 @@ static void inject_grid_func(
 void inject_overlaping_fields(
 		amr_field *fields, amr_grid *grid, amr_grid *parent)
 {
+	assert(parent!=NULL) ;
+	assert(grid!=NULL) ;
 	int index = 0 ;
 	for (amr_field *field=fields; field!=NULL; field=field->next) {
 		index = field->index ;
@@ -638,6 +659,8 @@ void inject_overlaping_fields(
 /*==========================================================================*/
 void flag_field_regridding_coords(amr_field *fields, amr_grid *parent, amr_grid *grid)
 {
+	assert(parent!=NULL) ;
+	assert(grid!=NULL) ;
 	double regrid_err_lim = trunc_err_tolerance*pow(grid->dt,2) ;
 	for (amr_field *field=fields; field!=NULL; field=(field->next)) {
 		if ((strcmp(field->pde_type,HYPERBOLIC)==0)
@@ -690,6 +713,7 @@ void flag_field_regridding_coords(amr_field *fields, amr_grid *parent, amr_grid 
 static void determine_grid_coords(
 	amr_field *fields, amr_grid *grid)
 {
+	assert(grid!=NULL) ;
 	int Nx = grid->Nx ;
 	int lower_child_grid_coord = Nx-1 ; 
 	int upper_child_grid_coord = 0 ; 
@@ -729,6 +753,7 @@ static void determine_grid_coords(
 /*==========================================================================*/
 void regrid_all_finer_levels(amr_field *fields, amr_grid *grid)
 {
+	assert(grid!=NULL) ;
 	if ((grid->child)!=NULL) {
 		inject_overlaping_fields(fields, grid->child, grid) ;
 	}
@@ -763,6 +788,8 @@ void add_self_similar_initial_grids(
 /*============================================================================*/
 void amr_insert_grid(amr_grid *grid_to_insert, amr_grid* grid)
 {
+	assert(grid_to_insert!=NULL) ;
+	assert(grid!=NULL) ;
 	grid_to_insert->child  = grid->child ;
 	grid_to_insert->parent = grid ;
 	if ((grid->child)!=NULL) {
@@ -775,6 +802,7 @@ void amr_insert_grid(amr_grid *grid_to_insert, amr_grid* grid)
 /*============================================================================*/
 void amr_destroy_grid(amr_grid* grid) 
 {	
+	assert(grid!=NULL) ;
 	printf("destroying level %d\n", grid->level) ;
 	free_double_2DArray(grid->grid_funcs) ;
 

@@ -23,6 +23,7 @@ static void copy_to_2nd_array(int Nx, double *field_1, double *field_2)
 /*==========================================================================*/
 static void shift_field(int field_index, int time_levels, amr_grid *grid)
 {
+	assert(grid!=NULL) ;
 	int Nx = grid->Nx ;
 	for (int iC=field_index+time_levels-1; iC>field_index; iC--) {
 		copy_to_2nd_array(Nx, grid->grid_funcs[iC-1], grid->grid_funcs[iC]) ;
@@ -33,6 +34,7 @@ static void shift_fields_one_time_level(
 	amr_field *fields,
 	amr_grid *grid)
 {
+	assert(grid!=NULL) ;
 	int index, time_levels ;
 	for (amr_field *field=fields; field!=NULL; field=field->next) {
 		index = field->index ;
@@ -57,6 +59,8 @@ static void shift_grids_one_time_level(amr_grid_hierarchy *gh)
 static void set_interior_hyperbolic_boundary_quad_interp(
 	amr_field* field, amr_grid* parent, amr_grid* grid)
 {
+	assert(parent!=NULL) ;
+	assert(grid!=NULL) ;
 	int tC = (grid->tC)%refinement ;
 
 	int index = field->index ;
@@ -101,6 +105,8 @@ static void set_interior_hyperbolic_boundary_quad_interp(
 static void set_interior_hyperbolic_boundary(
 	amr_field* fields, amr_grid* parent, amr_grid* grid)
 {
+	assert(parent!=NULL) ;
+	assert(grid!=NULL) ;
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		if (strcmp(field->pde_type,HYPERBOLIC)==0) {
 			set_interior_hyperbolic_boundary_quad_interp(
@@ -115,6 +121,7 @@ static void set_interior_hyperbolic_boundary(
 /*==========================================================================*/
 static void linear_extrapapolate_level_0_field(amr_field* field, amr_grid* grid) 
 {
+	assert(grid!=NULL) ;
 	int field_index = field->index ;
 	int extrap_index = (field_index)+(field->time_levels) ;
 	double p_0, p_1 ;
@@ -133,6 +140,7 @@ static void linear_extrapapolate_level_0_field(amr_field* field, amr_grid* grid)
 /*==========================================================================*/
 static void linear_extrapapolate_level_n_field(amr_field* field, amr_grid* grid) 
 {
+	assert(grid!=NULL) ;
 	int field_index = field->index ;
 	int extrap_index = (field_index)+(field->time_levels) ;
 	double p_0, p_1 ;
@@ -155,6 +163,7 @@ static void linear_extrapapolate_level_n_field(amr_field* field, amr_grid* grid)
 /*==========================================================================*/
 static void amr_extrapolate_ode_fields(amr_field* fields, amr_grid* grid) 
 {
+	assert(grid!=NULL) ;
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		if (strcmp(field->pde_type,ODE) == 0) {
 			if ((grid->level)==0) {
@@ -169,6 +178,8 @@ static void amr_extrapolate_ode_fields(amr_field* fields, amr_grid* grid)
 /*==========================================================================*/
 static void set_finer_grid_ode_initial_condition(amr_field* fields, amr_grid* grid, amr_grid* child) 
 {
+	assert(grid!=NULL) ;
+	assert(child!=NULL) ;
 	int child_lower_jC = child->perim_coords[0] ;
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		if (strcmp(field->pde_type,ODE) == 0) {
@@ -181,6 +192,8 @@ static void set_finer_grid_ode_initial_condition(amr_field* fields, amr_grid* gr
 /*==========================================================================*/
 static void set_coarser_grid_ode_initial_condition(amr_field* fields, amr_grid* grid, amr_grid* child) 
 {
+	assert(grid!=NULL) ;
+	assert(child!=NULL) ;
 	int child_upper_jC = child->perim_coords[1] ;
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		if (strcmp(field->pde_type,ODE) == 0) {
@@ -198,6 +211,7 @@ static void set_coarser_grid_ode_initial_condition(amr_field* fields, amr_grid* 
 static void solve_ode_fields(
 	amr_field* fields, amr_grid* grid, void (*solve_ode)(amr_grid*)) 
 {
+	assert(grid!=NULL) ;
 /* if finest grid then solve and exit */	
 	if ((grid->child)==NULL) {
 		solve_ode(grid) ;
@@ -247,6 +261,7 @@ static void solve_ode_fields(
 /*==========================================================================*/
 static void set_extrap_levels(amr_field* field, amr_grid* grid) 
 {
+	assert(grid!=NULL) ;
 	int field_index = field->index ;
 	int extrap_levels = field->extrap_levels ;
 	int extrap_index = (field->index) + (field->time_levels) ;
@@ -270,6 +285,7 @@ static void set_extrap_levels(amr_field* field, amr_grid* grid)
 /*==========================================================================*/
 static void set_grid_ode_extrap_levels(amr_field* fields, amr_grid* grid) 
 {
+	assert(grid!=NULL) ;
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		if (strcmp(field->pde_type,ODE) == 0) {
 			set_extrap_levels(field, grid) ;
@@ -283,6 +299,7 @@ static void set_grid_ode_extrap_levels(amr_field* fields, amr_grid* grid)
 /*==========================================================================*/
 static void shift_extrap_field(int field_index, int time_levels, int extrap_levels, amr_grid* grid)
 {
+	assert(grid!=NULL) ;
 	int Nx = grid->Nx ;
 	for (int iC=(field_index+time_levels+extrap_levels-1); iC>(field_index+time_levels); iC--) {
 		copy_to_2nd_array(Nx, grid->grid_funcs[iC-1], grid->grid_funcs[iC]) ;
@@ -294,6 +311,7 @@ static void shift_extrap_fields_one_level(
 	amr_field* fields,
 	amr_grid* grid)
 {
+	assert(grid!=NULL) ;
 	int index, time_levels, extrap_levels ;
 	for (amr_field* field=fields; field!=NULL; field=field->next) {
 		index = field->index ;
@@ -348,6 +366,7 @@ static void evolve_grid(
 	void (*evolve_hyperbolic_pde)(amr_grid*),
 	void (*solve_ode)(amr_grid*))
 {
+	assert(grid!=NULL) ;
 	for (int tC=0; tC<num_t_steps; tC++) {
 		if (((grid->parent)!=NULL)
 		&&  ((grid->tC)!=0) 
@@ -415,6 +434,7 @@ static void save_all_grids(
 /*==========================================================================*/
 void set_excision_point(amr_grid* grid)
 {
+	assert(grid!=NULL) ;
 	if (((grid->level) > 0)
 	&&  ((grid->parent->excised_jC) > (grid->perim_coords[0]))
 	) {
@@ -452,6 +472,7 @@ static void set_past_t_data_first_order(amr_grid_hierarchy* gh)
 /*==========================================================================*/
 static void flip_earlier_time_levels(amr_field* field, amr_grid* grid)
 {
+	assert(grid!=NULL) ;
 	int time_levels= field->time_levels ; 
 	int extrap_levels= field->extrap_levels ; 
 	int field_index= field->index ;
@@ -469,6 +490,7 @@ static void flip_earlier_time_levels(amr_field* field, amr_grid* grid)
 /*==========================================================================*/
 static void flip_dt(amr_field* fields, amr_grid* grids)
 {
+	assert(grids!=NULL) ;
 	for (amr_grid* grid=grids; grid!=NULL; grid=grid->child) {
 		for (amr_field* field=fields; field!=NULL; field=field->next) {
 			flip_earlier_time_levels(field, grid) ;

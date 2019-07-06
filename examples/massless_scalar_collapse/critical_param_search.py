@@ -18,7 +18,7 @@ from make_read_write_files_dirs import (
 	make_directory_name_current_time
 )
 
-CRITICAL_PARAM_ERROR = 1e-9
+CRITICAL_PARAM_ERROR = 1e-12
 OUTPUT_DIR = "/home/jripley/one-dim-amr/examples/massless_scalar_collapse/output"
 
 ###############################################################################

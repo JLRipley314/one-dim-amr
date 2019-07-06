@@ -141,7 +141,7 @@ elif (run_type == "convergence_test"):
 elif (run_type) == "critical_param_search":
 
 	param = "amp"	
-	param_range = [0.000678,0.00069]	
+	param_range = [0.000676,0.000677]	
 	critical_param_search(run_data, param, param_range)
 ##############################################################################
 else:
