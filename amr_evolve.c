@@ -204,9 +204,7 @@ static void set_coarser_grid_ode_initial_condition(amr_field* fields, amr_grid* 
 	return ; 
 }
 /*==========================================================================*/
-/* solve from leftmost grid to rightmost-for now it's finer to coarser
- * as all begin from r=0. The coarser level is integrated from the finer
- * level boundary outwards */
+/* solve from leftmost grid to rightmost. */
 /*==========================================================================*/
 static void solve_ode_fields(
 	amr_field* fields, amr_grid* grid, void (*solve_ode)(amr_grid*)) 
