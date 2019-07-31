@@ -11,10 +11,10 @@
 const int amr_max_levels = 4 ; 
 const int refinement = 2 ; 
 const int regrid = 64 ; 
-const int buffer_coord = 32 ; 
-const int min_grid_size = 32 ;
+const int buffer_coord = 96 ; 
+const int min_grid_size = 96 ;
 
-const double trunc_err_tolerance = 1e-2 ; 
+const double trunc_err_tolerance = 1e-14 ; 
 
 const char HYPERBOLIC[] = "hyperbolic" ;
 const char ELLIPTIC[] = "elliptic" ;
@@ -367,7 +367,7 @@ static void interpolate_all_grid_funcs(amr_grid *parent, amr_grid *child)
 /*==========================================================================*/
 void smooth_all_grid_funcs(amr_field *fields, amr_grid *grid)
 {
-	double epsilon_ko = 0.2 ;
+	double epsilon_ko = 1.0 ;
 	int Nx = grid->Nx ;
 	int exc_jC = grid->excised_jC ;
 	for (amr_field *field=fields; field!=NULL; field=field->next) {	
@@ -700,13 +700,9 @@ void flag_field_regridding_coords(amr_field *fields, amr_grid *parent, amr_grid 
 {
 	assert(parent!=NULL) ;
 	assert(grid!=NULL) ;
-	double regrid_err_lim = trunc_err_tolerance*pow(grid->dt,2) ;
+	double regrid_err_lim = trunc_err_tolerance ;
 	for (amr_field *field=fields; field!=NULL; field=(field->next)) {
-		if ((strcmp(field->pde_type,HYPERBOLIC)==0)
-//		||  (strcmp(field->pde_type,ODE)==0) 
-		) {
-			/* keep on going */
-		} else {
+		if (strcmp(field->pde_type,HYPERBOLIC)!=0) {
 			field->flagged_coords[0] = (grid->Nx)-1 ;
 			field->flagged_coords[1] = 0 ;
 			continue ;
@@ -731,7 +727,6 @@ void flag_field_regridding_coords(amr_field *fields, amr_grid *parent, amr_grid 
 			double grid_val = grid->grid_funcs[field_index][grid_index] ;
 
 			double trunc_err = fabs(parent_val-grid_val) ;
-
 			if (trunc_err > regrid_err_lim) {
 				if (lower_flagged_coords==(-1)) {
 					lower_flagged_coords = grid_index ;
@@ -743,8 +738,6 @@ void flag_field_regridding_coords(amr_field *fields, amr_grid *parent, amr_grid 
 		}
 		field->flagged_coords[0] = lower_flagged_coords ;
 		field->flagged_coords[1] = upper_flagged_coords ;
-//		printf("field %s\t", field->name) ;
-//		printf("lower %d\tupper %d\n", field->flagged_coords[0], field->flagged_coords[1]) ;
 	}
 	return ;
 }
@@ -761,7 +754,6 @@ static void determine_grid_coords(
 		int lower_coord = field->flagged_coords[0] ;
 		int upper_coord = field->flagged_coords[1] ;
 		if ((	(strcmp(field->pde_type,HYPERBOLIC)==0) 
-//		     || (strcmp(field->pde_type,ODE)==0)
 		) &&  	(lower_coord!=(-1) && upper_coord!=(-1)) 
 		) {
 			lower_child_grid_coord = min_double(lower_coord,lower_child_grid_coord) ;
@@ -779,7 +771,17 @@ static void determine_grid_coords(
 	) {
 		upper_child_grid_coord = Nx-1 ;
 	}
-
+/* if not close to physical boundary then add buffer */
+	if ((grid->perim_interior[0]==true)
+	&&  (lower_child_grid_coord - buffer_coord/2 > 0)
+	) {
+		lower_child_grid_coord -= buffer_coord/2 ;
+	}
+	if ((grid->perim_interior[1]==true)
+	&&  (lower_child_grid_coord + buffer_coord/2 < Nx-1)
+	) {
+		upper_child_grid_coord +=buffer_coord/2 ;
+	}
 	grid->flagged_coords[0] = lower_child_grid_coord ;
 	grid->flagged_coords[1] = upper_child_grid_coord ;
 
@@ -817,7 +819,7 @@ void add_self_similar_initial_grids(
 	int Nx = grid->Nx ; 
 
 	for (int iC=0; iC<num_grids; iC++) {
-		amr_add_finer_grid(0, (int)(Nx/grid_size_ratio), grid) ;
+		amr_add_finer_grid(0, (int)(Nx/(grid_size_ratio)), grid) ;
 		grid = grid->child ;
 		Nx = grid->Nx ;
 	}
