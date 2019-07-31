@@ -51,8 +51,8 @@ run_data = {
 ###	Nx, Nt should be of the form 2**n + 1 with n an integer
 ###	cfl_num: Courant Friedrichs Lewy number (for hyperbolics)
 ###
-	"Nx"		: 2**9+1,
-	"Nt"		: 2**10+1,
+	"Nx"		: 2**10+1,
+	"Nt"		: 2**11+1,
 	"t_step_save"	: 2**0,
 	"cfl_num"	: 0.25,  
 	"err_tolerance"	: 1.0e-12, 
@@ -63,7 +63,7 @@ run_data = {
 ###
 	"amp"		: 0.0001,
 	"width"		: 3.0,
-	"center"	: 10.0,
+	"center"	: 8.0,
 	"direction"	: "ingoing",#"stationary",#"outgoing",#
 ###
 ###	if initial_data is initial_black_hole
@@ -141,7 +141,7 @@ elif (run_type == "convergence_test"):
 elif (run_type) == "critical_param_search":
 
 	param = "amp"	
-	param_range = [0.0006761349560156,0.00067613495625]	
+	param_range = [0.0,0.5]	
 	critical_param_search(run_data, param, param_range)
 ##############################################################################
 else:

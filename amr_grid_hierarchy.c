@@ -8,13 +8,13 @@
 #include <assert.h>
 
 /*============================================================================*/
-const int amr_max_levels = 4 ; 
+const int amr_max_levels = 6 ; 
 const int refinement = 2 ; 
-const int regrid = 64 ; 
-const int buffer_coord = 96 ; 
-const int min_grid_size = 96 ;
+const int regrid = 100 ; 
+const int buffer_coord = 100 ; 
+const int min_grid_size = 100 ;
 
-const double trunc_err_tolerance = 1e-14 ; 
+const double trunc_err_tolerance = 1e-15 ; 
 
 const char HYPERBOLIC[] = "hyperbolic" ;
 const char ELLIPTIC[] = "elliptic" ;
@@ -773,14 +773,14 @@ static void determine_grid_coords(
 	}
 /* if not close to physical boundary then add buffer */
 	if ((grid->perim_interior[0]==true)
-	&&  (lower_child_grid_coord - buffer_coord/2 > 0)
+	&&  (lower_child_grid_coord - buffer_coord > 0)
 	) {
-		lower_child_grid_coord -= buffer_coord/2 ;
+		lower_child_grid_coord -= buffer_coord ;
 	}
 	if ((grid->perim_interior[1]==true)
-	&&  (lower_child_grid_coord + buffer_coord/2 < Nx-1)
+	&&  (lower_child_grid_coord + buffer_coord < Nx-1)
 	) {
-		upper_child_grid_coord +=buffer_coord/2 ;
+		upper_child_grid_coord +=buffer_coord ;
 	}
 	grid->flagged_coords[0] = lower_child_grid_coord ;
 	grid->flagged_coords[1] = upper_child_grid_coord ;

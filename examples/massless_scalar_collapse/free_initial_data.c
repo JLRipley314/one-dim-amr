@@ -59,9 +59,9 @@ void initial_data_Gaussian(
 		+	4 * pow(r,3)
 		) ;
 		if (strcmp(direction,"ingoing")==0) {
-			P[jC] = + Q[jC] ;
+			P[jC] = + (Q[jC] + pow(r,3) * gaussian) ;
 		} else if (strcmp(direction,"outgoing")==0) {
-			P[jC] = - Q[jC] ;
+			P[jC] = - (Q[jC] + pow(r,3) * gaussian) ;
 		} else if (strcmp(direction,"stationary")==0) {
 			P[jC]=0;
 		} else {
