@@ -363,8 +363,50 @@ static void interpolate_all_grid_funcs(amr_grid *parent, amr_grid *child)
 	return ;
 }
 /*==========================================================================*/
+/* Kreiss Oliger filter the grid functions */
+/*==========================================================================*/
+void smooth_all_grid_funcs(amr_field *fields, amr_grid *grid)
+{
+	double epsilon_ko = 0.2 ;
+	int Nx = grid->Nx ;
+	int exc_jC = grid->excised_jC ;
+	for (amr_field *field=fields; field!=NULL; field=field->next) {	
+		double *vals = grid->grid_funcs[field->index] ;
+		for (int jC=exc_jC+2; jC<(Nx-2); jC++) {
+			vals[jC] -= (epsilon_ko/16.) * (
+				vals[jC+2] 
+			+       (-4.*vals[jC+1])
+			+       (6.*vals[jC]) 
+			+       (-4.*vals[jC-1])
+			+       vals[jC-2]
+			)
+			;
+        	}
+/* for outer excision boundary */
+		vals[Nx-2] += (epsilon_ko/16.) * (
+			vals[Nx-1] 
+		+       (-4.*vals[Nx-2]) 
+		+       (6.*vals[Nx-3]) 
+		+       (-4.*vals[Nx-4]) 
+		+       vals[Nx-5] 
+		) ;
+		vals[1] += (epsilon_ko/16.) * ( 
+                        vals[0] 
+                +       (-4.*vals[1]) 
+                +       (6.*vals[2]) 
+                +       (-4.*vals[3]) 
+                +       vals[4] 
+        	) ;
+		vals = NULL ;
+	}
+	return ;
+}
+/*==========================================================================*/
 /* 	if the parent grid moved, then the finer grid should have different
-	bounding coordinates to not move itself in physical space */
+	bounding coordinates to not move itself in physical space. Only
+	the immediate child needs to be shifted as it does not actually
+	change in size and perim coords are defined with respect to
+	immediate parent. */
 /*==========================================================================*/
 static void reset_child_grid_perim_coords(
 	int old_parent_lower_coord, int new_parent_lower_coord, amr_grid *child)
@@ -530,8 +572,8 @@ static void add_flagged_child_grid(amr_grid *grid)
 	amr_insert_grid(new_child, grid) ;
 	if (new_child->child!=NULL) {
 		printf("new_child->child->level %d\n", new_child->child->level) ;
+		reset_child_grid_perim_coords(old_lower_coord, new_lower_coord, grid->child->child) ;
 	}
-	reset_child_grid_perim_coords(old_lower_coord, new_lower_coord, grid->child) ;
 
 	return ;
 }
@@ -753,6 +795,7 @@ void regrid_all_finer_levels(amr_field *fields, amr_grid *grid)
 	assert(grid!=NULL) ;
 	if ((grid->child)!=NULL) {
 		inject_overlaping_fields(fields, grid->child, grid) ;
+		smooth_all_grid_funcs(fields, grid) ;
 	}
 	flag_field_regridding_coords(fields, grid->parent, grid) ;
 	determine_grid_coords(fields, grid) ;

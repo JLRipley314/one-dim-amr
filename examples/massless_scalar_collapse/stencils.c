@@ -69,12 +69,12 @@ void Kreiss_Oliger_filter(
 /* for outer excision boundary */
 	epsilon_ko = 1.0 ;
 	field[Nx-2] += (epsilon_ko/16.) * (
-			field[Nx-1] 
-		+ 	(-4.*field[Nx-2]) 
-		+ 	(6.*field[Nx-3]) 
-		+ 	(-4.*field[Nx-4]) 
-		+ 	field[Nx-5] 
-		) ;
+		field[Nx-1] 
+	+ 	(-4.*field[Nx-2]) 
+	+ 	(6.*field[Nx-3]) 
+	+ 	(-4.*field[Nx-4]) 
+	+ 	field[Nx-5] 
+	) ;
 
 	return ;
 }
