@@ -8,9 +8,9 @@
 #include <assert.h>
 
 /*============================================================================*/
-const int amr_max_levels = 8 ; 
+const int amr_max_levels = 4 ; 
 const int refinement = 2 ; 
-const int regrid = 32 ; 
+const int regrid = 64 ; 
 const int buffer_coord = 32 ; 
 const int min_grid_size = 32 ;
 
@@ -270,7 +270,7 @@ inline static double cubic_polynomial(
 	return p0 + p1*step + (p2*pow(step,2)/2.) + (p3*pow(step,3)/6.) ;
 }
 /*==========================================================================*/
-static void interpolate_cubic_grid_func(
+/*static*/ void interpolate_cubic_grid_func(
 	int lower_coord, int Nx, double *parent_gf, double *child_gf)
 {
 	assert(parent_gf!=NULL) ;
@@ -367,18 +367,15 @@ static void interpolate_all_grid_funcs(amr_grid *parent, amr_grid *child)
 	bounding coordinates to not move itself in physical space */
 /*==========================================================================*/
 static void reset_child_grid_perim_coords(
-	int old_lower_coord, amr_grid *base_grid)
+	int old_parent_lower_coord, int new_parent_lower_coord, amr_grid *child)
 {
-	assert(base_grid!=NULL) ;
-	for (amr_grid *grid=(base_grid->child); grid!=NULL; grid=(grid->child)) {
-		int current_lower_coord = grid->parent->perim_coords[0] ;
-		int grid_lower_coord = grid->perim_coords[0] ;
+	if (child==NULL) return ;
 
-		grid->perim_coords[0] += refinement*(old_lower_coord-current_lower_coord) ;
-		grid->perim_coords[1] += refinement*(old_lower_coord-current_lower_coord) ;
+	int shift = refinement*(old_parent_lower_coord-new_parent_lower_coord) ;
 
-		old_lower_coord = grid_lower_coord ;
-	}
+	child->perim_coords[0] += shift ;
+	child->perim_coords[1] += shift ;
+
 	return ;
 }
 /*==========================================================================*/
@@ -534,7 +531,7 @@ static void add_flagged_child_grid(amr_grid *grid)
 	if (new_child->child!=NULL) {
 		printf("new_child->child->level %d\n", new_child->child->level) ;
 	}
-//	reset_child_grid_perim_coords(old_lower_coord, grid->child) ;
+	reset_child_grid_perim_coords(old_lower_coord, new_lower_coord, grid->child) ;
 
 	return ;
 }
