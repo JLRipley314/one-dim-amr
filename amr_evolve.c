@@ -385,6 +385,7 @@ static void evolve_grid(
 	for (int tC=0; tC<num_t_steps; tC++) {
 		if (((grid->parent)!=NULL)
 		&&  ((grid->tC)!=0) 
+//		&&  ((grid->tC)>=(grid->level)*regrid) 
 		&&  ((grid->tC)%regrid==0) 
 		) {
 			regrid_all_finer_levels(fields, grid) ;
@@ -438,9 +439,9 @@ static void save_all_grids(
 {
 	assert(gh!=NULL) ;
 	for (amr_grid* grid=gh->grids; grid != NULL; grid=grid->child) {
-		printf("level %d\t %.10e\t %.4e\t %.4e\n",
-			grid->level, grid->time, grid->bbox[0], grid->bbox[1]
-		) ;
+//		printf("level %d\t %.10e\t %.4e\t %.4e\n",
+//			grid->level, grid->time, grid->bbox[0], grid->bbox[1]
+//		) ;
 		save_to_file(grid) ;
 	}
 	return ;

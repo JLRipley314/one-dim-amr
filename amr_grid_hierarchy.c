@@ -10,11 +10,11 @@
 /*============================================================================*/
 const int amr_max_levels = 6 ; 
 const int refinement = 2 ; 
-const int regrid = 100 ; 
-const int buffer_coord = 100 ; 
-const int min_grid_size = 100 ;
+const int regrid = 40 ; 
+const int buffer_coord = 80 ; 
+const int min_grid_size = 80 ;
 
-const double trunc_err_tolerance = 1e-15 ; 
+const double trunc_err_tolerance = 0.0005 ; 
 
 const char HYPERBOLIC[] = "hyperbolic" ;
 const char ELLIPTIC[] = "elliptic" ;
