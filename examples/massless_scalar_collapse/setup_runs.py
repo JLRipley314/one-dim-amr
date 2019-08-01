@@ -52,10 +52,10 @@ run_data = {
 ###	cfl_num: Courant Friedrichs Lewy number (for hyperbolics)
 ###
 	"Nx"		: 2**11+1,
-	"Nt"		: 2**12+1,
+	"Nt"		: 3000,#2**12+1,
 	"t_step_save"	: 2**2,
-	"cfl_num"	: 0.2,  
-	"err_tolerance"	: 1.0e-12, 
+	"cfl_num"	: 0.25,  
+	"err_tolerance"	: 1.0e-10, 
 	
 	"initial_data" : "r4Exp",#"initial_black_hole",#"initial_black_hole_with_r4Exp",#"presetPQPhi",# 
 ###

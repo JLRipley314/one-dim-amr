@@ -8,13 +8,13 @@
 #include <assert.h>
 
 /*============================================================================*/
-const int amr_max_levels = 6 ; 
+const int amr_max_levels = 5 ; 
 const int refinement = 2 ; 
-const int regrid = 40 ; 
+const int regrid = 80 ; 
 const int buffer_coord = 40 ; 
 const int min_grid_size = 40 ;
 
-const double trunc_err_tolerance = 1e-3 ; 
+const double trunc_err_tolerance = 1e-7 ; 
 
 const char HYPERBOLIC[] = "hyperbolic" ;
 const char ELLIPTIC[] = "elliptic" ;
@@ -536,10 +536,10 @@ static void add_flagged_child_grid(amr_grid *grid)
 	if (old_child!=NULL) {
 		old_lower_coord = old_child->perim_coords[0] ;
 		old_upper_coord = old_child->perim_coords[1] ;
-/* do not regrid if the new grid takes the same place as the old grid 
+/* do not regrid if the new grid is too close to the old grid value 
 */
-		if ((old_lower_coord==new_lower_coord)
-		&&  (old_upper_coord==new_upper_coord)
+		if ((fabs(old_lower_coord-new_lower_coord)<8)
+		&&  (fabs(old_upper_coord-new_upper_coord)<8)
 		) {
 			return ;
 		}
@@ -815,7 +815,7 @@ void add_initial_grids(
 	amr_grid* grid = gh->grids->child ; /* start at grid level=1 */
 	int Nx = grid->Nx ; 
 
-	int num_grids = 3 ;
+	int num_grids = 2 ;
 
 	for (int iC=0; iC<num_grids; iC++) {
 		switch (iC) {
@@ -823,7 +823,7 @@ void add_initial_grids(
 				amr_add_finer_grid(0, (int)(Nx/3), grid) ;
 				break ;
 			case 1:
-				amr_add_finer_grid(0, (int)(Nx/1.5), grid) ;
+				amr_add_finer_grid(0, (int)(Nx-2*buffer_coord), grid) ;
 				break ;	
 			default:
 				amr_add_finer_grid(0, (int)(Nx/2), grid) ;

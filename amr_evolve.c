@@ -573,7 +573,7 @@ void amr_main(
 /* 
 	add_initial...: for the fixed amr grid hierarchy 
 */
-//	add_initial_grids(gh) ;
+	add_initial_grids(gh) ;
 
 	set_initial_data(
 		gh, 
