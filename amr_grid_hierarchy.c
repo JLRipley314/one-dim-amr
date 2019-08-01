@@ -11,10 +11,10 @@
 const int amr_max_levels = 6 ; 
 const int refinement = 2 ; 
 const int regrid = 40 ; 
-const int buffer_coord = 80 ; 
-const int min_grid_size = 80 ;
+const int buffer_coord = 40 ; 
+const int min_grid_size = 40 ;
 
-const double trunc_err_tolerance = 0.0005 ; 
+const double trunc_err_tolerance = 1e-3 ; 
 
 const char HYPERBOLIC[] = "hyperbolic" ;
 const char ELLIPTIC[] = "elliptic" ;
@@ -795,10 +795,6 @@ static void determine_grid_coords(
 void regrid_all_finer_levels(amr_field *fields, amr_grid *grid)
 {
 	assert(grid!=NULL) ;
-	if ((grid->child)!=NULL) {
-		inject_overlaping_fields(fields, grid->child, grid) ;
-		smooth_all_grid_funcs(fields, grid) ;
-	}
 	flag_field_regridding_coords(fields, grid->parent, grid) ;
 	determine_grid_coords(fields, grid) ;
 	printf("level %d\n", grid->level) ;
@@ -806,20 +802,33 @@ void regrid_all_finer_levels(amr_field *fields, amr_grid *grid)
 	fflush(NULL) ;
 	if ((grid->level)<amr_max_levels-1) {
 		add_flagged_child_grid(grid) ;
+		smooth_all_grid_funcs(fields, grid) ;
 	}
 	return ;
 }
 /*============================================================================*/
 /* starting from level 1 grid, add self similar grid hierarchy from origin */
 /*============================================================================*/
-void add_self_similar_initial_grids(
-	amr_grid_hierarchy* gh, int grid_size_ratio, int num_grids) 
+void add_initial_grids(
+	amr_grid_hierarchy* gh) 
 {
 	amr_grid* grid = gh->grids->child ; /* start at grid level=1 */
 	int Nx = grid->Nx ; 
 
+	int num_grids = 3 ;
+
 	for (int iC=0; iC<num_grids; iC++) {
-		amr_add_finer_grid(0, (int)(Nx/(grid_size_ratio)), grid) ;
+		switch (iC) {
+			case 0:
+				amr_add_finer_grid(0, (int)(Nx/3), grid) ;
+				break ;
+			case 1:
+				amr_add_finer_grid(0, (int)(Nx/1.5), grid) ;
+				break ;	
+			default:
+				amr_add_finer_grid(0, (int)(Nx/2), grid) ;
+				break ;
+		}
 		grid = grid->child ;
 		Nx = grid->Nx ;
 	}

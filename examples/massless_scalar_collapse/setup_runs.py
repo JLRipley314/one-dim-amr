@@ -52,16 +52,16 @@ run_data = {
 ###	cfl_num: Courant Friedrichs Lewy number (for hyperbolics)
 ###
 	"Nx"		: 2**11+1,
-	"Nt"		: 2**13+1,
-	"t_step_save"	: 2**0,
-	"cfl_num"	: 0.1,  
+	"Nt"		: 2**12+1,
+	"t_step_save"	: 2**2,
+	"cfl_num"	: 0.2,  
 	"err_tolerance"	: 1.0e-12, 
 	
 	"initial_data" : "r4Exp",#"initial_black_hole",#"initial_black_hole_with_r4Exp",#"presetPQPhi",# 
 ###
 ###	if initial_data is r4Exp
 ###
-	"amp"		: 0.01,
+	"amp"		: 0.05,
 	"width"		: 10.0,
 	"center"	: 10.0,
 	"direction"	: "ingoing",#"stationary",#"outgoing",#
@@ -141,7 +141,7 @@ elif (run_type == "convergence_test"):
 elif (run_type) == "critical_param_search":
 
 	param = "amp"	
-	param_range = [0.0,0.2]	
+	param_range = [0.0,0.1]	
 	critical_param_search(run_data, param, param_range)
 ##############################################################################
 else:

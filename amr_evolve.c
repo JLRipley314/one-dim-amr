@@ -60,9 +60,7 @@ static void shift_grids_one_time_level(amr_grid_hierarchy *gh)
    to second order (quadratic order) 
    We need at least three time levels for this to work */
 /*==========================================================================*/
-static void set_interior_hyperbolic_boundary_quad_interp(
-	amr_field* field, amr_grid* parent, amr_grid* grid)
-{
+static void set_interior_hyperbolic_boundary_quad_interp(amr_field* field, amr_grid* parent, amr_grid* grid) {
 	assert(field!=NULL) ;
 	assert(parent!=NULL) ;
 	assert(grid!=NULL) ;
@@ -72,26 +70,26 @@ static void set_interior_hyperbolic_boundary_quad_interp(
 
 	if (grid->perim_interior[0] == true) {
 		int perim  =  grid->perim_coords[0] ;
-		double coef_0 =  parent->grid_funcs[index][perim] ;
+		double coef_0 =  parent->grid_funcs[index+1][perim] ;
 		double coef_1 = (
 			parent->grid_funcs[index  ][perim]
-		- 	parent->grid_funcs[index+2][perim]
+		-	parent->grid_funcs[index+2][perim]
 		)/(2*refinement) ;
 		double coef_2 = (
 			   parent->grid_funcs[index  ][perim]
-		- 	(2*parent->grid_funcs[index+1][perim])
-		+    	   parent->grid_funcs[index+2][perim]
-		)/pow(refinement,2) ;
+		-	(2*parent->grid_funcs[index+1][perim])
+		+	   parent->grid_funcs[index+2][perim]
+		)/(2*pow(refinement,2)) ;
 
-		grid->grid_funcs[index  ][0] = coef_0 + coef_1*(tC+1) + 0.5*coef_2*pow(tC,2) ;
-		grid->grid_funcs[index+1][0] = coef_0 + coef_1*(tC  ) + 0.5*coef_2*pow(tC,2) ;
+		grid->grid_funcs[index  ][0] = coef_0 + coef_1*(tC+1) + coef_2*pow(tC,2) ;
+		grid->grid_funcs[index+1][0] = coef_0 + coef_1*(tC  ) + coef_2*pow(tC,2) ;
 	}
 	if (grid->perim_interior[1] == true) {
 		int perim  =  grid->perim_coords[1] ;
-		double coef_0 =  parent->grid_funcs[index][perim] ;
+		double coef_0 =  parent->grid_funcs[index+1][perim] ;
 		double coef_1 = (
 			parent->grid_funcs[index  ][perim]
-		- 	parent->grid_funcs[index+2][perim]
+		-	parent->grid_funcs[index+2][perim]
 		)/(2*refinement) ;
 		double coef_2 = (
 			   parent->grid_funcs[index  ][perim]
@@ -99,8 +97,8 @@ static void set_interior_hyperbolic_boundary_quad_interp(
 		+	   parent->grid_funcs[index+2][perim]
 		)/pow(refinement,2) ;
 
-		grid->grid_funcs[index  ][grid->Nx-1] = coef_0 + coef_1*(tC+1) + 0.5*coef_2*pow(tC,2) ;
-		grid->grid_funcs[index+1][grid->Nx-1] = coef_0 + coef_1*(tC  ) + 0.5*coef_2*pow(tC,2) ;
+		grid->grid_funcs[index  ][grid->Nx-1] = coef_0 + coef_1*(tC+1) + coef_2*pow(tC,2) ;
+		grid->grid_funcs[index+1][grid->Nx-1] = coef_0 + coef_1*(tC  ) + coef_2*pow(tC,2) ;
 	}
 	return ;
 }
@@ -385,7 +383,6 @@ static void evolve_grid(
 	for (int tC=0; tC<num_t_steps; tC++) {
 		if (((grid->parent)!=NULL)
 		&&  ((grid->tC)!=0) 
-//		&&  ((grid->tC)>=(grid->level)*regrid) 
 		&&  ((grid->tC)%regrid==0) 
 		) {
 			regrid_all_finer_levels(fields, grid) ;
@@ -576,9 +573,7 @@ void amr_main(
 /* 
 	add_initial...: for the fixed amr grid hierarchy 
 */
-//	int grid_size_ratio = 2 ;
-//	int grid_levels = 2 ;
-//	add_self_similar_initial_grids(gh, grid_size_ratio, grid_levels) ;
+//	add_initial_grids(gh) ;
 
 	set_initial_data(
 		gh, 

@@ -126,7 +126,7 @@ void inject_overlaping_fields(amr_field *fields, amr_grid *grid, amr_grid *paren
 
 void regrid_all_finer_levels(amr_field *fields, amr_grid *base_grid) ;
 
-void add_self_similar_initial_grids(amr_grid_hierarchy* gh, int grid_size_ratio, int num_grids) ;
+void add_initial_grids(amr_grid_hierarchy* gh) ;
 
 void amr_destroy_grid_hierarchy(amr_grid_hierarchy* gh) ;
 

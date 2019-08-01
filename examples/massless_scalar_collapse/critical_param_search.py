@@ -22,9 +22,9 @@ from make_read_write_files_dirs import (
 ### continue bisection search until relative difference in the bisection
 ### bracket is below the critical param error
 ###############################################################################
-CRITICAL_PARAM_ERROR = 1e-12
-OUTPUT_DIR = "/home/jripley/one-dim-amr/examples/massless_scalar_collapse/output"
+CRITICAL_PARAM_ERROR = 1e-3
 
+OUTPUT_DIR = "/home/jripley/one-dim-amr/examples/massless_scalar_collapse/output"
 ###############################################################################
 def compute_normalized_difference(lower:float,upper:float)->float:
 	return (
