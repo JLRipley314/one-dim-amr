@@ -14,7 +14,7 @@ const int regrid = 80 ;
 const int buffer_coord = 40 ; 
 const int min_grid_size = 40 ;
 
-const double trunc_err_tolerance = 1e-7 ; 
+const double trunc_err_tolerance = 1e-6 ; 
 
 const char HYPERBOLIC[] = "hyperbolic" ;
 const char ELLIPTIC[] = "elliptic" ;
@@ -538,8 +538,9 @@ static void add_flagged_child_grid(amr_grid *grid)
 		old_upper_coord = old_child->perim_coords[1] ;
 /* do not regrid if the new grid is too close to the old grid value 
 */
-		if ((fabs(old_lower_coord-new_lower_coord)<8)
-		&&  (fabs(old_upper_coord-new_upper_coord)<8)
+		int min_shift_distance = 8 ;
+		if ((fabs(old_lower_coord-new_lower_coord)<min_shift_distance)
+		&&  (fabs(old_upper_coord-new_upper_coord)<min_shift_distance)
 		) {
 			return ;
 		}
@@ -694,13 +695,10 @@ void inject_overlaping_fields(
 	return ;
 }
 /*==========================================================================*/
-/* flagging all hyperbolic and ode fields */
-/*==========================================================================*/
-void flag_field_regridding_coords(amr_field *fields, amr_grid *parent, amr_grid *grid)
+void flag_field_regridding_coords_Richardson(amr_field *fields, amr_grid *parent, amr_grid *grid)
 {
 	assert(parent!=NULL) ;
 	assert(grid!=NULL) ;
-	double regrid_err_lim = trunc_err_tolerance ;
 	for (amr_field *field=fields; field!=NULL; field=(field->next)) {
 		if (strcmp(field->pde_type,HYPERBOLIC)!=0) {
 			field->flagged_coords[0] = (grid->Nx)-1 ;
@@ -727,7 +725,8 @@ void flag_field_regridding_coords(amr_field *fields, amr_grid *parent, amr_grid 
 			double grid_val = grid->grid_funcs[field_index][grid_index] ;
 
 			double trunc_err = fabs(parent_val-grid_val) ;
-			if (trunc_err > regrid_err_lim) {
+
+			if (trunc_err > trunc_err_tolerance) {
 				if (lower_flagged_coords==(-1)) {
 					lower_flagged_coords = grid_index ;
 					upper_flagged_coords = grid_index ;
@@ -736,6 +735,49 @@ void flag_field_regridding_coords(amr_field *fields, amr_grid *parent, amr_grid 
 				} 
 			}
 		}
+		field->flagged_coords[0] = lower_flagged_coords ;
+		field->flagged_coords[1] = upper_flagged_coords ;
+	}
+	return ;
+}
+/*==========================================================================*/
+void flag_field_regridding_coords_difference(amr_field *fields, amr_grid *grid)
+{
+	assert(grid!=NULL) ;
+	for (amr_field *field=fields; field!=NULL; field=(field->next)) {
+		if (strcmp(field->pde_type,HYPERBOLIC)!=0) {
+			field->flagged_coords[0] = (grid->Nx)-1 ;
+			field->flagged_coords[1] = 0 ;
+			continue ;
+		}
+		int field_index = field->index ;
+		int lower_flagged_coords = (-1) ;
+		int upper_flagged_coords = (-1) ;
+		int lower_jC = grid->perim_coords[0] ;
+		int upper_jC = grid->perim_coords[1] ;
+		int start_jC = (grid->perim_interior[0]==true) 
+		?	lower_jC + buffer_coord
+		:	lower_jC 
+		;
+		int end_jC = (grid->perim_interior[1]==true) 
+		?	upper_jC - buffer_coord
+		:	upper_jC 
+		;
+		double *gf = grid->grid_funcs[field_index] ;
+		for (int jC=start_jC; jC<end_jC-1; jC++) {
+
+			double trunc_err = fabs(gf[jC+1]-gf[jC]) ;
+
+			if (trunc_err > trunc_err_tolerance) {
+				if (lower_flagged_coords==(-1)) {
+					lower_flagged_coords = jC ;
+					upper_flagged_coords = jC ;
+				} else {
+					upper_flagged_coords = jC ;
+				} 
+			}
+		}
+		gf = NULL ;
 		field->flagged_coords[0] = lower_flagged_coords ;
 		field->flagged_coords[1] = upper_flagged_coords ;
 	}
@@ -795,7 +837,9 @@ static void determine_grid_coords(
 void regrid_all_finer_levels(amr_field *fields, amr_grid *grid)
 {
 	assert(grid!=NULL) ;
-	flag_field_regridding_coords(fields, grid->parent, grid) ;
+	flag_field_regridding_coords_Richardson(fields, grid->parent, grid) ;
+//	flag_field_regridding_coords_difference(fields, grid) ;
+
 	determine_grid_coords(fields, grid) ;
 	printf("level %d\n", grid->level) ;
 	printf("lower %d\tupper %d\n", grid->flagged_coords[0], grid->flagged_coords[1]) ;
@@ -815,7 +859,7 @@ void add_initial_grids(
 	amr_grid* grid = gh->grids->child ; /* start at grid level=1 */
 	int Nx = grid->Nx ; 
 
-	int num_grids = 2 ;
+	int num_grids = 1 ;
 
 	for (int iC=0; iC<num_grids; iC++) {
 		switch (iC) {
