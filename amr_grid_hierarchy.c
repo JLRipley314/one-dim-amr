@@ -8,7 +8,7 @@
 #include <assert.h>
 
 /*============================================================================*/
-const int amr_max_levels = 5 ; 
+const int amr_max_levels = 8 ; 
 const int refinement = 2 ; 
 const int regrid = 80 ; 
 const int buffer_coord = 40 ; 
@@ -859,12 +859,12 @@ void add_initial_grids(
 	amr_grid* grid = gh->grids->child ; /* start at grid level=1 */
 	int Nx = grid->Nx ; 
 
-	int num_grids = 1 ;
+	int num_grids = 2 ;
 
 	for (int iC=0; iC<num_grids; iC++) {
 		switch (iC) {
 			case 0:
-				amr_add_finer_grid(0, (int)(Nx/3), grid) ;
+				amr_add_finer_grid(0, (int)(Nx/2.5), grid) ;
 				break ;
 			case 1:
 				amr_add_finer_grid(0, (int)(Nx-2*buffer_coord), grid) ;

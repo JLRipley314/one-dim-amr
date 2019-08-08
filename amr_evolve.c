@@ -385,7 +385,7 @@ static void evolve_grid(
 		&&  ((grid->tC)!=0) 
 		&&  ((grid->tC)%regrid==0) 
 		) {
-			regrid_all_finer_levels(fields, grid) ;
+//			regrid_all_finer_levels(fields, grid) ;
 		}
 		if ((grid->level)>1) {
 			set_interior_hyperbolic_boundary(fields, grid->parent, grid) ;
@@ -531,6 +531,7 @@ static void set_initial_data(
 {
 	assert(gh!=NULL) ;
 	set_free_initial_data(gh, free_initial_data) ;
+	set_past_t_data_first_order(gh) ;	
 	solve_ode_initial_data(gh, solve_ode) ; 	
 	set_past_t_data_first_order(gh) ;	
 	for (int iC=0; iC<1; iC++) {
@@ -541,7 +542,7 @@ static void set_initial_data(
 			evolve_hyperbolic_pde,
 			solve_ode) 
 		;
-		regrid_all_finer_levels(gh->fields, gh->grids->child) ;
+//		regrid_all_finer_levels(gh->fields, gh->grids->child) ;
 		flip_dt(gh->fields,gh->grids) ;
 		evolve_grid(
 			gh->fields, 

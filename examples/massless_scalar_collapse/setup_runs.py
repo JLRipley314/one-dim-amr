@@ -31,11 +31,11 @@ run_data = {
 
 	"param_search"	: "no",#"yes",#
 
-	"theory"	: "massless_scalar_GR",#"EdGB",#
+	"theory"	: "EdGB",#"massless_scalar_GR",#
 ###
 ###	EdGB: coupling for Gauss-Bonnet scalar (gbs)
 ###
-	"coupling_gbs"	: 0.0,
+	"coupling_gbs"	: 1.0,
 
 	"stereographic_L" : 100,
 	
@@ -51,17 +51,17 @@ run_data = {
 ###	Nx, Nt should be of the form 2**n + 1 with n an integer
 ###	cfl_num: Courant Friedrichs Lewy number (for hyperbolics)
 ###
-	"Nx"		: 2**11+1,
-	"Nt"		: 2**12+1,
-	"t_step_save"	: 2**2,
+	"Nx"		: 2**9+1,
+	"Nt"		: 2**9+1,#2**13+1,
+	"t_step_save"	: 2**0,
 	"cfl_num"	: 0.25,  
 	"err_tolerance"	: 1.0e-10, 
 	
-	"initial_data" : "r4Exp",#"initial_black_hole",#"initial_black_hole_with_r4Exp",#"presetPQPhi",# 
+	"initial_data" : "initial_black_hole",#"r4Exp",#"initial_black_hole_with_r4Exp",#"presetPQPhi",# 
 ###
 ###	if initial_data is r4Exp
 ###
-	"amp"		: 0.05,
+	"amp"		: 0.029983671875,
 	"width"		: 10.0,
 	"center"	: 10.0,
 	"direction"	: "ingoing",#"stationary",#"outgoing",#
@@ -141,7 +141,7 @@ elif (run_type == "convergence_test"):
 elif (run_type) == "critical_param_search":
 
 	param = "amp"	
-	param_range = [0.0296875,0.03125]	
+	param_range = [0.02998,0.03]	
 	critical_param_search(run_data, param, param_range)
 ##############################################################################
 else:
