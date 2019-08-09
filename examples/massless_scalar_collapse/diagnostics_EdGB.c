@@ -287,7 +287,7 @@ static void computeArray_center_EdGB_characteristics(
 		double rho = 0 ;
 		double Jr = 0 ;
 
-		double matrix_A[2][2] = {0} ;
+		double matrix_A[2][2] = {{0}} ;
 		matrix_A[0][0] = compute_element_P_eom_tDer_P(
 			c_gbs,     r_j, 
 			phi_Der_f, phiphi_Der_f, 
@@ -299,7 +299,7 @@ static void computeArray_center_EdGB_characteristics(
 		matrix_A[1][0] = compute_element_Q_eom_tDer_P()	;
 		matrix_A[1][1] = compute_element_Q_eom_tDer_Q()	;
 
-		double matrix_B[2][2] = {0} ;
+		double matrix_B[2][2] = {{0}} ;
 		matrix_B[0][0] = compute_element_P_eom_rDer_P(
 			c_gbs,     r_j, 
 			phi_Der_f, phiphi_Der_f, 
@@ -317,10 +317,10 @@ static void computeArray_center_EdGB_characteristics(
 		matrix_B[1][0] = compute_element_Q_eom_rDer_P(Al) ;
 		matrix_B[1][1] = compute_element_Q_eom_rDer_Q(Al, Ze) ;
 
-		double matrix_inv_A[2][2] = {0} ;
+		double matrix_inv_A[2][2] = {{0}} ;
 		compute_2dMatrix_inverse(matrix_A, matrix_inv_A) ;
 		
-		double matrix_inv_AB[2][2] = {0} ;
+		double matrix_inv_AB[2][2] = {{0}} ;
 		compute_2dMatrix_multiply(matrix_inv_A, matrix_B, matrix_inv_AB) ;
 
 		double eigenvalues[2] = {0} ;

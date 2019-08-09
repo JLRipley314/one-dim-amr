@@ -27,7 +27,7 @@ run_type = sys.argv[1]
 ##############################################################################
 ### Initialize run data ##############################################################################
 run_data = {
-	"computer"	: "jlr_laptop",#"Feynman_cluster",#
+	"computer"	: "Feynman_cluster",#"jlr_laptop",#
 
 	"param_search"	: "no",#"yes",#
 

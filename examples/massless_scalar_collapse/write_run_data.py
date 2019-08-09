@@ -62,7 +62,7 @@ def write_slurm_script(run_data: dict) -> None:
 		f.write("#SBATCH --mail-user=jripley@princeton.edu\t\t# Mail  id of the user\n")
 #		f.write("#SBATCH --mail-type=begin\t\t# Slurm will send mail at the beginning of the job\n")
 #		f.write("#SBATCH --mail-type=end\t\t# Slurm will send at the completion of your job\n")
-		f.write("\n./collapse\n\n")
+		f.write("\n./sim\n\n")
 
 	shutil.copyfile(
 		"{}/run_TEdGB_collapse.slurm".format(run_data["home_dir"]),

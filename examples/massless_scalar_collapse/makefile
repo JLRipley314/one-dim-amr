@@ -1,10 +1,12 @@
 CC = gcc -I/home/jripley/one-dim-amr
 
-CFLAGS = -g -O2 -Wall -Wextra -fmax-errors=5     
+CFLAGS = -g -O2 -Wall -Wextra -fmax-errors=5 -std=gnu11
 
 LIBS = -lm -lamr -lbbhutil
 
-LDFLAGS = -L/home/jripley/one-dim-amr
+LDFLAGS = -I/home/jripley/rnpletal/include -L/home/jripley/rnpletal/lib \
+		-I/usr/include/openblas -L/home/jripley/one-dim-amr \
+		-lbbhutil -lm 
 
 OBJECTS = main.o \
 	evolution_routines_GR.o \
