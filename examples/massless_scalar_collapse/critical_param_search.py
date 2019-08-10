@@ -26,14 +26,16 @@ CRITICAL_PARAM_ERROR = 1e-5
 
 OUTPUT_DIR = "/home/jripley/one-dim-amr/examples/massless_scalar_collapse/output"
 ###############################################################################
-def compute_normalized_difference(lower:float,upper:float)->float:
+#def compute_normalized_difference(lower:float,upper:float)->float:
+def compute_normalized_difference(lower,upper):
 	return (
 		2*(upper-lower)/(upper+lower)
 	)
 ###############################################################################
 ### if finds black hole in output then True, otherwise False
 ###############################################################################
-def check_output_black_hole_formed(output_file: str) -> bool:
+#def check_output_black_hole_formed(output_file: str) -> bool:
+def check_output_black_hole_formed(output_file):
 	with open(output_file, 'r') as f:
 		for line in f:
 			if (line.split(':')[0]  == "outermost trapped jC"):
@@ -42,7 +44,8 @@ def check_output_black_hole_formed(output_file: str) -> bool:
 ###############################################################################
 ### if run finsihed then True, otherwise False
 ###############################################################################
-def check_output_run_finished(output_file: str) -> bool:
+#def check_output_run_finished(output_file: str) -> bool:
+def check_output_run_finished(output_file):
 	with open(output_file, 'r') as f:
 		for line in f:
 			if (line.split(':')[0] == "time evolving sim (sec)"):
@@ -51,7 +54,8 @@ def check_output_run_finished(output_file: str) -> bool:
 ###############################################################################
 ### if code crashed then True, otherwise False
 ###############################################################################
-def check_output_code_crashed(output_file: str) -> bool:
+#def check_output_code_crashed(output_file: str) -> bool:
+def check_output_code_crashed(output_file):
 	with open(output_file, 'r') as f:
 		for line in f:
 			if (line.split(':')[0] == 'ERROR'):
@@ -59,9 +63,12 @@ def check_output_code_crashed(output_file: str) -> bool:
 	return False
 ###############################################################################
 ###############################################################################
+#def critical_param_search(
+#	run_data: dict, param: str, param_range:list ### List[float]
+#) -> None:
 def critical_param_search(
-	run_data: dict, param: str, param_range:list ### List[float]
-) -> None:
+	run_data, param, param_range
+):
 
 	found_critical_param = False
 

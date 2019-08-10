@@ -35,7 +35,7 @@ run_data = {
 ###
 ###	EdGB: coupling for Gauss-Bonnet scalar (gbs)
 ###
-	"coupling_gbs"	: 1.0,
+	"coupling_gbs"	: 400.0,
 
 	"stereographic_L" : 100,
 	
@@ -51,9 +51,9 @@ run_data = {
 ###	Nx, Nt should be of the form 2**n + 1 with n an integer
 ###	cfl_num: Courant Friedrichs Lewy number (for hyperbolics)
 ###
-	"Nx"		: 2**9+1,
-	"Nt"		: 2**9+1,#2**13+1,
-	"t_step_save"	: 2**0,
+	"Nx"		: 2**7+1,
+	"Nt"		: 2**18+1,#2**13+1,
+	"t_step_save"	: 2**5,
 	"cfl_num"	: 0.25,  
 	"err_tolerance"	: 1.0e-10, 
 	
@@ -76,7 +76,7 @@ run_data = {
 ###
 ### walltime format: (dd:hh:mm:ss)
 ###
-	"walltime"        : "8:00:00",
+	"walltime"        : "336:00:00",
 	"memory_usage_MB" : "2000"
 }
 ##############################################################################
@@ -84,8 +84,8 @@ run_data = {
 ##############################################################################
 if (run_data["computer"]=="jlr_laptop"):
 	run_data["base_output_dir"] = "/home/jripley/one-dim-amr/examples/massless_scalar_collapse/output"
-elif (run_data["computer"]=="feynman_cluster"):
-	run_data["base_output_dir"] = "/group/grtheory/EdGB_SSCollapse_output"
+elif (run_data["computer"]=="Feynman_cluster"):
+	run_data["base_output_dir"] = "/mnt/grtheory/jripley-data/scalarized_bh"
 else:
 	raise SystemError("'computer' value not set") 
 

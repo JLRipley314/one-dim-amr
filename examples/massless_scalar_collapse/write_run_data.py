@@ -3,7 +3,8 @@
 import shutil
 
 #############################################################################
-def write_initial_data(run_data: dict) -> None:
+#def write_initial_data(run_data: dict) -> None:
+def write_initial_data(run_data):
 
 	with open("{}/initial_data.txt".format(run_data["home_dir"]), "w") as f:
 		f.write("amp={}\n".format(run_data["amp"]))
@@ -21,7 +22,8 @@ def write_initial_data(run_data: dict) -> None:
 
 	return
 #############################################################################
-def write_run_data(run_data: dict) -> str:
+#def write_run_data(run_data: dict) -> str:
+def write_run_data(run_data):
 
 	with open("{}/run_data.txt".format(run_data["home_dir"]), "w") as f:
 		f.write("output_dir={}\n".format(run_data["output_dir"]))
@@ -44,7 +46,8 @@ def write_run_data(run_data: dict) -> str:
 	
 	return
 #############################################################################
-def write_slurm_script(run_data: dict) -> None:
+#def write_slurm_script(run_data: dict) -> None:
+def write_slurm_script(run_data):
 
 	run_data["var_name"] = "output"
 

@@ -288,7 +288,8 @@ void set_free_initial_data(amr_grid* grid)
 	} else 
 	if (strcmp(initial_data,"initial_black_hole")==0) {
 		if ((grid->level)==0) {
-			(grid->excised_jC) = (int)round(initial_black_hole_mass/(2.*dx)) ;
+			double outer_trapped_ratio = 0.9 ;
+			(grid->excised_jC) = (int)round(2*initial_black_hole_mass*outer_trapped_ratio/dx) ; 
 		} else {
 			set_excision_point(grid) ;
 		}
