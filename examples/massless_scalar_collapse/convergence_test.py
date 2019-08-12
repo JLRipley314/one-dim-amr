@@ -13,12 +13,9 @@ from make_read_write_files_dirs import (
 ### launch N sims with fixed initial data
 ### subprocess.call: wait uNtil subprocess over to coNtinue
 ###############################################################################
-#def convergence_test(
-#	sleep_time:float, run_data:dict, sim_number:int
-#) -> None:
 def convergence_test(
-	sleep_time, run_data, sim_number
-):
+	sleep_time:float, run_data:dict, sim_number:int
+) -> None:
 	Nx  = run_data["Nx"]
 	Nt  = run_data["Nt"]
 	tss = run_data["t_step_save"]

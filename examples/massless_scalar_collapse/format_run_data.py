@@ -2,8 +2,7 @@
 ### format for writing to initial data and run params for
 ### initial data file, run param file, and slurm script
 ##############################################################################
-#def format_run_data(run_data: dict) -> dict:
-def format_run_data(run_data):
+def format_run_data(run_data: dict) -> dict:
 
 	run_data["cfl_num"] = "{:.10e}".format(float(run_data["cfl_num"]))
 	run_data["err_tolerance"] = "{:.10e}".format(float(run_data["err_tolerance"]))

@@ -7,8 +7,7 @@
 import sys, os, fnmatch, time
 
 ###############################################################################
-#def make_directory_name_current_time(run_data:dict) -> str:
-def make_directory_name_current_time(run_data):
+def make_directory_name_current_time(run_data:dict) -> str:
 
 	dir_name = "_".join("_".join(time.asctime().split(" ")).split(":"))
 
@@ -16,8 +15,7 @@ def make_directory_name_current_time(run_data):
 
 	return dir_name_path
 ###############################################################################
-#def make_directory_name_current_time_and_Nx(run_data:dict) -> str:
-def make_directory_name_current_time_and_Nx(run_data):
+def make_directory_name_current_time_and_Nx(run_data:dict) -> str:
 
 	dir_name = "_".join("_".join(time.asctime().split(" ")).split(":"))
 
@@ -28,13 +26,11 @@ def make_directory_name_current_time_and_Nx(run_data):
 
 	return dir_name_path
 ###############################################################################
-#def make_new_file(file_name: str) -> None:
-def make_new_file(file_name):
+def make_new_file(file_name: str) -> None:
 	open(file_name, "w").close()
 	return 
 ###############################################################################
-#def append_to_file(file_name: str, message: str) -> None:
-def append_to_file(file_name, message):
+def append_to_file(file_name: str, message: str) -> None:
 	with open(file_name, "a") as f:
 		f.write(message) 
 	return 
