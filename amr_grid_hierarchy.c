@@ -857,24 +857,32 @@ void add_initial_grids(
 	amr_grid_hierarchy* gh) 
 {
 	amr_grid* grid = gh->grids->child ; /* start at grid level=1 */
-	int Nx = grid->Nx ; 
+	double dx = grid->dx ; 
 
-	int num_grids = 2 ;
+	int num_grids = 4 ;
 
 	for (int iC=0; iC<num_grids; iC++) {
 		switch (iC) {
 			case 0:
-				amr_add_finer_grid(0, (int)(Nx/2.5), grid) ;
+				amr_add_finer_grid(0, (int)(55/dx), grid) ;
 				break ;
 			case 1:
-				amr_add_finer_grid(0, (int)(Nx-2*buffer_coord), grid) ;
+				amr_add_finer_grid(0, (int)(49/dx), grid) ;
 				break ;	
-			default:
-				amr_add_finer_grid(0, (int)(Nx/2), grid) ;
+			case 2:
+				amr_add_finer_grid(0, (int)(44/dx), grid) ;
+				break ;	
+			case 3:
+				amr_add_finer_grid(0, (int)(40/dx), grid) ;
+				break ;	
+			default:	
+				printf("did not assign case yet!") ;
+				fflush(NULL) ;
+				assert(iC<3) ;
 				break ;
 		}
 		grid = grid->child ;
-		Nx = grid->Nx ;
+		dx = grid->dx ;
 	}
 	grid = grid->child ;
 	grid = NULL ;

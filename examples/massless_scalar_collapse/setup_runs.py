@@ -35,7 +35,7 @@ run_data = {
 ###
 ###	EdGB: coupling for Gauss-Bonnet scalar (gbs)
 ###
-	"coupling_gbs"	: 1.0,
+	"coupling_gbs"	: 5.0,
 
 	"stereographic_L" : 100,
 	
@@ -51,9 +51,9 @@ run_data = {
 ###	Nx, Nt should be of the form 2**n + 1 with n an integer
 ###	cfl_num: Courant Friedrichs Lewy number (for hyperbolics)
 ###
-	"Nx"		: 2**9+1,
-	"Nt"		: 2**9+1,#2**13+1,
-	"t_step_save"	: 2**0,
+	"Nx"		: 2**7+1,
+	"Nt"		: 2**17+1,#2**13+1,
+	"t_step_save"	: 2**5,
 	"cfl_num"	: 0.25,  
 	"err_tolerance"	: 1.0e-10, 
 	
