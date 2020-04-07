@@ -1,10 +1,10 @@
-CC = gcc -I/home/jripley/one-dim-amr
+CC = gcc -I/home/jripley/one-dim-amr -I/home/jripley/one-dim-amr/include
 
 CFLAGS = -g -O2 -Wall -Wextra -fmax-errors=5     
 
 LIBS = -lm -lamr -lbbhutil
 
-LDFLAGS = -L/home/jripley/one-dim-amr/bin -L/home/jripley/one-dim-amr/include
+LDFLAGS = -L/home/jripley/one-dim-amr/bin 
 
 OBJECTS = main.o \
 	evolution_routines_GR.o \
