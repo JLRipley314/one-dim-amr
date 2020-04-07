@@ -4,7 +4,7 @@ CFLAGS = -g -O2 -Wall -Wextra -fmax-errors=5
 
 LIBS = -lm -lamr -lbbhutil
 
-LDFLAGS = -L/home/jripley/one-dim-amr
+LDFLAGS = -L/home/jripley/one-dim-amr/bin -L/home/jripley/one-dim-amr/include
 
 OBJECTS = main.o \
 	evolution_routines_GR.o \
