@@ -23,18 +23,21 @@
      
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
-       Basic layout of the amr code. A lot of this comes from the AMRD/PAMR
-library written by Frans Pretorius (with addtions by Branson Stevens).  
+	Berger-Oliger style adaptive mesh refinement \cite{Berger:1984zza},
+with implementation of delayed solution technique of \cite{Pretorius:2005ua}
+to also solve ordinary differential equation constraints along with PDE.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Organization of data}
+       A lot of the basic implementation ideas come from the AMRD/PAMR
+library written by Frans Pretorius
+(with addtions by Will East and Branson Stevens).  
 
+	As it stands, the code can handle one dimensional PDE, with only
+one refinement grid per level. The code can also handle excision, and
+be configured to run with fixed mesh refinement.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Basic algorithms}
 
-	With fixed mesh refinment we do not need the regridding routine,
-which is perhaps the most complicated part of the algorithm. Note also
-we do \emph{not} implement multiple grids at the same level.
+	The basic algorithm. See also \cite{Berger:1984zza,Pretorius:2005ua}. 
 
 \begin{algorithm}
 \caption{Evolve grid hierarchy (recursive)}\label{alg:time_step}
@@ -61,5 +64,7 @@ we do \emph{not} implement multiple grids at the same level.
 \end{algorithmic}
 \end{algorithm}
 
+\bibliography{localbib}
+\bibliographystyle{alpha}
 
 \end{document}
